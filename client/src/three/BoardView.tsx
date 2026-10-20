@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react';
-import { ThreeEvent, useFrame } from '@react-three/fiber';
+import { useEffect, useMemo, useRef } from 'react';
+import { ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { BOARD_SIZE, Cell, PlacedTile, Seat } from '../../../shared/src';
 import { useStore, setSel, resetSel, pushToast } from '../store';
@@ -8,6 +8,7 @@ import { tr } from '../i18n';
 import { sfx } from '../audio';
 import { PLAYER_COLORS, UI, shapeColor } from './colors';
 import { inBounds, previewFor } from './placement';
+import { dragApi } from './dragApi';
 
 const CELL_X = (c: number) => c - (BOARD_SIZE - 1) / 2;
 const CELL_Y = (r: number) => (BOARD_SIZE - 1) / 2 - r;
@@ -16,7 +17,7 @@ function TileMesh({ tile }: { tile: PlacedTile }) {
   const ref = useRef<THREE.Group>(null);
   const t0 = useRef(performance.now());
   const color = shapeColor(tile.shape);
-  const light = useMemo(() => new THREE.Color(color).offsetHSL(0, 0, 0.12), [color]);
+  const light = useMemo(() => new THREE.Color(color).offsetHSL(0, 0, 0.16), [color]);
   const cx = tile.cells.reduce((s, c) => s + CELL_X(c[1]), 0) / tile.cells.length;
   const cy = tile.cells.reduce((s, c) => s + CELL_Y(c[0]), 0) / tile.cells.length;
   const keys = useMemo(() => new Set(tile.cells.map((c) => c.join(','))), [tile]);
@@ -39,7 +40,7 @@ function TileMesh({ tile }: { tile: PlacedTile }) {
             </mesh>
             <mesh position={[0, 0, 0.36]}>
               <planeGeometry args={[0.66, 0.66]} />
-              <meshBasicMaterial color={light} transparent opacity={0.35} />
+              <meshBasicMaterial color={light} transparent opacity={0.55} />
             </mesh>
             {keys.has(`${r},${c + 1}`) && (
               <mesh position={[0.5, 0, 0.2]}><boxGeometry args={[0.14, 0.9, 0.3]} /><meshStandardMaterial color={color} roughness={0.75} /></mesh>
@@ -50,7 +51,7 @@ function TileMesh({ tile }: { tile: PlacedTile }) {
             {i < tile.engraved && (
               <mesh position={[0, 0, 0.42]} rotation={[Math.PI / 2, 0, 0]}>
                 <cylinderGeometry args={[0.24, 0.24, 0.08, 20]} />
-                <meshStandardMaterial color={UI.coin} roughness={0.4} metalness={0.2} />
+                <meshStandardMaterial color={UI.coin} roughness={0.35} metalness={0.15} />
               </mesh>
             )}
             {tile.shape === 'mono' && (
@@ -73,6 +74,24 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
   const interactive = mine && active && (game.phase === 'placing_reward' || sel.offer !== null);
   const preview = interactive ? previewFor(game, seat, sel) : null;
   const frame = PLAYER_COLORS[seat];
+  const { camera, gl } = useThree();
+
+  // Used by DOM drag & drop: which cell of MY board is under the pointer (null if far from the board)
+  useEffect(() => {
+    if (!mine) return;
+    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -0.2);
+    const rc = new THREE.Raycaster();
+    const hit = new THREE.Vector3();
+    dragApi.pick = (cx, cy) => {
+      const rect = gl.domElement.getBoundingClientRect();
+      rc.setFromCamera(new THREE.Vector2(((cx - rect.left) / rect.width) * 2 - 1, -(((cy - rect.top) / rect.height) * 2 - 1)), camera);
+      if (!rc.ray.intersectPlane(plane, hit)) return null;
+      const lx = (hit.x - x) / scale, ly = (hit.y - y) / scale;
+      const c = Math.floor(lx + BOARD_SIZE / 2), r = Math.floor(BOARD_SIZE / 2 - ly);
+      return r >= -2 && c >= -2 && r < BOARD_SIZE + 2 && c < BOARD_SIZE + 2 ? [r, c] : null;
+    };
+    return () => { dragApi.pick = null; };
+  }, [mine, camera, gl, x, y, scale]);
 
   const cellFromEvent = (e: ThreeEvent<PointerEvent>): [number, number] | null => {
     const lp = e.object.worldToLocal(e.point.clone());
@@ -105,18 +124,18 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
     <group position={[x, y, 0]} scale={[scale, scale, 1]}>
       <mesh position={[0, 0, -0.1]}>
         <boxGeometry args={[9.8, 9.8, 0.1]} />
-        <meshStandardMaterial color={frame} emissive={frame} emissiveIntensity={active ? 0.55 : 0.08} roughness={0.8} />
+        <meshStandardMaterial color={frame} emissive={frame} emissiveIntensity={active ? 0.35 : 0.0} roughness={0.8} />
       </mesh>
       <mesh position={[0, 0, -0.02]}>
         <boxGeometry args={[9.4, 9.4, 0.1]} />
-        <meshStandardMaterial color="#14141f" roughness={1} />
+        <meshStandardMaterial color={UI.board} roughness={1} />
       </mesh>
       {Array.from({ length: BOARD_SIZE * BOARD_SIZE }, (_, i) => {
         const r = Math.floor(i / BOARD_SIZE), c = i % BOARD_SIZE;
         return p.board[i] === 0 ? (
           <mesh key={i} position={[CELL_X(c), CELL_Y(r), 0.04]}>
             <planeGeometry args={[0.92, 0.92]} />
-            <meshBasicMaterial color={UI.gridLine} transparent opacity={0.55} />
+            <meshBasicMaterial color={UI.gridLine} />
           </mesh>
         ) : null;
       })}

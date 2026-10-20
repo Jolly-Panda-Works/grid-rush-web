@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { REWARD_POSITIONS, TRACK_LENGTH, TREASURE_POSITIONS, BOARD_SIZE, scoreOf, Seat } from '../../../shared/src';
+import { TRACK_LENGTH, BOARD_SIZE, scoreOf, Seat } from '../../../shared/src';
 import { profileLevel } from '../profile';
 import { useT } from '../i18n';
 import { useStore } from '../store';
-import { CoinIcon, PlayerGlyph } from './TileShape';
+import { CoinIcon, PlayerGlyph, TimeIcon } from './TileShape';
 
 function PlayerCard({ seat, align }: { seat: Seat; align: 'left' | 'right' }) {
   const t = useT();
@@ -24,35 +24,12 @@ function PlayerCard({ seat, align }: { seat: Seat; align: 'left' | 'right' }) {
       </div>
       <div className="pstats">
         <span title={t('hud.coins')}><CoinIcon /> <b className="num">{p.coins}</b></span>
+        <span title={t('hud.pos')} className="num"><TimeIcon /> {p.pos}/{TRACK_LENGTH}</span>
         <span title={t('hud.cells')} className="num">{filled}/{BOARD_SIZE * BOARD_SIZE}</span>
         <span title={t('hud.score')} className="num score">{sc.total >= 0 ? '+' : ''}{sc.total}</span>
         {p.bonus7 && <span className="tag good">7x7</span>}
       </div>
       <div className="muted small">{t('hud.lv', { n: p.level })} · {p.rating}</div>
-    </div>
-  );
-}
-
-function TrackBar() {
-  const t = useT();
-  const g = useStore((s) => s.game)!;
-  const pct = (n: number) => `${(n / TRACK_LENGTH) * 100}%`;
-  const [a, b] = g.players;
-  const lead = a.pos - b.pos;
-  return (
-    <div className="trackbar" aria-label="Shared time track">
-      <div className="line">
-        {TREASURE_POSITIONS.map((tp) => <i key={'t' + tp} className="tick treasure" style={{ left: pct(tp) }} title={t('hud.treasure')} />)}
-        {REWARD_POSITIONS.map((rp, i) => !g.rewardTaken[i] && <i key={'r' + rp} className="tick reward" style={{ left: pct(rp) }} title={t('hud.reward')} />)}
-        <i className="tick finish" style={{ left: '100%' }} />
-        <span className="m m0" style={{ left: pct(a.pos) }}><PlayerGlyph seat={0} size={18} /></span>
-        <span className="m m1" style={{ left: pct(b.pos) }}><PlayerGlyph seat={1} size={18} /></span>
-      </div>
-      <div className="tinfo num">
-        <span>{a.pos}</span>
-        <span className="muted">{lead === 0 ? t('hud.level') : t('hud.leads', { name: (lead > 0 ? a : b).name, n: Math.abs(lead) })} · {t('hud.finish', { n: TRACK_LENGTH })}</span>
-        <span>{b.pos}</span>
-      </div>
     </div>
   );
 }
@@ -73,7 +50,7 @@ export function Hud() {
   return (
     <header className="hud">
       <PlayerCard seat={mySeat} align="left" />
-      <div className="hudmid"><TrackBar /><Timer /></div>
+      <div className="hudmid"><Timer /></div>
       <PlayerCard seat={opp} align="right" />
     </header>
   );

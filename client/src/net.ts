@@ -32,7 +32,7 @@ export async function startSearch(solo: boolean) {
   leaving = false; finalized = false; lastEventId = 0;
   const st = useStore.getState();
   useStore.setState({
-    screen: 'matchmaking', game: null, result: null, connection: 'ok', toasts: [],
+    screen: 'matchmaking', game: null, result: null, connection: 'ok', popups: [], fx: [], pendingFx: {}, drag: null,
     match: { status: 'connecting', solo, waitMs: 0, startedAt: Date.now() },
   });
   resetSel();
@@ -58,7 +58,11 @@ function bind(r: Room, my: number) {
     useStore.setState((s) => ({ mySeat: m.seat, match: { ...s.match, status: 'found', botTierName: m.botTierName } }));
     sfx.turn();
     setTimeout(() => {
-      if (my === token && useStore.getState().match.status === 'found') useStore.setState({ screen: 'game' });
+      if (my === token && useStore.getState().match.status === 'found') {
+        useStore.setState({ screen: 'game' });
+        const g = useStore.getState().game;
+        if (g && g.current === m.seat) pushToast(tr('toast.yourTurn'), 'good');
+      }
     }, 2600);
   });
   r.onMessage('state', (m: { state: GameState; turnLeft: number | null }) => onState(m.state, m.turnLeft));
@@ -96,10 +100,10 @@ function onState(g: GameState, turnLeft: number | null) {
       switch (e.k) {
         case 'buy': pushToast(tr('toast.buy', { name: nameOf(g, e.seat), c: e.coinCost, t: e.timeCost }), e.seat === st.mySeat ? 'good' : 'info'); sfx.place(); break;
         case 'advance': pushToast(tr('toast.advance', { name: nameOf(g, e.seat), s: e.steps, c: e.coins }), 'info'); sfx.advance(); break;
-        case 'treasure': pushToast(tr('toast.treasure', { name: nameOf(g, e.seat), c: e.coins }), 'good'); sfx.coin(); useStore.setState((s) => ({ flashes: { ...s.flashes, [e.pos]: performance.now() } })); break;
-        case 'reward': pushToast(tr('toast.reward', { name: nameOf(g, e.seat) }), 'good'); useStore.setState((s) => ({ flashes: { ...s.flashes, [e.pos]: performance.now() } })); break;
+        case 'treasure': pushToast(tr('toast.treasure', { name: nameOf(g, e.seat), c: e.coins }), 'good'); sfx.coin(); useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'treasure', coins: e.coins }; break;
+        case 'reward': pushToast(tr('toast.reward', { name: nameOf(g, e.seat) }), 'good'); useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'reward', coins: 0 }; break;
         case 'bonus7': pushToast(tr('toast.bonus7', { name: nameOf(g, e.seat) }), 'good'); sfx.bonus(); break;
-        case 'turn': if (e.seat === st.mySeat) sfx.turn(); break;
+        case 'turn': if (e.seat === st.mySeat) { sfx.turn(); pushToast(tr('toast.yourTurn'), 'good'); } break;
       }
     }
   }

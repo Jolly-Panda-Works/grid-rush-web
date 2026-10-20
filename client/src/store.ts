@@ -3,7 +3,9 @@ import type { GameState, Seat } from '../../shared/src';
 import { Profile, Settings, loadProfile, loadSettings } from './profile';
 
 export type Screen = 'loading' | 'menu' | 'matchmaking' | 'game' | 'results';
-export interface Toast { id: number; text: string; tone: 'info' | 'good' | 'warn' | 'bad' }
+export interface Popup { id: number; text: string; tone: 'info' | 'good' | 'warn' | 'bad' }
+export interface Fx { id: number; kind: 'coins' | 'tile'; x: number; y: number; tx?: number; ty?: number; count?: number; color?: string }
+export interface PendingFx { kind: 'treasure' | 'reward'; coins: number }
 export interface MatchState {
   status: 'idle' | 'connecting' | 'searching' | 'found' | 'error';
   solo: boolean; waitMs: number; startedAt: number; error?: string; botTierName?: string | null;
@@ -26,8 +28,11 @@ interface Store {
   turnRecvAt: number;
   connection: 'ok' | 'reconnecting';
   sel: Selection;
-  toasts: Toast[];
+  popups: Popup[];
   flashes: Record<number, number>;
+  fx: Fx[];
+  pendingFx: Record<string, PendingFx>;
+  drag: { x: number; y: number } | null;
   showHelp: boolean;
   confirmResign: boolean;
   result: ResultInfo | null;
@@ -45,18 +50,27 @@ export const useStore = create<Store>(() => ({
   turnRecvAt: 0,
   connection: 'ok',
   sel: { offer: null, rot: 0, flip: false, hover: null },
-  toasts: [],
+  popups: [],
   flashes: {},
+  fx: [],
+  pendingFx: {},
+  drag: null,
   showHelp: false,
   confirmResign: false,
   result: null,
 }));
 
-let toastId = 1;
-export function pushToast(text: string, tone: Toast['tone'] = 'info') {
-  const id = toastId++;
-  useStore.setState((s) => ({ toasts: [...s.toasts.slice(-3), { id, text, tone }] }));
-  setTimeout(() => useStore.setState((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), 3400);
+let popupId = 1;
+/** Notifications are shown one by one in a popup in the middle of the stage. */
+export function pushToast(text: string, tone: Popup['tone'] = 'info') {
+  const id = popupId++;
+  useStore.setState((s) => ({ popups: [...s.popups.slice(-5), { id, text, tone }] }));
 }
+let fxId = 1;
+export function spawnFx(fx: Omit<Fx, 'id'>) {
+  const id = fxId++;
+  useStore.setState((s) => ({ fx: [...s.fx.slice(-12), { ...fx, id }] }));
+}
+export const removeFx = (id: number) => useStore.setState((s) => ({ fx: s.fx.filter((f) => f.id !== id) }));
 export const setSel = (p: Partial<Selection>) => useStore.setState((s) => ({ sel: { ...s.sel, ...p } }));
 export const resetSel = () => useStore.setState({ sel: { offer: null, rot: 0, flip: false, hover: null } });

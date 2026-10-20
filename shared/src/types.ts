@@ -69,6 +69,7 @@ export interface GameState {
   current: Seat;
   players: [PlayerState, PlayerState];
   offer: TileDef[];
+  next: TileDef; // the tile that will replace the next bought one (visible to both players)
   rewardTaken: boolean[];
   bonus7By: Seat | null;
   endTriggeredBy: Seat | null;

@@ -3,7 +3,8 @@ import { TRACK_LENGTH } from '../../../shared/src';
 import { Hud } from '../components/Hud';
 import { OfferPanel } from '../components/OfferPanel';
 import { useT } from '../i18n';
-import { Toasts } from '../components/Toasts';
+import { Popup } from '../components/Popup';
+import { DragGhost } from '../components/DragGhost';
 import { resign, send } from '../net';
 import { resetSel, setSel, useStore } from '../store';
 
@@ -43,12 +44,13 @@ export default function GameScreen() {
       <Hud />
       <section className="stage">
         <Suspense fallback={<div className="center muted">{t('game.loading3d')}</div>}><GameCanvas /></Suspense>
-        <Toasts />
+        <Popup />
         <button className="resign" onClick={() => useStore.setState({ confirmResign: true })}>{t('game.resign')}</button>
         {conn === 'reconnecting' && <div className="overlay soft"><div className="modal small">{t('game.reconnecting')}</div></div>}
         {game.phase === 'finished' && <div className="overlay soft"><div className="modal small">{t('game.over')}</div></div>}
       </section>
       <OfferPanel />
+      <DragGhost />
       {confirm && (
         <div className="overlay" onClick={() => useStore.setState({ confirmResign: false })}>
           <div className="modal small" onClick={(e) => e.stopPropagation()}>

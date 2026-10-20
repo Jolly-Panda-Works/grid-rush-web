@@ -98,11 +98,12 @@ export function createGame(inits: [PlayerInit, PlayerInit], rng: Rng = Math.rand
     board: new Array(BOARD_SIZE * BOARD_SIZE).fill(0), tiles: [], bonus7: false, connected: true,
   });
   const s: GameState = {
-    phase: 'playing', current: rng() < 0.5 ? 0 : 1, players: [mk(0), mk(1)], offer: [],
+    phase: 'playing', current: rng() < 0.5 ? 0 : 1, players: [mk(0), mk(1)], offer: [], next: undefined as never,
     rewardTaken: REWARD_POSITIONS.map(() => false), bonus7By: null, endTriggeredBy: null,
     pendingRewards: 0, nextUid: 1, eventSeq: 1, events: [], turnNo: 1, result: null,
   };
   for (let i = 0; i < OFFER_SIZE; i++) s.offer.push(makeTile(s.nextUid++, rng));
+  s.next = makeTile(s.nextUid++, rng);
   return s;
 }
 
@@ -204,7 +205,8 @@ export function applyBuy(s: GameState, seat: Seat, offerIdx: number, abs: Cell[]
   me.coins -= tile.coinCost;
   for (const [r, c] of abs) me.board[cellIdx(r, c)] = tile.uid;
   me.tiles.push({ uid: tile.uid, shape: tile.shape, engraved: tile.engraved, cells: abs.map((c) => [...c] as Cell) });
-  s.offer[offerIdx] = makeTile(s.nextUid++, rng);
+  s.offer[offerIdx] = s.next;           // the previewed tile slides in
+  s.next = makeTile(s.nextUid++, rng);  // and a new one is drawn as the next preview
   ev(s, { k: 'buy', seat, shape: tile.shape, timeCost: tile.timeCost, coinCost: tile.coinCost });
   check7x7(s, seat);
   moveTo(s, seat, tile.timeCost); // placement happens BEFORE the move (CONFIRMED)

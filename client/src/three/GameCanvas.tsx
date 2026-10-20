@@ -26,8 +26,8 @@ function Scene() {
   const opp = (1 - mySeat) as 0 | 1;
   return (
     <>
-      <ambientLight intensity={1.05} />
-      <directionalLight position={[-6, 10, 18]} intensity={1.2} />
+      <ambientLight intensity={1.25} />
+      <directionalLight position={[-6, 10, 18]} intensity={0.9} />
       <BoardView seat={mySeat} x={layout.my.x} y={layout.my.y} scale={layout.my.scale} />
       <BoardView seat={opp} x={layout.opp.x} y={layout.opp.y} scale={layout.opp.scale} />
       <TrackView layout={layout} />
@@ -38,7 +38,7 @@ function Scene() {
 export default function GameCanvas() {
   return (
     <Canvas dpr={[1, 2]} camera={{ fov: 30, position: [0, 0, 40], near: 0.1, far: 300 }} gl={{ antialias: true }}>
-      <color attach="background" args={['#12121C']} />
+      <color attach="background" args={['#F4F7FE']} />
       <Scene />
     </Canvas>
   );
