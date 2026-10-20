@@ -1,0 +1,29 @@
+import { useEffect } from 'react';
+import { useStore } from './store';
+import { saveSettings } from './profile';
+import LoadingScreen from './screens/LoadingScreen';
+import MenuScreen from './screens/MenuScreen';
+import MatchmakingScreen from './screens/MatchmakingScreen';
+import GameScreen from './screens/GameScreen';
+import ResultsScreen from './screens/ResultsScreen';
+import HowToPlay from './components/HowToPlay';
+
+export default function App() {
+  const screen = useStore((s) => s.screen);
+  const settings = useStore((s) => s.settings);
+  const help = useStore((s) => s.showHelp);
+  useEffect(() => {
+    saveSettings(settings);
+    document.documentElement.classList.toggle('reduce-motion', settings.reduceMotion);
+  }, [settings]);
+  return (
+    <>
+      {screen === 'loading' && <LoadingScreen />}
+      {screen === 'menu' && <MenuScreen />}
+      {screen === 'matchmaking' && <MatchmakingScreen />}
+      {screen === 'game' && <GameScreen />}
+      {screen === 'results' && <ResultsScreen />}
+      {help && <HowToPlay />}
+    </>
+  );
+}

@@ -1,0 +1,26 @@
+{
+  "name": "@grid-rush/server",
+  "version": "0.4.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test:bots": "tsx src/botMatch.ts",
+    "smoke": "tsx src/smoke.ts"
+  },
+  "dependencies": {
+    "@colyseus/ws-transport": "^0.15.3",
+    "colyseus": "^0.15.17",
+    "cors": "^2.8.5",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.0",
+    "colyseus.js": "^0.15.26",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
