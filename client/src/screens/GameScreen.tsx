@@ -6,7 +6,7 @@ import { useT } from '../i18n';
 import { Popup } from '../components/Popup';
 import { DragGhost } from '../components/DragGhost';
 import { resign, send } from '../net';
-import { resetSel, setSel, useStore } from '../store';
+import { flipHorizontal, flipVertical, resetSel, setSel, useStore } from '../store';
 
 const GameCanvas = lazy(() => import('../three/GameCanvas'));
 void TRACK_LENGTH;
@@ -25,7 +25,8 @@ export default function GameScreen() {
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
       const k = e.key.toLowerCase();
       if (k === 'r') setSel({ rot: (st.sel.rot + 1) % 4 });
-      else if (k === 'f') setSel({ flip: !st.sel.flip });
+      else if (k === 'f') flipHorizontal();
+      else if (k === 'v') flipVertical();
       else if (k === 'escape') resetSel();
       else if (k === 'a') { resetSel(); send.advance(); }
       else if (['1', '2', '3'].includes(k)) {

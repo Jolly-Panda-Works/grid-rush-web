@@ -11,7 +11,7 @@ export function DragGhost() {
   const tile = g.offer[sel.offer];
   if (!tile) return null;
   return (
-    <div className="ghost" style={{ left: drag.x, top: drag.y }}>
+    <div className="drag-ghost" style={{ left: drag.x, top: drag.y }}>
       <TileShape cells={transformCells(tile.cells, sel.rot, sel.flip)} shape={tile.shape} engraved={tile.engraved} cell={30} />
     </div>
   );

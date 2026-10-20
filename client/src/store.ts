@@ -74,3 +74,7 @@ export function spawnFx(fx: Omit<Fx, 'id'>) {
 export const removeFx = (id: number) => useStore.setState((s) => ({ fx: s.fx.filter((f) => f.id !== id) }));
 export const setSel = (p: Partial<Selection>) => useStore.setState((s) => ({ sel: { ...s.sel, ...p } }));
 export const resetSel = () => useStore.setState({ sel: { offer: null, rot: 0, flip: false, hover: null } });
+
+/** Screen-space mirrors of the currently shown orientation (shown = rotate(rot) after flip). */
+export const flipHorizontal = () => useStore.setState((st) => ({ sel: { ...st.sel, rot: (4 - st.sel.rot) % 4, flip: !st.sel.flip } }));
+export const flipVertical = () => useStore.setState((st) => ({ sel: { ...st.sel, rot: (6 - st.sel.rot) % 4, flip: !st.sel.flip } }));

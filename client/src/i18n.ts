@@ -25,7 +25,7 @@ const en: Dict = {
   'offer.playing': '{name}{bot} is playing', 'offer.over': 'Game over…', 'offer.botSuffix': ' (bot)',
   'offer.noCoins': 'Not enough coins', 'offer.noRoom': 'No room on your board', 'offer.needCoins': 'Need coins', 'offer.room': 'No room',
   'offer.engraved': 'Engraved coins (paid out at treasures)', 'offer.select': 'Select ({n})',
-  'offer.rotate': 'Rotate', 'offer.flip': 'Flip', 'offer.cancel': 'Cancel', 'offer.hint': 'Drag a tile onto your board (or click it, then click the board), or advance.', 'offer.next': 'Next', 'offer.nextTitle': 'This tile will appear after the next purchase',
+  'offer.rotate': 'Rotate', 'offer.flip': 'Flip ↔', 'offer.flipV': 'Flip ↕', 'offer.cancel': 'Cancel', 'offer.hint': 'Drag a tile onto your board (or click it, then click the board), or advance.', 'offer.next': 'Next', 'offer.nextTitle': 'This tile will appear after the next purchase',
   'offer.passes': 'Passes opponent: turn ends', 'offer.keeps': 'You keep the turn', 'offer.tre': '{n} treasure +{c}', 'offer.ends': 'ENDS THE GAME',
   'offer.advance': 'Advance', 'offer.advInfo': '+{n} cells · +{n} coins', 'offer.advEnds': ' · ends game',
   'game.resign': 'Resign', 'game.resignTitle': 'Resign this game?', 'game.resignText': 'Your opponent wins and your rating drops.', 'game.keep': 'Keep playing',
@@ -50,7 +50,7 @@ const en: Dict = {
   'help.r8': 'Game ends when someone reaches cell {l}, or a board is completely full.',
   'help.r9': 'Score: coins + bonus - {p} per empty cell. A tie goes to the player who ended the game.',
   'help.r10': 'You start with {c} coins. Ending the game does not guarantee a win: check the score first.',
-  'help.keys': 'Drag a tile from the bottom panel onto your board to preview and place it. Shortcuts: 1-3 select tile, R rotate, F flip, A advance, Esc cancel. On touch you can also tap to preview and tap again to place.', 'help.ok': 'Got it',
+  'help.keys': 'Drag a tile from the bottom panel onto your board to preview and place it. Shortcuts: 1-3 select tile, R rotate, F flip horizontally, V flip vertically, A advance, Esc cancel. On touch you can also tap to preview and tap again to place.', 'help.ok': 'Got it',
   'err.Not enough coins': 'Not enough coins', 'err.Not your turn': 'Not your turn', 'err.Cells are not free': 'Those cells are not free',
 };
 
@@ -76,7 +76,7 @@ const fa: Dict = {
   'offer.playing': '{name}{bot} در حال بازی است', 'offer.over': 'بازی تمام شد…', 'offer.botSuffix': ' (بات)',
   'offer.noCoins': 'سکه‌ی کافی نداری', 'offer.noRoom': 'روی صفحه‌ات جایی برای آن نیست', 'offer.needCoins': 'سکه کم داری', 'offer.room': 'جا نیست',
   'offer.engraved': 'سکه‌ی حکاکی‌شده (در خزانه‌ها پرداخت می‌شود)', 'offer.select': 'انتخاب ({n})',
-  'offer.rotate': 'چرخش', 'offer.flip': 'آینه', 'offer.cancel': 'لغو', 'offer.hint': 'کاشی را بکش و روی صفحه‌ات رها کن (یا روی آن کلیک کن و بعد روی صفحه کلیک کن)، یا Advance بزن.', 'offer.next': 'بعدی', 'offer.nextTitle': 'این کاشی بعد از خرید بعدی وارد می‌شود',
+  'offer.rotate': 'چرخش', 'offer.flip': 'آینه ↔', 'offer.flipV': 'آینه ↕', 'offer.cancel': 'لغو', 'offer.hint': 'کاشی را بکش و روی صفحه‌ات رها کن (یا روی آن کلیک کن و بعد روی صفحه کلیک کن)، یا Advance بزن.', 'offer.next': 'بعدی', 'offer.nextTitle': 'این کاشی بعد از خرید بعدی وارد می‌شود',
   'offer.passes': 'از حریف عبور می‌کنی: نوبت تمام می‌شود', 'offer.keeps': 'نوبت با خودت می‌ماند', 'offer.tre': '{n} خزانه، +{c}', 'offer.ends': 'بازی را تمام می‌کند',
   'offer.advance': 'Advance', 'offer.advInfo': '+{n} خانه · +{n} سکه', 'offer.advEnds': ' · بازی تمام می‌شود',
   'game.resign': 'تسلیم', 'game.resignTitle': 'تسلیم می‌شوی؟', 'game.resignText': 'حریف برنده می‌شود و رتبه‌ات کم می‌شود.', 'game.keep': 'ادامه‌ی بازی',
@@ -101,7 +101,7 @@ const fa: Dict = {
   'help.r8': 'پایان بازی: وقتی کسی به خانه‌ی {l} برسد، یا یک صفحه کاملاً پر شود.',
   'help.r9': 'امتیاز: سکه + پاداش − {p} به‌ازای هر خانه‌ی خالی. در تساوی، بازیکنی که بازی را تمام کرده برنده است.',
   'help.r10': 'با {c} سکه شروع می‌کنی. تمام‌کردن بازی برد را تضمین نمی‌کند، اول امتیازها را ببین.',
-  'help.keys': 'کاشی را از پنل پایین به صفحه‌ات بکش تا جایگاهش پیش‌نمایش شود و رها کن تا قرار بگیرد. میان‌برها: ۱ تا ۳ انتخاب کاشی، R چرخش، F آینه، A پیشروی، Esc لغو. روی موبایل می‌توانی با یک تپ پیش‌نمایش و تپ دوم قرار بدهی.', 'help.ok': 'متوجه شدم',
+  'help.keys': 'کاشی را از پنل پایین به صفحه‌ات بکش تا جایگاهش پیش‌نمایش شود و رها کن تا قرار بگیرد. میان‌برها: ۱ تا ۳ انتخاب کاشی، R چرخش، F آینه‌ی افقی، V آینه‌ی عمودی، A پیشروی، Esc لغو. روی موبایل می‌توانی با یک تپ پیش‌نمایش و تپ دوم قرار بدهی.', 'help.ok': 'متوجه شدم',
   'err.Not enough coins': 'سکه‌ی کافی نداری', 'err.Not your turn': 'نوبت تو نیست', 'err.Cells are not free': 'آن خانه‌ها خالی نیستند',
 };
 

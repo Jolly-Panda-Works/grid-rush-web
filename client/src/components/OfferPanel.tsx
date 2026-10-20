@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { TRACK_LENGTH, TREASURE_POSITIONS, canPlaceAny, engravedTotal, transformCells } from '../../../shared/src';
 import { useT, tr } from '../i18n';
 import { send } from '../net';
-import { pushToast, resetSel, setSel, useStore } from '../store';
+import { flipHorizontal, flipVertical, pushToast, resetSel, setSel, useStore } from '../store';
 import { dragApi } from '../three/dragApi';
 import { previewFor } from '../three/placement';
 import { CoinIcon, TileShape, TimeIcon } from './TileShape';
@@ -118,7 +118,8 @@ export function OfferPanel() {
       <div className="actions">
         <div className="tools">
           <button className="btn ghost" disabled={!selTile} onClick={() => setSel({ rot: (sel.rot + 1) % 4 })}>{t('offer.rotate')} <kbd>R</kbd></button>
-          <button className="btn ghost" disabled={!selTile} onClick={() => setSel({ flip: !sel.flip })}>{t('offer.flip')} <kbd>F</kbd></button>
+          <button className="btn ghost" disabled={!selTile} onClick={flipHorizontal}>{t('offer.flip')} <kbd>F</kbd></button>
+          <button className="btn ghost" disabled={!selTile} onClick={flipVertical}>{t('offer.flipV')} <kbd>V</kbd></button>
           <button className="btn ghost" disabled={!selTile} onClick={resetSel}>{t('offer.cancel')} <kbd>Esc</kbd></button>
         </div>
         <div className="hint">{selTile ? hint : t('offer.hint')}</div>
