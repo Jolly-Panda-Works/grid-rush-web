@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { REWARD_POSITIONS, TRACK_LENGTH, TREASURE_POSITIONS, BOARD_SIZE, scoreOf, Seat } from '../../../shared/src';
 import { profileLevel } from '../profile';
+import { useT } from '../i18n';
 import { useStore } from '../store';
 import { CoinIcon, PlayerGlyph } from './TileShape';
 
 function PlayerCard({ seat, align }: { seat: Seat; align: 'left' | 'right' }) {
+  const t = useT();
   const g = useStore((s) => s.game)!;
   const mySeat = useStore((s) => s.mySeat);
   const p = g.players[seat];
@@ -16,22 +18,23 @@ function PlayerCard({ seat, align }: { seat: Seat; align: 'left' | 'right' }) {
       <div className="pname">
         <PlayerGlyph seat={seat} />
         <span className="n">{p.name}</span>
-        {seat === mySeat && <span className="tag">You</span>}
-        {p.isBot && <span className="tag bot">Bot</span>}
-        {!p.connected && <span className="tag warn">offline</span>}
+        {seat === mySeat && <span className="tag">{t('you')}</span>}
+        {p.isBot && <span className="tag bot">{t('bot')}</span>}
+        {!p.connected && <span className="tag warn">{t('offline')}</span>}
       </div>
       <div className="pstats">
-        <span title="Coins"><CoinIcon /> <b className="num">{p.coins}</b></span>
-        <span title="Cells filled" className="num">{filled}/{BOARD_SIZE * BOARD_SIZE}</span>
-        <span title="Score if the game ended now" className="num score">{sc.total >= 0 ? '+' : ''}{sc.total}</span>
+        <span title={t('hud.coins')}><CoinIcon /> <b className="num">{p.coins}</b></span>
+        <span title={t('hud.cells')} className="num">{filled}/{BOARD_SIZE * BOARD_SIZE}</span>
+        <span title={t('hud.score')} className="num score">{sc.total >= 0 ? '+' : ''}{sc.total}</span>
         {p.bonus7 && <span className="tag good">7x7</span>}
       </div>
-      <div className="muted small">Lv {p.level} · {p.rating}</div>
+      <div className="muted small">{t('hud.lv', { n: p.level })} · {p.rating}</div>
     </div>
   );
 }
 
 function TrackBar() {
+  const t = useT();
   const g = useStore((s) => s.game)!;
   const pct = (n: number) => `${(n / TRACK_LENGTH) * 100}%`;
   const [a, b] = g.players;
@@ -39,15 +42,15 @@ function TrackBar() {
   return (
     <div className="trackbar" aria-label="Shared time track">
       <div className="line">
-        {TREASURE_POSITIONS.map((t) => <i key={'t' + t} className="tick treasure" style={{ left: pct(t) }} title="Treasure" />)}
-        {REWARD_POSITIONS.map((t, i) => !g.rewardTaken[i] && <i key={'r' + t} className="tick reward" style={{ left: pct(t) }} title="1x1 reward" />)}
+        {TREASURE_POSITIONS.map((tp) => <i key={'t' + tp} className="tick treasure" style={{ left: pct(tp) }} title={t('hud.treasure')} />)}
+        {REWARD_POSITIONS.map((rp, i) => !g.rewardTaken[i] && <i key={'r' + rp} className="tick reward" style={{ left: pct(rp) }} title={t('hud.reward')} />)}
         <i className="tick finish" style={{ left: '100%' }} />
         <span className="m m0" style={{ left: pct(a.pos) }}><PlayerGlyph seat={0} size={18} /></span>
         <span className="m m1" style={{ left: pct(b.pos) }}><PlayerGlyph seat={1} size={18} /></span>
       </div>
       <div className="tinfo num">
         <span>{a.pos}</span>
-        <span className="muted">{lead === 0 ? 'level' : `${Math.abs(lead)} cells ${lead > 0 ? '← blue ahead' : 'red ahead →'}`} · finish at {TRACK_LENGTH}</span>
+        <span className="muted">{lead === 0 ? t('hud.level') : t('hud.leads', { name: (lead > 0 ? a : b).name, n: Math.abs(lead) })} · {t('hud.finish', { n: TRACK_LENGTH })}</span>
         <span>{b.pos}</span>
       </div>
     </div>

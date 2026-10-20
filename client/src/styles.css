@@ -30,7 +30,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .menu-card { background: var(--surface); border-radius: 16px; padding: 32px 36px; width: min(440px, 94vw); display: flex; flex-direction: column; gap: 18px; align-items: center; box-shadow: 0 20px 50px rgba(0,0,0,.35); }
 .pprofile { width: 100%; display: flex; flex-direction: column; gap: 8px; align-items: stretch; background: var(--bg); border-radius: 12px; padding: 14px; }
 .pprofile .xp { width: 100%; }
-.field { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.field { display: flex; flex-direction: column; gap: 4px; text-align: start; }
 input[type=text], .field input { background: var(--surface2); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 9px 11px; font: inherit; }
 .pstat { display: flex; justify-content: space-between; }
 .menu-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; }
@@ -49,7 +49,7 @@ input[type=text], .field input { background: var(--surface2); border: 1px solid 
 .banner.warnb { background: rgba(255,184,77,.12); color: var(--warn); } .banner.accentb { background: rgba(255,107,53,.15); color: var(--accent); font-weight: 500; }
 .banner.waiting { color: var(--muted); }
 .dots::after { content: ''; animation: dots 1.2s steps(4) infinite; } @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75%,100% { content: '...'; } }
-.tag { font-size: 11px; background: rgba(255,255,255,.1); border-radius: 5px; padding: 1px 6px; margin-left: 6px; font-weight: 600; }
+.tag { font-size: 11px; background: rgba(255,255,255,.1); border-radius: 5px; padding: 1px 6px; margin-inline-start: 6px; font-weight: 600; }
 .tag.bot { background: rgba(108,92,231,.3); color: #c6beff; } .tag.good { background: rgba(67,209,122,.2); color: var(--ok); } .tag.warn { background: rgba(255,184,77,.2); color: var(--warn); }
 
 .radar { display: grid; grid-template-columns: repeat(3, 22px); gap: 5px; margin-bottom: 8px; }
@@ -99,11 +99,11 @@ input[type=text], .field input { background: var(--surface2); border: 1px solid 
 .overlay { position: fixed; inset: 0; background: rgba(8,8,14,.7); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
 .overlay.soft { position: absolute; background: rgba(8,8,14,.55); }
 .modal { background: var(--surface); border-radius: 16px; padding: 26px; max-width: 560px; width: 100%; max-height: 90vh; overflow: auto; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
-.modal.small { max-width: 360px; text-align: center; } .rules { padding-left: 18px; line-height: 1.55; } .rules li { margin-bottom: 4px; }
+.modal.small { max-width: 360px; text-align: center; } .rules { padding-inline-start: 20px; line-height: 1.55; } .rules li { margin-bottom: 4px; }
 
 .results h1 { font-size: 48px; } .results h1.win { color: var(--ok); } .results h1.lose { color: var(--muted); }
 .scoregrid { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
-.scorecard { background: var(--surface); border-radius: 14px; padding: 18px 22px; min-width: 260px; text-align: left; border: 2px solid transparent; } .scorecard.winner { border-color: var(--ok); }
+.scorecard { background: var(--surface); border-radius: 14px; padding: 18px 22px; min-width: 260px; text-align: start; border: 2px solid transparent; } .scorecard.winner { border-color: var(--ok); }
 .scorecard table { width: 100%; margin: 10px 0; border-collapse: collapse; } .scorecard td { padding: 4px 0; } .scorecard td:last-child { text-align: right; }
 .scorecard .total td { border-top: 1px solid var(--line); font-weight: 700; font-size: 18px; padding-top: 8px; }
 .progress { display: flex; flex-direction: column; gap: 6px; align-items: center; } .up { color: var(--ok); } .down { color: var(--err); }
@@ -115,3 +115,17 @@ input[type=text], .field input { background: var(--surface2); border: 1px solid 
 }
 .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { animation-duration: .001s !important; transition-duration: .001s !important; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001s !important; transition-duration: .001s !important; } }
+
+/* language + RTL (Persian) */
+html[lang='fa'] { --font: 'Vazirmatn', 'Inter', system-ui, sans-serif; --head: 'Vazirmatn', 'Sora', sans-serif; }
+html[lang='fa'] body { font-size: 15.5px; line-height: 1.6; }
+.langswitch { position: absolute; top: 14px; inset-inline-end: 14px; display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; z-index: 3; }
+.langswitch button { background: var(--surface); border: 0; padding: 6px 14px; color: var(--muted); }
+.langswitch button.on { background: var(--primary); color: #fff; }
+/* the game layout mirrors the 3D scene (me = left), so keep its geometry LTR and only flip the text */
+.game, .hud, .offers, .actions, .tools, .trackbar, .tinfo { direction: ltr; }
+html[dir='rtl'] .hint, html[dir='rtl'] .toast, html[dir='rtl'] .banner, html[dir='rtl'] .why,
+html[dir='rtl'] .game .modal, html[dir='rtl'] .tinfo .muted { direction: rtl; unicode-bidi: plaintext; }
+html[dir='rtl'] .toast { border-left: 0; border-right: 3px solid var(--muted); }
+html[dir='rtl'] .toast.good { border-right-color: var(--ok); } html[dir='rtl'] .toast.bad { border-right-color: var(--err); } html[dir='rtl'] .toast.warn { border-right-color: var(--warn); }
+html[dir='rtl'] .toasts { left: auto; right: 12px; align-items: flex-end; }

@@ -4,9 +4,10 @@ import {
   applyAction, botTierFor, chooseAction, createGame, forfeit, other, BOT_TIER_NAMES,
 } from '../../shared/src';
 
-interface Human { name: string; level: number; rating: number }
+interface Human { name: string; level: number; rating: number; lang: 'en' | 'fa' }
 interface Participant { sid: string | null; init: PlayerInit }
 
+const BOT_NAMES_FA = ['آرش', 'نیکا', 'کیان', 'سارا', 'رها', 'پارسا', 'مهان', 'آوا', 'سپهر', 'نوین', 'دانا', 'یاسی'];
 const BOT_NAMES = ['Nova', 'Pixel', 'Vector', 'Quark', 'Atlas', 'Echo', 'Rune', 'Axiom', 'Kite', 'Orbit', 'Delta', 'Mosaic'];
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 const cleanName = (n: unknown) => (typeof n === 'string' ? n.replace(/[^\p{L}\p{N} _.\-]/gu, '').trim().slice(0, 16) : '') || 'Player';
@@ -54,11 +55,12 @@ export class GridRushRoom extends Room {
   }
 
   /* ---------------- lobby ---------------- */
-  onJoin(client: Client, options: { name?: string; level?: number; rating?: number }) {
+  onJoin(client: Client, options: { name?: string; level?: number; rating?: number; lang?: string }) {
     this.humans.set(client.sessionId, {
       name: cleanName(options?.name),
       level: cleanNum(options?.level, 1, 99, 1),
       rating: cleanNum(options?.rating, 100, 4000, 1000),
+      lang: options?.lang === 'fa' ? 'fa' : 'en',
     });
     if (this.humans.size === 1) {
       const wait = this.solo ? 1800 : Number(process.env.MATCH_WAIT_MS || MATCH_WAIT_MS);
@@ -82,7 +84,8 @@ export class GridRushRoom extends Room {
       const tier = botTierFor(h.level, h.rating);
       const rating = Math.max(100, Math.round(h.rating + (tier - 3) * 25 + rand(-40, 40)));
       const level = Math.max(1, h.level + Math.round(rand(-1, 2)));
-      const name = `${BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)]}`;
+      const names = [...this.humans.values()][0].lang === 'fa' ? BOT_NAMES_FA : BOT_NAMES;
+      const name = names[Math.floor(Math.random() * names.length)];
       parts.push({ sid: null, init: { name, isBot: true, level, rating, botTier: tier } });
     }
     if (Math.random() < 0.5) parts.reverse(); // random seat assignment
@@ -149,7 +152,7 @@ export class GridRushRoom extends Room {
     this.idle[seat]++;
     if (this.idle[seat] >= 2) return this.endByForfeit(seat, 'timeout');
     applyAction(g, seat, chooseAction(g, seat, 1));
-    this.broadcast('notice', { msg: `${g.players[seat].name} ran out of time - auto move played.` });
+    this.broadcast('notice', { code: 'timeout', name: g.players[seat].name });
     this.afterAction();
   }
 

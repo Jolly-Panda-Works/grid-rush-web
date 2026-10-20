@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect } from 'react';
 import { TRACK_LENGTH } from '../../../shared/src';
 import { Hud } from '../components/Hud';
 import { OfferPanel } from '../components/OfferPanel';
+import { useT } from '../i18n';
 import { Toasts } from '../components/Toasts';
 import { resign, send } from '../net';
 import { resetSel, setSel, useStore } from '../store';
@@ -10,6 +11,7 @@ const GameCanvas = lazy(() => import('../three/GameCanvas'));
 void TRACK_LENGTH;
 
 export default function GameScreen() {
+  const t = useT();
   const conn = useStore((s) => s.connection);
   const confirm = useStore((s) => s.confirmResign);
   const game = useStore((s) => s.game);
@@ -35,24 +37,24 @@ export default function GameScreen() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  if (!game) return <main className="screen center"><p className="muted">Waiting for game state…</p></main>;
+  if (!game) return <main className="screen center"><p className="muted">{t('game.waiting')}</p></main>;
   return (
     <main className="game">
       <Hud />
       <section className="stage">
-        <Suspense fallback={<div className="center muted">Loading 3D…</div>}><GameCanvas /></Suspense>
+        <Suspense fallback={<div className="center muted">{t('game.loading3d')}</div>}><GameCanvas /></Suspense>
         <Toasts />
-        <button className="resign" onClick={() => useStore.setState({ confirmResign: true })}>Resign</button>
-        {conn === 'reconnecting' && <div className="overlay soft"><div className="modal small">Connection lost. Reconnecting…</div></div>}
-        {game.phase === 'finished' && <div className="overlay soft"><div className="modal small">Game over. Calculating results…</div></div>}
+        <button className="resign" onClick={() => useStore.setState({ confirmResign: true })}>{t('game.resign')}</button>
+        {conn === 'reconnecting' && <div className="overlay soft"><div className="modal small">{t('game.reconnecting')}</div></div>}
+        {game.phase === 'finished' && <div className="overlay soft"><div className="modal small">{t('game.over')}</div></div>}
       </section>
       <OfferPanel />
       {confirm && (
         <div className="overlay" onClick={() => useStore.setState({ confirmResign: false })}>
           <div className="modal small" onClick={(e) => e.stopPropagation()}>
-            <h3>Resign this game?</h3>
-            <p className="muted">Your opponent wins and your rating drops.</p>
-            <div className="row"><button className="btn danger" onClick={resign}>Resign</button><button className="btn ghost" onClick={() => useStore.setState({ confirmResign: false })}>Keep playing</button></div>
+            <h3>{t('game.resignTitle')}</h3>
+            <p className="muted">{t('game.resignText')}</p>
+            <div className="row"><button className="btn danger" onClick={resign}>{t('game.resign')}</button><button className="btn ghost" onClick={() => useStore.setState({ confirmResign: false })}>Keep playing</button></div>
           </div>
         </div>
       )}

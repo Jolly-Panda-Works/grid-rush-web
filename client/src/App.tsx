@@ -15,6 +15,8 @@ export default function App() {
   useEffect(() => {
     saveSettings(settings);
     document.documentElement.classList.toggle('reduce-motion', settings.reduceMotion);
+    document.documentElement.lang = settings.lang;
+    document.documentElement.dir = settings.lang === 'fa' ? 'rtl' : 'ltr';
   }, [settings]);
   return (
     <>

@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { BOARD_SIZE, Cell, PlacedTile, Seat } from '../../../shared/src';
 import { useStore, setSel, resetSel, pushToast } from '../store';
 import { send } from '../net';
+import { tr } from '../i18n';
 import { sfx } from '../audio';
 import { PLAYER_COLORS, UI, shapeColor } from './colors';
 import { inBounds, previewFor } from './placement';
@@ -93,7 +94,7 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
     const same = sel.hover && sel.hover[0] === cell[0] && sel.hover[1] === cell[1];
     if (touch && !same) { setSel({ hover: cell }); return; } // first tap = preview, second tap = confirm
     const pv = previewFor(game, seat, { ...sel, hover: cell });
-    if (!pv || !pv.valid) { sfx.bad(); pushToast('That tile does not fit there', 'bad'); return; }
+    if (!pv || !pv.valid) { sfx.bad(); pushToast(tr('toast.noFit'), 'bad'); return; }
     if (game.phase === 'placing_reward') send.reward(cell[0], cell[1]);
     else if (sel.offer !== null) send.buy(sel.offer, pv.abs);
     sfx.place();
