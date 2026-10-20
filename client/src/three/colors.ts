@@ -1,16 +1,33 @@
+import * as THREE from 'three';
 import { SHAPE_IDS } from '../../../shared/src';
 
-// Google brand palette (brandcolorcode.com/google): #4285F4 blue, #EA4335 red, #FBBC05 yellow, #34A853 green
-export const G = { blue: '#4285F4', red: '#EA4335', yellow: '#FBBC05', green: '#34A853' };
-export const PLAYER_COLORS = [G.blue, G.red] as const;
+// Persian tile-work palette, sampled from the Grid Rush logo art:
+// lapis (#00308D), turquoise/firouzeh (#0AB6CB), emerald (#27B67A), saffron (#FFB400), cream plaster.
+export const C = {
+  navy: '#001E67', lapis: '#00308D', blue: '#0152AF', azure: '#17A8F0', turquoise: '#0AB6CB',
+  emerald: '#27B67A', saffron: '#FFB400', gold: '#E3A71A', terracotta: '#E5553F', rose: '#D6457E', plum: '#7B4BC4',
+  cream: '#FFF4DC', sand: '#EADBB2',
+};
+export const PLAYER_COLORS = [C.azure, '#F0524F'] as const;
 export const UI = {
-  bg: '#F4F7FE', board: '#FFFFFF', gridLine: '#E3E8F4', plate: '#DCE4F5',
-  coin: G.yellow, success: G.green, error: G.red, primary: G.green, secondary: G.blue, accent: G.yellow,
+  board: C.cream, gridLine: C.sand, plate: C.navy, coin: C.saffron,
+  success: C.emerald, error: C.terracotta,
 };
 
+const TILE_PALETTE = [C.turquoise, C.saffron, C.emerald, C.terracotta, C.rose, C.plum, C.azure, '#8DCB4C'];
+const cache = new Map<string, string>();
 export function shapeColor(shape: string): string {
-  if (shape === 'mono') return G.green;
-  const i = Math.max(0, SHAPE_IDS.indexOf(shape));
-  const hue = (i * 137.5 + 8) % 360;
-  return `hsl(${hue.toFixed(0)}, 72%, 56%)`;
+  const hit = cache.get(shape);
+  if (hit) return hit;
+  let out: string;
+  if (shape === 'mono') out = C.emerald;
+  else {
+    const i = Math.max(0, SHAPE_IDS.indexOf(shape));
+    const base = new THREE.Color(TILE_PALETTE[i % 8]);
+    const v = Math.floor(i / 8);
+    base.offsetHSL(0, 0, v === 1 ? -0.09 : v === 2 ? 0.09 : 0);
+    out = '#' + base.getHexString();
+  }
+  cache.set(shape, out);
+  return out;
 }

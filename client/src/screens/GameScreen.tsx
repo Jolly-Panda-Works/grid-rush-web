@@ -4,6 +4,7 @@ import { Hud } from '../components/Hud';
 import { OfferPanel } from '../components/OfferPanel';
 import { useT } from '../i18n';
 import { Popup } from '../components/Popup';
+import { Legend } from '../components/Legend';
 import { DragGhost } from '../components/DragGhost';
 import { resign, send } from '../net';
 import { flipHorizontal, flipVertical, resetSel, setSel, useStore } from '../store';
@@ -23,14 +24,15 @@ export default function GameScreen() {
       const g = st.game;
       if (!g || g.current !== st.mySeat || g.phase !== 'playing') return;
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
-      const k = e.key.toLowerCase();
-      if (k === 'r') setSel({ rot: (st.sel.rot + 1) % 4 });
-      else if (k === 'f') flipHorizontal();
-      else if (k === 'v') flipVertical();
-      else if (k === 'escape') resetSel();
-      else if (k === 'a') { resetSel(); send.advance(); }
-      else if (['1', '2', '3'].includes(k)) {
-        const i = Number(k) - 1;
+      // e.code is the physical key, so shortcuts also work on a Persian keyboard layout
+      const c = e.code;
+      if (c === 'KeyR') setSel({ rot: (st.sel.rot + 1) % 4 });
+      else if (c === 'KeyF') flipHorizontal();
+      else if (c === 'KeyV') flipVertical();
+      else if (c === 'Escape') resetSel();
+      else if (c === 'KeyA') { resetSel(); send.advance(); }
+      else if (/^(Digit|Numpad)[123]$/.test(c)) {
+        const i = Number(c.slice(-1)) - 1;
         const me = g.players[st.mySeat];
         if (g.offer[i] && me.coins >= g.offer[i].coinCost) setSel({ offer: i, rot: 0, flip: false, hover: null });
       }
@@ -50,6 +52,7 @@ export default function GameScreen() {
         {conn === 'reconnecting' && <div className="overlay soft"><div className="modal small">{t('game.reconnecting')}</div></div>}
         {game.phase === 'finished' && <div className="overlay soft"><div className="modal small">{t('game.over')}</div></div>}
       </section>
+      <Legend />
       <OfferPanel />
       <DragGhost />
       {confirm && (

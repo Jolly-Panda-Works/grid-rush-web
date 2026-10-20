@@ -6,8 +6,9 @@ import { useStore, setSel, resetSel, pushToast } from '../store';
 import { send } from '../net';
 import { tr } from '../i18n';
 import { sfx } from '../audio';
-import { PLAYER_COLORS, UI, shapeColor } from './colors';
+import { C, PLAYER_COLORS, UI, shapeColor } from './colors';
 import { inBounds, previewFor } from './placement';
+import { textTexture } from './icons';
 import { dragApi } from './dragApi';
 
 const CELL_X = (c: number) => c - (BOARD_SIZE - 1) / 2;
@@ -49,13 +50,13 @@ function TileMesh({ tile }: { tile: PlacedTile }) {
               <mesh position={[0, -0.5, 0.2]}><boxGeometry args={[0.9, 0.14, 0.3]} /><meshStandardMaterial color={color} roughness={0.75} /></mesh>
             )}
             {i < tile.engraved && (
-              <mesh position={[0, 0, 0.42]} rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[0.24, 0.24, 0.08, 20]} />
-                <meshStandardMaterial color={UI.coin} roughness={0.35} metalness={0.15} />
-              </mesh>
+              <group position={[0, 0, 0.44]} rotation={[Math.PI / 2, 0, 0]}>
+                <mesh><cylinderGeometry args={[0.27, 0.27, 0.08, 24]} /><meshStandardMaterial color={UI.coin} roughness={0.3} metalness={0.2} /></mesh>
+                <mesh position={[0, 0.045, 0]}><cylinderGeometry args={[0.15, 0.15, 0.04, 20]} /><meshStandardMaterial color="#C98A00" roughness={0.4} /></mesh>
+              </group>
             )}
             {tile.shape === 'mono' && (
-              <mesh position={[0, 0, 0.42]}><planeGeometry args={[0.28, 0.28]} /><meshBasicMaterial color="#ffffff" transparent opacity={0.8} /></mesh>
+              <mesh position={[0, 0, 0.37]}><planeGeometry args={[0.8, 0.8]} /><meshBasicMaterial map={textTexture('1×1')} transparent /></mesh>
             )}
           </group>
         );
@@ -122,6 +123,15 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
 
   return (
     <group position={[x, y, 0]} scale={[scale, scale, 1]}>
+      <mesh position={[0, 0, -0.16]}>
+        <boxGeometry args={[10.4, 10.4, 0.1]} />
+        <meshStandardMaterial color={C.gold} roughness={0.45} metalness={0.25} />
+      </mesh>
+      {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sy], k) => (
+        <mesh key={'orn' + k} position={[sx * 5.2, sy * 5.2, -0.05]} rotation={[0, 0, Math.PI / 4]}>
+          <boxGeometry args={[0.5, 0.5, 0.12]} /><meshStandardMaterial color={C.saffron} roughness={0.4} />
+        </mesh>
+      ))}
       <mesh position={[0, 0, -0.1]}>
         <boxGeometry args={[9.8, 9.8, 0.1]} />
         <meshStandardMaterial color={frame} emissive={frame} emissiveIntensity={active ? 0.35 : 0.0} roughness={0.8} />

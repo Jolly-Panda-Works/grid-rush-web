@@ -3,11 +3,12 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { REWARD_POSITIONS, Seat, TRACK_LENGTH, TREASURE_POSITIONS } from '../../../shared/src';
 import { removeFx, spawnFx, useStore } from '../store';
-import { G, PLAYER_COLORS, UI } from './colors';
+import { C, PLAYER_COLORS, UI } from './colors';
+import { cellTexture } from './icons';
 import { Layout, trackCoord, trackCoordFrac } from './layout';
 
-const NORMAL = new THREE.Color('#CBD4EA');
-const END_TINT = new THREE.Color('#F4B6B0');
+const NORMAL = new THREE.Color('#F6EBCB');
+const END_TINT = new THREE.Color('#F2B49A');
 
 function TrackCell({ i, layout }: { i: number; layout: Layout }) {
   const ref = useRef<THREE.Group>(null);
@@ -19,11 +20,13 @@ function TrackCell({ i, layout }: { i: number; layout: Layout }) {
   const reward = ri >= 0 && !rewardTaken[ri];
   const finish = i === TRACK_LENGTH;
   const base = useMemo(() => {
-    if (finish) return '#3C4043';
-    if (treasure) return '#FDE7A0';
-    if (reward) return '#BFE6C9';
-    return NORMAL.clone().lerp(END_TINT, (i / TRACK_LENGTH) * 0.85).getStyle();
+    if (finish) return '#E9DDF0';
+    if (treasure) return '#FFE08A';
+    if (reward) return '#BDEBD2';
+    return NORMAL.clone().lerp(END_TINT, (i / TRACK_LENGTH) * 0.9).getStyle();
   }, [i, finish, treasure, reward]);
+  // Treasure = chest, reward = 1x1 tile, finish = checkered flag; every cell shows its index.
+  const tex = useMemo(() => cellTexture(finish ? 'flag' : treasure ? 'chest' : reward ? 'reward' : null, i), [i, finish, treasure, reward]);
 
   useFrame(() => {
     if (!ref.current) return;
@@ -39,30 +42,13 @@ function TrackCell({ i, layout }: { i: number; layout: Layout }) {
   return (
     <group ref={ref} position={[x, y, 0]}>
       <mesh position={[0, 0, 0.05]}>
-        <boxGeometry args={[cell * 0.9, cell * 0.9, 0.12]} />
-        <meshStandardMaterial color={base} roughness={0.85} />
+        <boxGeometry args={[cell * 0.92, cell * 0.92, 0.12]} />
+        <meshStandardMaterial color={base} roughness={0.8} />
       </mesh>
-      {treasure && (
-        <group position={[0, 0, 0.18]}>
-          <mesh><boxGeometry args={[cell * 0.5, cell * 0.34, cell * 0.28]} /><meshStandardMaterial color={G.yellow} roughness={0.45} /></mesh>
-          <mesh position={[0, 0, cell * 0.16]}><boxGeometry args={[cell * 0.56, cell * 0.38, cell * 0.08]} /><meshStandardMaterial color="#E37400" roughness={0.5} /></mesh>
-        </group>
-      )}
-      {reward && (
-        <mesh position={[0, 0, 0.2]} rotation={[0, 0, Math.PI / 4]}>
-          <boxGeometry args={[cell * 0.4, cell * 0.4, cell * 0.25]} />
-          <meshStandardMaterial color={G.green} roughness={0.5} />
-        </mesh>
-      )}
-      {finish && [0, 1, 2, 3].map((k) => (
-        <mesh key={k} position={[((k % 2) - 0.5) * cell * 0.28, (Math.floor(k / 2) - 0.5) * cell * 0.28, 0.13]}>
-          <planeGeometry args={[cell * 0.26, cell * 0.26]} />
-          <meshBasicMaterial color={(k + Math.floor(k / 2)) % 2 ? '#202124' : '#ffffff'} />
-        </mesh>
-      ))}
-      {!finish && !treasure && !reward && i > 0 && i % 10 === 0 && (
-        <mesh position={[0, 0, 0.12]}><planeGeometry args={[cell * 0.5, cell * 0.08]} /><meshBasicMaterial color="#ffffff" /></mesh>
-      )}
+      <mesh position={[0, 0, 0.115]}>
+        <planeGeometry args={[cell * 0.9, cell * 0.9]} />
+        <meshBasicMaterial map={tex} transparent />
+      </mesh>
     </group>
   );
 }
@@ -86,7 +72,7 @@ function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
     if (fx.kind === 'treasure' && fx.coins > 0) spawnFx({ kind: 'coins', x, y, count: Math.min(12, 3 + fx.coins * 2) });
     if (fx.kind === 'reward') {
       const b = seat === st.mySeat ? layout.my : layout.opp;
-      spawnFx({ kind: 'tile', x, y, tx: b.x, ty: b.y, color: G.green });
+      spawnFx({ kind: 'tile', x, y, tx: b.x, ty: b.y, color: C.emerald });
     }
   };
 
@@ -133,7 +119,7 @@ function CoinBurst({ id, x, y, count }: { id: number; x: number; y: number; coun
   const parts = useMemo(() => Array.from({ length: count }, () => ({
     vx: (Math.random() - 0.5) * 3.6, vy: 2.2 + Math.random() * 3.2, vz: 2 + Math.random() * 2, spin: Math.random() * 8,
   })), [count]);
-  const mats = useMemo(() => parts.map(() => new THREE.MeshStandardMaterial({ color: G.yellow, roughness: 0.35, metalness: 0.2, transparent: true })), [parts]);
+  const mats = useMemo(() => parts.map(() => new THREE.MeshStandardMaterial({ color: C.saffron, roughness: 0.35, metalness: 0.2, transparent: true })), [parts]);
   useFrame(() => {
     const t = (performance.now() - t0.current) / 1000;
     parts.forEach((p, i) => {
@@ -184,7 +170,7 @@ function FxLayer() {
     <>
       {fx.map((f) => f.kind === 'coins'
         ? <CoinBurst key={f.id} id={f.id} x={f.x} y={f.y} count={f.count ?? 6} />
-        : <TileFly key={f.id} id={f.id} x={f.x} y={f.y} tx={f.tx ?? f.x} ty={f.ty ?? f.y} color={f.color ?? G.green} />)}
+        : <TileFly key={f.id} id={f.id} x={f.x} y={f.y} tx={f.tx ?? f.x} ty={f.ty ?? f.y} color={f.color ?? C.emerald} />)}
     </>
   );
 }
@@ -194,6 +180,10 @@ export function TrackView({ layout }: { layout: Layout }) {
   const { cols, cell, rowGap, rows, x, y } = layout.track;
   return (
     <group>
+      <mesh position={[x, y - ((rows - 1) * rowGap) / 2, -0.09]}>
+        <boxGeometry args={[cols * cell + 0.75, (rows - 1) * rowGap + cell + 0.65, 0.08]} />
+        <meshStandardMaterial color={C.gold} roughness={0.45} metalness={0.25} />
+      </mesh>
       <mesh position={[x, y - ((rows - 1) * rowGap) / 2, -0.05]}>
         <boxGeometry args={[cols * cell + 0.5, (rows - 1) * rowGap + cell + 0.4, 0.08]} />
         <meshStandardMaterial color={UI.plate} roughness={1} />

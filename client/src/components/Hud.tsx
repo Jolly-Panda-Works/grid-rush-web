@@ -50,7 +50,7 @@ export function Hud() {
   return (
     <header className="hud">
       <PlayerCard seat={mySeat} align="left" />
-      <div className="hudmid"><Timer /></div>
+      <div className="hudmid"><img className="hud-icon" src="/brand/icon-192.png" alt="Grid Rush" draggable={false} /><Timer /></div>
       <PlayerCard seat={opp} align="right" />
     </header>
   );

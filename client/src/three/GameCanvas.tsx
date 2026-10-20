@@ -37,8 +37,7 @@ function Scene() {
 
 export default function GameCanvas() {
   return (
-    <Canvas dpr={[1, 2]} camera={{ fov: 30, position: [0, 0, 40], near: 0.1, far: 300 }} gl={{ antialias: true }}>
-      <color attach="background" args={['#F4F7FE']} />
+    <Canvas dpr={[1, 2]} camera={{ fov: 30, position: [0, 0, 40], near: 0.1, far: 300 }} gl={{ antialias: true, alpha: true }}>
       <Scene />
     </Canvas>
   );
