@@ -10,19 +10,22 @@ import { sfx } from '../audio';
 
 const DRAG_THRESHOLD = 8;
 
+/** The panel is always visible. When it is not the player's turn everything is simply locked (not clickable). */
 export function OfferPanel() {
   const t = useT();
   const g = useStore((s) => s.game)!;
   const mySeat = useStore((s) => s.mySeat);
   const sel = useStore((s) => s.sel);
   const me = g.players[mySeat], opp = g.players[1 - mySeat];
+  const finished = g.phase === 'finished';
   const myTurn = g.current === mySeat && g.phase === 'playing';
   const placing = g.current === mySeat && g.phase === 'placing_reward';
+  const locked = !myTurn;
   const suppressClick = useRef(false);
 
   /** Drag a card onto the board: live preview while moving, buy on drop (if it fits). */
   const startDrag = (e: React.PointerEvent, i: number) => {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (locked || (e.pointerType === 'mouse' && e.button !== 0)) return;
     const st0 = { x: e.clientX, y: e.clientY, active: false };
     const off = e.pointerType === 'touch' ? -56 : 0; // keep the tile visible above the finger
     const move = (ev: PointerEvent) => {
@@ -54,55 +57,37 @@ export function OfferPanel() {
     window.addEventListener('pointercancel', up);
   };
 
-  if (placing) {
-    return <footer className="panel"><div className="banner accentb">{t('offer.placeReward', { n: g.pendingRewards })}</div></footer>;
-  }
   const nextTile = g.next;
-  const nextCard = nextTile && (
-    <div className="card next" title={t('offer.nextTitle')}>
-      <div className="nlabel">{t('offer.next')}</div>
-      <div className="shape"><TileShape cells={nextTile.cells} shape={nextTile.shape} engraved={nextTile.engraved} cell={11} /></div>
-      <div className="costs num small">
-        <span><CoinIcon size={12} /> {nextTile.coinCost}</span>
-        <span><TimeIcon size={12} /> {nextTile.timeCost}</span>
-        {nextTile.engraved > 0 && <span className="eng">⛁ {nextTile.engraved}</span>}
-      </div>
-    </div>
-  );
-  if (!myTurn) {
-    return (
-      <footer className="panel">
-        <div className="banner waiting">
-          {g.phase === 'finished' ? t('offer.over') : t('offer.playing', { name: opp.name, bot: opp.isBot ? t('offer.botSuffix') : '' })}<span className="dots" />
-        </div>
-      </footer>
-    );
-  }
   // RULE v0.4: Advance jumps to exactly (opponent position + 1)
   const advSteps = Math.min(TRACK_LENGTH - me.pos, Math.max(1, opp.pos + 1 - me.pos));
   const advEnds = me.pos + advSteps >= TRACK_LENGTH;
-  const selTile = sel.offer !== null ? g.offer[sel.offer] : null;
-  let hint = '';
-  if (selTile) {
+  const selTile = !locked && sel.offer !== null ? g.offer[sel.offer] : null;
+
+  let hint: { cls: string; text: string };
+  if (finished) hint = { cls: 'wait', text: t('offer.over') };
+  else if (placing) hint = { cls: 'place', text: t('offer.placeReward', { n: g.pendingRewards }) };
+  else if (!myTurn) hint = { cls: 'wait', text: t('offer.playing', { name: opp.name, bot: opp.isBot ? t('offer.botSuffix') : '' }) };
+  else if (selTile) {
     const np = Math.min(TRACK_LENGTH, me.pos + selTile.timeCost);
     const tre = TREASURE_POSITIONS.filter((p) => p > me.pos && p <= np).length;
     const gain = tre * (engravedTotal(me) + selTile.engraved);
-    hint = `${np > opp.pos ? t('offer.passes') : t('offer.keeps')}${tre ? ` · ${t('offer.tre', { n: tre, c: gain })}` : ''}${np >= TRACK_LENGTH ? ` · ${t('offer.ends')}` : ''}`;
-  }
+    hint = { cls: '', text: `${np > opp.pos ? t('offer.passes') : t('offer.keeps')}${tre ? ` · ${t('offer.tre', { n: tre, c: gain })}` : ''}${np >= TRACK_LENGTH ? ` · ${t('offer.ends')}` : ''}` };
+  } else hint = { cls: '', text: t('offer.hint') };
+
   const select = (i: number) => { sfx.turn(); setSel({ offer: sel.offer === i ? null : i, rot: 0, flip: false, hover: null }); };
 
   return (
-    <footer className="panel">
+    <footer className={'panel' + (locked ? ' locked' : '')} aria-disabled={locked}>
       <div className="offers">
         {g.offer.map((tile, i) => {
           const afford = me.coins >= tile.coinCost;
           const fits = canPlaceAny(me.board, tile.cells);
-          const disabled = !afford || !fits;
-          const shown = sel.offer === i ? transformCells(tile.cells, sel.rot, sel.flip) : tile.cells;
+          const blocked = !afford || !fits;
+          const shown = !locked && sel.offer === i ? transformCells(tile.cells, sel.rot, sel.flip) : tile.cells;
           return (
-            <button key={tile.uid} className={'card ' + (sel.offer === i ? 'sel ' : '') + (disabled ? 'dis' : '')} disabled={disabled}
-              onPointerDown={(e) => !disabled && startDrag(e, i)} onClick={() => { if (!suppressClick.current) select(i); }}
-              title={!afford ? t('offer.noCoins') : !fits ? t('offer.noRoom') : t('offer.select', { n: i + 1 })}>
+            <button key={tile.uid} className={'card ' + (sel.offer === i && !locked ? 'sel ' : '') + (locked ? 'locked ' : blocked ? 'dis' : '')} disabled={locked || blocked}
+              onPointerDown={(e) => startDrag(e, i)} onClick={() => { if (!suppressClick.current) select(i); }}
+              title={locked ? '' : !afford ? t('offer.noCoins') : !fits ? t('offer.noRoom') : t('offer.select', { n: i + 1 })}>
               <kbd>{i + 1}</kbd>
               <div className="shape"><TileShape cells={shown} shape={tile.shape} engraved={tile.engraved} cell={16} /></div>
               <div className="costs num">
@@ -110,21 +95,31 @@ export function OfferPanel() {
                 <span><TimeIcon /> {tile.timeCost}</span>
                 {tile.engraved > 0 && <span className="eng" title={t('offer.engraved')}>⛁ {tile.engraved}</span>}
               </div>
-              {disabled && <div className="why">{!afford ? t('offer.needCoins') : t('offer.room')}</div>}
+              {!locked && blocked && <div className="why">{!afford ? t('offer.needCoins') : t('offer.room')}</div>}
             </button>
           );
         })}
-        {nextCard}
+        {nextTile && (
+          <div className="card next" title={t('offer.nextTitle')}>
+            <div className="nlabel">{t('offer.next')}</div>
+            <div className="shape"><TileShape cells={nextTile.cells} shape={nextTile.shape} engraved={nextTile.engraved} cell={11} /></div>
+            <div className="costs num small">
+              <span><CoinIcon size={12} /> {nextTile.coinCost}</span>
+              <span><TimeIcon size={12} /> {nextTile.timeCost}</span>
+              {nextTile.engraved > 0 && <span className="eng">⛁ {nextTile.engraved}</span>}
+            </div>
+          </div>
+        )}
       </div>
       <div className="actions">
+        <div className={'hint ' + hint.cls}>{hint.text}{hint.cls === 'wait' && !finished && <span className="dots" />}</div>
         <div className="tools">
-          <button className="btn ghost" disabled={!selTile} onClick={() => setSel({ rot: (sel.rot + 1) % 4 })}>{t('offer.rotate')} <kbd>R</kbd></button>
-          <button className="btn ghost" disabled={!selTile} onClick={flipHorizontal}>{t('offer.flip')} <kbd>F</kbd></button>
-          <button className="btn ghost" disabled={!selTile} onClick={flipVertical}>{t('offer.flipV')} <kbd>V</kbd></button>
-          <button className="btn ghost" disabled={!selTile} onClick={resetSel}>{t('offer.cancel')} <kbd>Esc</kbd></button>
+          <button className="btn ghost" disabled={!selTile} onClick={() => setSel({ rot: (sel.rot + 1) % 4 })} title={t('offer.rotate')}><span className="ico">⟳</span><span className="lbl">{t('offer.rotate')} <kbd>R</kbd></span></button>
+          <button className="btn ghost" disabled={!selTile} onClick={flipHorizontal} title={t('offer.flip')}><span className="ico">↔</span><span className="lbl">{t('offer.flip')} <kbd>F</kbd></span></button>
+          <button className="btn ghost" disabled={!selTile} onClick={flipVertical} title={t('offer.flipV')}><span className="ico">↕</span><span className="lbl">{t('offer.flipV')} <kbd>V</kbd></span></button>
+          <button className="btn ghost" disabled={!selTile} onClick={resetSel} title={t('offer.cancel')}><span className="ico">✕</span><span className="lbl">{t('offer.cancel')} <kbd>Esc</kbd></span></button>
         </div>
-        <div className="hint">{selTile ? hint : t('offer.hint')}</div>
-        <button className={'btn primary adv ' + (advEnds ? 'danger' : '')} onClick={() => { sfx.advance(); resetSel(); send.advance(); }}>
+        <button className={'btn primary adv ' + (advEnds && !locked ? 'danger' : '')} disabled={locked} onClick={() => { sfx.advance(); resetSel(); send.advance(); }}>
           {t('offer.advance')} <kbd>A</kbd>
           <small>{t('offer.advInfo', { n: advSteps })}{advEnds ? t('offer.advEnds') : ''}</small>
         </button>

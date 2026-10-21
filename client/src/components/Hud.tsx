@@ -25,7 +25,7 @@ function PlayerCard({ seat, align }: { seat: Seat; align: 'left' | 'right' }) {
       <div className="pstats">
         <span title={t('hud.coins')}><CoinIcon /> <b className="num">{p.coins}</b></span>
         <span title={t('hud.pos')} className="num"><TimeIcon /> {p.pos}/{TRACK_LENGTH}</span>
-        <span title={t('hud.cells')} className="num">{filled}/{BOARD_SIZE * BOARD_SIZE}</span>
+        <span title={t('hud.cells')} className="num cells">{filled}/{BOARD_SIZE * BOARD_SIZE}</span>
         <span title={t('hud.score')} className="num score">{sc.total >= 0 ? '+' : ''}{sc.total}</span>
         {p.bonus7 && <span className="tag good">7x7</span>}
       </div>

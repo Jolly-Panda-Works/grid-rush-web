@@ -10,7 +10,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.getcapacitor.BridgeActivity;
 
-/** Grid Rush: landscape-only, immersive full-screen game. */
+/** Grid Rush: portrait-only, immersive full-screen game. */
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {

@@ -7,7 +7,8 @@ import { tr, trErr } from './i18n';
 
 const HOST = location.hostname || 'localhost';
 const SERVER_KEY = 'gridrush.server';
-export const isNative = (): boolean => !!(window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
+import { isNative } from './device';
+export { isNative };
 // Build-time default (VITE_SERVER_URL). In a native app there is no sensible default: the player enters the address.
 const DEFAULT_WS: string = (import.meta.env.VITE_SERVER_URL as string | undefined) || (isNative() ? '' : `${location.protocol === 'https:' ? 'wss' : 'ws'}://${HOST}:2567`);
 

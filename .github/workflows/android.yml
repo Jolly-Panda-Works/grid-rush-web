@@ -1,57 +1,72 @@
-name: Android build
+name: Build & Release
 
-# Builds the Grid Rush web client and wraps it into an Android app with Capacitor.
-#  - Pull requests / manual "debug-apk": installable debug APK (no secrets needed)
-#  - Tags "v*" or manual "release-apk" / "release-aab": signed release (needs the signing secrets, see README)
+# Every push to main/master:  type-check -> web build -> Android build -> new version tag + GitHub Release (APK/AAB + web zip).
+#   version: next patch after the latest v* tag. Put [minor] or [major] in the commit message to bump those instead.
+#   build:   signed release (APK + AAB) when the keystore secrets exist, otherwise a debug APK (published as a pre-release).
+# Pull requests: debug APK only (no release, no tag).  Manual run: choose build type / bump / whether to publish.
 
 on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+    paths-ignore: ['**.md', 'docs/**', '.gitignore', '.gitattributes']
+  pull_request:
+    paths: ['client/**', 'shared/**', 'package.json', 'package-lock.json', '.github/**']
   workflow_dispatch:
     inputs:
       build:
         description: 'What to build'
         type: choice
-        default: debug-apk
-        options: [debug-apk, release-apk, release-aab]
-  push:
-    tags: ['v*']
-  pull_request:
-    paths: ['client/**', 'shared/**', 'package.json', 'package-lock.json', '.github/workflows/android.yml']
+        default: auto
+        options: [auto, debug-apk, release-apk, release-aab]
+      bump:
+        description: 'Version bump'
+        type: choice
+        default: patch
+        options: [patch, minor, major]
+      release:
+        description: 'Create a tag + GitHub Release'
+        type: boolean
+        default: true
 
 permissions:
-  contents: write   # needed only to attach files to a GitHub Release on tags
+  contents: write   # create the version tag and the release
 
+# Release runs are queued (never cancelled halfway); only PR builds are cancelled by newer commits.
 concurrency:
-  group: android-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.ref) || 'release' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  android:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-
-      - name: Decide build type
-        id: cfg
-        run: |
-          BUILD="${{ github.event.inputs.build }}"
-          if [ -z "$BUILD" ]; then
-            if [ "${{ github.ref_type }}" = "tag" ]; then BUILD="release-aab"; else BUILD="debug-apk"; fi
-          fi
-          case "$BUILD" in
-            debug-apk)   echo "task=assembleDebug"   >> "$GITHUB_OUTPUT"; echo "glob=app/build/outputs/apk/debug/*.apk"      >> "$GITHUB_OUTPUT"; echo "ext=apk" >> "$GITHUB_OUTPUT" ;;
-            release-apk) echo "task=assembleRelease" >> "$GITHUB_OUTPUT"; echo "glob=app/build/outputs/apk/release/*.apk"    >> "$GITHUB_OUTPUT"; echo "ext=apk" >> "$GITHUB_OUTPUT" ;;
-            release-aab) echo "task=bundleRelease"   >> "$GITHUB_OUTPUT"; echo "glob=app/build/outputs/bundle/release/*.aab" >> "$GITHUB_OUTPUT"; echo "ext=aab" >> "$GITHUB_OUTPUT" ;;
-          esac
-          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
-          if [ "${BUILD#release}" != "$BUILD" ]; then echo "release=true" >> "$GITHUB_OUTPUT"; else echo "release=false" >> "$GITHUB_OUTPUT"; fi
-          if [ "${{ github.ref_type }}" = "tag" ]; then V="${GITHUB_REF_NAME#v}"; else V="1.0.${{ github.run_number }}"; fi
-          echo "version=$V" >> "$GITHUB_OUTPUT"
+        with:
+          fetch-depth: 0   # we need the tags to compute the next version
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+
+      - name: Decide version and build type
+        id: cfg
+        run: bash .github/scripts/version.sh
+        env:
+          EVENT: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+          PR_NUMBER: ${{ github.event.number }}
+          INPUT_BUMP: ${{ github.event.inputs.bump }}
+          INPUT_BUILD: ${{ github.event.inputs.build }}
+          INPUT_RELEASE: ${{ github.event.inputs.release }}
+          HAS_KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+
+      - name: Show plan
+        run: echo "::notice title=Grid Rush v${{ steps.cfg.outputs.version }}::build=${{ steps.cfg.outputs.build }} bump=${{ steps.cfg.outputs.bump }} publish=${{ steps.cfg.outputs.publish }}"
 
       - uses: actions/setup-java@v4
         with:
@@ -63,12 +78,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Stamp version into the workspace packages
+        run: |
+          node -e "const fs=require('fs');for(const f of ['package.json','client/package.json','server/package.json']){const j=JSON.parse(fs.readFileSync(f,'utf8'));j.version=process.env.V;fs.writeFileSync(f,JSON.stringify(j,null,2)+'\n')}"
+        env:
+          V: ${{ steps.cfg.outputs.version }}
+
       - name: Type check
-        run: npm run typecheck -w client
+        run: npm run typecheck
 
       - name: Build web client
         run: npm run build -w client
         env:
+          VITE_APP_VERSION: ${{ steps.cfg.outputs.version }}
           # Optional repository variable (Settings > Secrets and variables > Actions > Variables), e.g. wss://game.example.com
           VITE_SERVER_URL: ${{ vars.SERVER_URL }}
 
@@ -76,7 +98,7 @@ jobs:
         working-directory: client
         run: npx cap sync android
 
-      - name: Set version
+      - name: Set Android version
         working-directory: client/android
         run: |
           sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" app/build.gradle
@@ -84,18 +106,14 @@ jobs:
           grep -n "versionCode\|versionName" app/build.gradle
 
       - name: Prepare signing key
-        if: steps.cfg.outputs.release == 'true'
+        if: steps.cfg.outputs.signed == 'true'
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          if [ -z "$KEYSTORE_B64" ]; then
-            echo "::error::Release builds need the secrets ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD (see README)."
-            exit 1
-          fi
           echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
           echo "KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
 
-      - name: Build with Gradle
+      - name: Build Android
         working-directory: client/android
         env:
           KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -103,7 +121,7 @@ jobs:
           KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x gradlew
-          if [ "${{ steps.cfg.outputs.release }}" = "true" ]; then
+          if [ "${{ steps.cfg.outputs.signed }}" = "true" ]; then
             ./gradlew ${{ steps.cfg.outputs.task }} --no-daemon \
               -Pandroid.injected.signing.store.file="$KEYSTORE_FILE" \
               -Pandroid.injected.signing.store.password="$KS_PASS" \
@@ -113,25 +131,31 @@ jobs:
             ./gradlew ${{ steps.cfg.outputs.task }} --no-daemon
           fi
 
-      - name: Collect output
-        id: out
-        working-directory: client/android
+      - name: Collect files
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/dist-android"
-          NAME="GridRush-${{ steps.cfg.outputs.version }}-${{ steps.cfg.outputs.build }}.${{ steps.cfg.outputs.ext }}"
-          cp ${{ steps.cfg.outputs.glob }} "$GITHUB_WORKSPACE/dist-android/$NAME"
-          echo "file=dist-android/$NAME" >> "$GITHUB_OUTPUT"
-          ls -la "$GITHUB_WORKSPACE/dist-android"
+          mkdir -p dist-android
+          V="${{ steps.cfg.outputs.version }}"
+          find client/android/app/build/outputs -type f \( -name '*.apk' -o -name '*.aab' \) | while read -r f; do
+            case "$f" in */debug/*) variant=debug ;; *) variant=release ;; esac
+            cp "$f" "dist-android/GridRush-${V}-${variant}.${f##*.}"
+          done
+          (cd client/dist && zip -qr "$GITHUB_WORKSPACE/dist-android/GridRush-web-${V}.zip" .)
+          ls -la dist-android
 
-      - name: Upload artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: GridRush-android-${{ steps.cfg.outputs.build }}
-          path: ${{ steps.out.outputs.file }}
+          name: GridRush-${{ steps.cfg.outputs.version }}
+          path: dist-android/*
           if-no-files-found: error
 
-      - name: Attach to GitHub Release
-        if: github.ref_type == 'tag'
+      - name: Create tag and GitHub Release
+        if: steps.cfg.outputs.publish == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ steps.out.outputs.file }}
+          tag_name: v${{ steps.cfg.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: Grid Rush v${{ steps.cfg.outputs.version }}
+          generate_release_notes: true
+          prerelease: ${{ steps.cfg.outputs.signed != 'true' }}
+          files: dist-android/*

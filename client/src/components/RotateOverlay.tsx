@@ -1,22 +1,23 @@
 import { useEffect, useState } from 'react';
+import { isMobile } from '../device';
 import { useT } from '../i18n';
 
-const isPortrait = () => window.innerHeight > window.innerWidth;
+const isLandscape = () => window.innerWidth > window.innerHeight;
 
-/** Grid Rush is landscape-only: in portrait the player is asked to rotate the device. */
+/** On phones Grid Rush is portrait-only: in landscape the player is asked to rotate the device back. */
 export function RotateOverlay() {
   const t = useT();
-  const [portrait, setPortrait] = useState(isPortrait());
+  const [wrong, setWrong] = useState(isMobile() && isLandscape());
   useEffect(() => {
-    const on = () => setPortrait(isPortrait());
+    const on = () => setWrong(isMobile() && isLandscape());
     window.addEventListener('resize', on);
     window.addEventListener('orientationchange', on);
     // Best effort lock (works in installed PWAs / fullscreen on Android; ignored elsewhere)
-    const lock = () => { try { (screen.orientation as unknown as { lock?: (o: string) => Promise<void> }).lock?.('landscape')?.catch(() => {}); } catch { /* ignore */ } };
-    if (matchMedia('(pointer: coarse)').matches) window.addEventListener('pointerdown', lock, { once: true });
+    const lock = () => { try { (screen.orientation as unknown as { lock?: (o: string) => Promise<void> }).lock?.('portrait')?.catch(() => {}); } catch { /* ignore */ } };
+    if (isMobile()) window.addEventListener('pointerdown', lock, { once: true });
     return () => { window.removeEventListener('resize', on); window.removeEventListener('orientationchange', on); };
   }, []);
-  if (!portrait) return null;
+  if (!wrong) return null;
   return (
     <div className="rotate-overlay" role="alert">
       <svg width="96" height="96" viewBox="0 0 64 64" className="rot-phone" aria-hidden="true">

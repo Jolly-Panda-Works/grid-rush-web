@@ -56,6 +56,7 @@ export default function MenuScreen() {
           <label><input type="checkbox" checked={settings.sound} onChange={(e) => setS({ sound: e.target.checked })} /> {t('menu.sound')}</label>
           <label><input type="checkbox" checked={settings.reduceMotion} onChange={(e) => setS({ reduceMotion: e.target.checked })} /> {t('menu.reduce')}</label>
         </div>
+        <div className="version num" dir="ltr">v{__APP_VERSION__}</div>
       </div>
     </main>
   );
