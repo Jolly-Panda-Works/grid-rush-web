@@ -1,10 +1,6 @@
-import { useStore } from '../store';
-
+// DEPRECATED: notifications are now shown in the centered <Popup /> component (components/Popup.tsx).
+// This empty stub only exists so that an old copy of this file in an existing checkout cannot break the build.
+// It is safe to delete this file.
 export function Toasts() {
-  const toasts = useStore((s) => s.toasts);
-  return (
-    <div className="toasts" aria-live="polite">
-      {toasts.map((t) => <div key={t.id} className={'toast ' + t.tone}>{t.text}</div>)}
-    </div>
-  );
+  return null;
 }
