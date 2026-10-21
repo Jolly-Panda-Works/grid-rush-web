@@ -1,0 +1,77 @@
+import {
+  Action, GameState, PlayerInit, Seat, applyAction, botTierFor, chooseAction, createGame, forfeit,
+} from '../../shared/src';
+
+/**
+ * Offline game: the shared rules engine and the bot run right inside the app, so playing against a bot
+ * works without any server (this is what the mobile app uses until the online server is available).
+ */
+const BOT_NAMES = ['Nova', 'Pixel', 'Vector', 'Quark', 'Atlas', 'Echo', 'Rune', 'Axiom', 'Kite', 'Orbit', 'Delta', 'Mosaic'];
+const BOT_NAMES_FA = ['آرش', 'نیکا', 'کیان', 'سارا', 'رها', 'پارسا', 'مهان', 'آوا', 'سپهر', 'نوین', 'دانا', 'یاسی'];
+const rand = (a: number, b: number) => a + Math.random() * (b - a);
+
+export interface LocalOpts {
+  human: PlayerInit;
+  lang: 'en' | 'fa';
+  deliver: (g: GameState) => void;
+  onError: (msg: string) => void;
+}
+
+export class LocalSession {
+  game: GameState;
+  humanSeat: Seat;
+  botTier: number;
+  private timer: ReturnType<typeof setTimeout> | undefined;
+  private stopped = false;
+  private started = false;
+
+  constructor(private o: LocalOpts) {
+    const h = o.human;
+    this.botTier = botTierFor(h.level, h.rating);
+    const names = o.lang === 'fa' ? BOT_NAMES_FA : BOT_NAMES;
+    const bot: PlayerInit = {
+      name: names[Math.floor(Math.random() * names.length)], isBot: true, botTier: this.botTier,
+      rating: Math.max(100, Math.round(h.rating + (this.botTier - 3) * 25 + rand(-40, 40))),
+      level: Math.max(1, h.level + Math.round(rand(-1, 2))),
+    };
+    this.humanSeat = Math.random() < 0.5 ? 0 : 1; // random seat, like the online matchmaking
+    this.game = createGame(this.humanSeat === 0 ? [h, bot] : [bot, h]);
+  }
+
+  snapshot(): GameState { return JSON.parse(JSON.stringify(this.game)); }
+  private push() { if (!this.stopped) this.o.deliver(this.snapshot()); }
+
+  /** Called when the "versus" screen is over. */
+  begin() { this.started = true; this.push(); this.schedule(); }
+
+  act(a: Action) {
+    if (this.stopped || !this.started) return;
+    const err = applyAction(this.game, this.humanSeat, a);
+    if (err) return this.o.onError(err);
+    this.push();
+    this.schedule();
+  }
+
+  resign() {
+    if (this.stopped || this.game.phase === 'finished') return;
+    forfeit(this.game, this.humanSeat, 'forfeit');
+    clearTimeout(this.timer);
+    this.push();
+  }
+
+  stop() { this.stopped = true; clearTimeout(this.timer); }
+
+  private schedule() {
+    clearTimeout(this.timer);
+    if (this.stopped || this.game.phase === 'finished') return;
+    const seat = this.game.current;
+    if (!this.game.players[seat].isBot) return;
+    this.timer = setTimeout(() => {
+      if (this.stopped || this.game.phase === 'finished' || this.game.current !== seat) return;
+      let err = applyAction(this.game, seat, chooseAction(this.game, seat, this.botTier));
+      if (err) err = applyAction(this.game, seat, { t: 'advance' });
+      this.push();
+      this.schedule();
+    }, 900 + Math.random() * 1100);
+  }
+}

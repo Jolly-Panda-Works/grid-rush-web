@@ -34,6 +34,7 @@ interface Store {
   pendingFx: Record<string, PendingFx>;
   drag: { x: number; y: number } | null;
   showHelp: boolean;
+  showSettings: boolean;
   confirmResign: boolean;
   result: ResultInfo | null;
 }
@@ -56,6 +57,7 @@ export const useStore = create<Store>(() => ({
   pendingFx: {},
   drag: null,
   showHelp: false,
+  showSettings: false,
   confirmResign: false,
   result: null,
 }));

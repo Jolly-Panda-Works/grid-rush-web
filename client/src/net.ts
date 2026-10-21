@@ -4,6 +4,8 @@ import { sfx } from './audio';
 import { saveProfile, profileLevel } from './profile';
 import { pushToast, resetSel, useStore } from './store';
 import { tr, trErr } from './i18n';
+import { LocalSession } from './local';
+import { BOT_TIER_NAMES } from '../../shared/src';
 
 const HOST = location.hostname || 'localhost';
 const SERVER_KEY = 'gridrush.server';
@@ -27,7 +29,7 @@ export async function pingServer(): Promise<boolean> {
   if (!getWsUrl()) return false;
   try {
     const ctl = new AbortController();
-    const t = setTimeout(() => ctl.abort(), 2500);
+    const t = setTimeout(() => ctl.abort(), 1800);
     const r = await fetch(`${getHttpUrl()}/health`, { signal: ctl.signal });
     clearTimeout(t);
     return r.ok;
@@ -40,30 +42,59 @@ let token = 0;            // invalidates stale async work after cancel
 let leaving = false;
 let lastEventId = 0;
 let finalized = false;
+let gotFirst = false;
+let local: LocalSession | null = null;   // offline game running inside the app
 
 export async function startSearch(solo: boolean) {
   const my = ++token;
   leaveRoom();
-  leaving = false; finalized = false; lastEventId = 0;
+  leaving = false; finalized = false; lastEventId = 0; gotFirst = false;
   const st = useStore.getState();
   useStore.setState({
     screen: 'matchmaking', game: null, result: null, connection: 'ok', popups: [], fx: [], pendingFx: {}, drag: null,
     match: { status: 'connecting', solo, waitMs: 0, startedAt: Date.now() },
   });
   resetSel();
+  // Playing against a bot never needs the server: it runs on this device.
+  if (solo) return startLocal(my, false);
+  if (!getWsUrl()) return startLocal(my, true);
   try {
-    if (!getWsUrl()) throw new Error('no server');
     client = new Client(getWsUrl());
-    const opts = { name: st.profile.name, level: profileLevel(st.profile), rating: st.profile.rating, solo, lang: st.settings.lang };
-    const r = solo ? await client.create('grid_rush', opts) : await client.joinOrCreate('grid_rush', opts);
+    const opts = { name: st.profile.name, level: profileLevel(st.profile), rating: st.profile.rating, solo: false, lang: st.settings.lang };
+    const r = await client.joinOrCreate('grid_rush', opts);
     if (my !== token) { r.leave(); return; }
     room = r;
     bind(r, my);
   } catch (e) {
     if (my !== token) return;
-    console.error(e);
-    useStore.setState((s) => ({ match: { ...s.match, status: 'error', error: 'connect' } }));
+    console.warn('online server unreachable, playing offline vs bot', e);
+    startLocal(my, true);
   }
+}
+
+/** Offline bot game. `fallback` = the player asked for an online match but no server could be reached. */
+function startLocal(my: number, fallback: boolean) {
+  const st = useStore.getState();
+  const session = new LocalSession({
+    human: { name: st.profile.name, isBot: false, level: profileLevel(st.profile), rating: st.profile.rating },
+    lang: st.settings.lang,
+    deliver: (g) => onState(g, null),
+    onError: (m) => { pushToast(trErr(m), 'bad'); sfx.bad(); },
+  });
+  local = session;
+  onState(session.snapshot(), null);
+  useStore.setState((s) => ({
+    mySeat: session.humanSeat,
+    match: { ...s.match, status: 'found', solo: true, botTierName: BOT_TIER_NAMES[session.botTier - 1] },
+  }));
+  sfx.turn();
+  setTimeout(() => {
+    if (my !== token || local !== session) return;
+    useStore.setState({ screen: 'game' });
+    session.begin();
+    if (fallback) pushToast(tr('toast.offlineBot'), 'warn');
+    if (session.game.current === session.humanSeat) pushToast(tr('toast.yourTurn'), 'good');
+  }, 2600);
 }
 
 function bind(r: Room, my: number) {
@@ -108,7 +139,8 @@ function nameOf(g: GameState, seat: Seat) { return seat === useStore.getState().
 
 function onState(g: GameState, turnLeft: number | null) {
   const st = useStore.getState();
-  const first = lastEventId === 0;
+  const first = !gotFirst;
+  gotFirst = true;
   const fresh = g.events.filter((e) => e.id > lastEventId);
   lastEventId = g.events.length ? g.events[g.events.length - 1].id : lastEventId;
   if (!first) {
@@ -154,16 +186,17 @@ function finalize(g: GameState) {
 
 export function leaveRoom() {
   leaving = true;
+  local?.stop(); local = null;
   try { room?.leave(); } catch { /* ignore */ }
   room = null;
 }
 export function cancelSearch() { token++; leaveRoom(); useStore.setState({ screen: 'menu', match: { status: 'idle', solo: false, waitMs: 0, startedAt: 0 } }); }
 export function backToMenu() { token++; leaveRoom(); useStore.setState({ screen: 'menu', game: null, result: null, confirmResign: false, match: { status: 'idle', solo: false, waitMs: 0, startedAt: 0 } }); resetSel(); }
-export function resign() { room?.send('resign'); useStore.setState({ confirmResign: false }); }
+export function resign() { if (local) local.resign(); else room?.send('resign'); useStore.setState({ confirmResign: false }); }
 
 export const send = {
-  advance: () => room?.send('advance'),
-  buy: (offer: number, cells: [number, number][]) => room?.send('buy', { offer, cells }),
-  reward: (r: number, c: number) => room?.send('reward', { r, c }),
+  advance: () => (local ? local.act({ t: 'advance' }) : room?.send('advance')),
+  buy: (offer: number, cells: [number, number][]) => (local ? local.act({ t: 'buy', offer, cells }) : room?.send('buy', { offer, cells })),
+  reward: (r: number, c: number) => (local ? local.act({ t: 'reward', r, c }) : room?.send('reward', { r, c })),
 };
 void levelFromXp;

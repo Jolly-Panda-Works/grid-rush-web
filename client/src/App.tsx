@@ -8,11 +8,13 @@ import GameScreen from './screens/GameScreen';
 import ResultsScreen from './screens/ResultsScreen';
 import HowToPlay from './components/HowToPlay';
 import { RotateOverlay } from './components/RotateOverlay';
+import { SettingsModal } from './components/SettingsModal';
 
 export default function App() {
   const screen = useStore((s) => s.screen);
   const settings = useStore((s) => s.settings);
   const help = useStore((s) => s.showHelp);
+  const settingsOpen = useStore((s) => s.showSettings);
   useEffect(() => {
     saveSettings(settings);
     document.documentElement.classList.toggle('reduce-motion', settings.reduceMotion);
@@ -27,6 +29,7 @@ export default function App() {
       {screen === 'game' && <GameScreen />}
       {screen === 'results' && <ResultsScreen />}
       {help && <HowToPlay />}
+      {settingsOpen && <SettingsModal />}
       <RotateOverlay />
     </>
   );
