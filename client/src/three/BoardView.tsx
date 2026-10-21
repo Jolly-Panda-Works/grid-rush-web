@@ -91,7 +91,13 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
       const c = Math.floor(lx + BOARD_SIZE / 2), r = Math.floor(BOARD_SIZE / 2 - ly);
       return r >= -2 && c >= -2 && r < BOARD_SIZE + 2 && c < BOARD_SIZE + 2 ? [r, c] : null;
     };
-    return () => { dragApi.pick = null; };
+    const a = new THREE.Vector3(), b = new THREE.Vector3();
+    dragApi.cellPx = () => {
+      const rect = gl.domElement.getBoundingClientRect();
+      a.set(x, y, 0.2).project(camera); b.set(x + scale, y, 0.2).project(camera);
+      return (Math.abs(b.x - a.x) / 2) * rect.width;
+    };
+    return () => { dragApi.pick = null; dragApi.cellPx = null; };
   }, [mine, camera, gl, x, y, scale]);
 
   const cellFromEvent = (e: ThreeEvent<PointerEvent>): [number, number] | null => {

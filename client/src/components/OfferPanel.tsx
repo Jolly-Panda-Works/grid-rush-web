@@ -24,14 +24,15 @@ export function OfferPanel() {
   const startDrag = (e: React.PointerEvent, i: number) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const st0 = { x: e.clientX, y: e.clientY, active: false };
+    const off = e.pointerType === 'touch' ? -56 : 0; // keep the tile visible above the finger
     const move = (ev: PointerEvent) => {
       if (!st0.active) {
         if (Math.hypot(ev.clientX - st0.x, ev.clientY - st0.y) < DRAG_THRESHOLD) return;
         st0.active = true;
         if (useStore.getState().sel.offer !== i) setSel({ offer: i, rot: 0, flip: false, hover: null });
       }
-      useStore.setState({ drag: { x: ev.clientX, y: ev.clientY } });
-      setSel({ hover: dragApi.pick?.(ev.clientX, ev.clientY) ?? null });
+      useStore.setState({ drag: { x: ev.clientX, y: ev.clientY + off } });
+      setSel({ hover: dragApi.pick?.(ev.clientX, ev.clientY + off) ?? null });
     };
     const up = (ev: PointerEvent) => {
       window.removeEventListener('pointermove', move);
@@ -42,7 +43,7 @@ export function OfferPanel() {
       suppressClick.current = true;
       setTimeout(() => { suppressClick.current = false; }, 0);
       const st = useStore.getState();
-      const cell = ev.type === 'pointercancel' ? null : dragApi.pick?.(ev.clientX, ev.clientY) ?? null;
+      const cell = ev.type === 'pointercancel' ? null : dragApi.pick?.(ev.clientX, ev.clientY + off) ?? null;
       if (!cell || !st.game || st.sel.offer === null) { setSel({ hover: null }); return; } // dropped elsewhere: tile stays selected
       const pv = previewFor(st.game, st.mySeat, { ...st.sel, hover: cell });
       if (pv && pv.valid) { send.buy(st.sel.offer, pv.abs); sfx.place(); resetSel(); }

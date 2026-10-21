@@ -1,5 +1,6 @@
 import { useStore } from '../store';
 import { useT } from '../i18n';
+import { Legend } from './Legend';
 import { BOARD_SIZE, EMPTY_CELL_PENALTY, SPECIAL_7X7_BONUS, STARTING_COINS, TRACK_LENGTH } from '../../../shared/src';
 
 export default function HowToPlay() {
@@ -12,6 +13,7 @@ export default function HowToPlay() {
         <h2>{t('help.title')}</h2>
         <p className="muted">{t('help.sub', v)}</p>
         <ul className="rules">{Array.from({ length: 10 }, (_, i) => <li key={i}>{t('help.r' + (i + 1), v)}</li>)}</ul>
+        <Legend inline />
         <p className="muted small">{t('help.keys')}</p>
         <button className="btn primary" onClick={close}>{t('help.ok')}</button>
       </div>

@@ -7,6 +7,7 @@ import MatchmakingScreen from './screens/MatchmakingScreen';
 import GameScreen from './screens/GameScreen';
 import ResultsScreen from './screens/ResultsScreen';
 import HowToPlay from './components/HowToPlay';
+import { RotateOverlay } from './components/RotateOverlay';
 
 export default function App() {
   const screen = useStore((s) => s.screen);
@@ -26,6 +27,7 @@ export default function App() {
       {screen === 'game' && <GameScreen />}
       {screen === 'results' && <ResultsScreen />}
       {help && <HowToPlay />}
+      <RotateOverlay />
     </>
   );
 }

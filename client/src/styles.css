@@ -153,3 +153,32 @@ html[lang='fa'] body { font-size: 15.5px; line-height: 1.6; }
 /* the game layout mirrors the 3D scene (me = left), so keep its geometry LTR and only flip the text */
 .game, .hud, .offers, .actions, .tools { direction: ltr; }
 html[dir='rtl'] .hint, html[dir='rtl'] .banner, html[dir='rtl'] .why, html[dir='rtl'] .popup, html[dir='rtl'] .legend, html[dir='rtl'] .game .modal { direction: rtl; unicode-bidi: plaintext; }
+
+/* ---- landscape-only game ---- */
+.drag-ghost.over { opacity: .6; }
+.rotate-overlay { position: fixed; inset: 0; z-index: 500; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 24px; color: #fff;
+  background: linear-gradient(rgba(0, 20, 82, .92), rgba(0, 14, 66, .97)), url('/brand/pattern.jpg') center / cover; }
+.rot-phone { animation: rot 2.4s ease-in-out infinite; transform-origin: center; } @keyframes rot { 0%, 30% { transform: rotate(0); } 70%, 100% { transform: rotate(-90deg); } }
+.helpbtn { position: absolute; top: 14px; right: 88px; width: 30px; height: 30px; border-radius: 50%; background: var(--cream); border: 2px solid var(--gold); color: var(--ink); font-weight: 800; z-index: 5; padding: 0; }
+.serverbox { width: 100%; display: flex; flex-direction: column; gap: 8px; align-items: stretch; background: var(--cream2); border-radius: 14px; padding: 12px; color: var(--ink); --muted: var(--ink-muted); }
+.serverbox input { background: #fff; border: 2px solid var(--line); color: var(--ink); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 13px; }
+.legend-inline { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; font-size: 13.5px; }
+.legend-inline .litem { display: flex; }
+.hud { padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
+
+/* short landscape screens (phones): side panel instead of a bottom panel */
+@media (max-height: 560px) {
+  .game { grid-template-columns: minmax(0, 1fr) min(300px, 38vw); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: 'hud hud' 'stage panel'; }
+  .hud { grid-area: hud; padding-top: 4px; padding-bottom: 8px; gap: 8px; } .stage { grid-area: stage; }
+  .panel { grid-area: panel; border-top: 0; border-left: 3px solid var(--gold); padding: 8px max(8px, env(safe-area-inset-right)) 8px 8px; overflow: auto; justify-content: flex-start; gap: 6px; }
+  .panel::before { display: none; } .legend { display: none; }
+  .pcard { padding: 3px 10px; } .pcard .small { display: none; } .hud-icon { width: 28px; height: 28px; } .timer { font-size: 16px; padding: 2px 8px; min-width: 40px; }
+  .offers { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-width: none; }
+  .card { max-width: none; min-height: 68px; padding: 4px; gap: 2px; } .card.next { flex: none; min-height: 68px; } .card kbd { display: none; }
+  .shape { min-height: 30px; } .costs { font-size: 13px; gap: 6px; }
+  .actions { flex-direction: column; align-items: stretch; gap: 6px; max-width: none; } .tools { justify-content: space-between; } .tools .btn { flex: 1; padding: 6px 4px; font-size: 12px; } .tools kbd, .adv kbd { display: none; }
+  .hint { display: none; } .adv { padding: 6px 10px; } .banner { padding: 8px; font-size: 13px; }
+  .resign, .helpbtn { top: 8px; } .helpbtn { right: 78px; }
+  .menu-card { padding: 16px 22px; gap: 10px; } .logo-img { max-height: 64px; width: auto !important; }
+  .screen { padding: 10px; gap: 8px; } .results h1 { font-size: 34px; } .scorecard { padding: 10px 14px; min-width: 220px; } .vcard { padding: 12px 20px; }
+}

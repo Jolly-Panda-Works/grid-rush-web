@@ -1,0 +1,14 @@
+{
+  "name": "Grid Rush",
+  "short_name": "Grid Rush",
+  "description": "Build Your Grid. Beat the Clock.",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#001E67",
+  "theme_color": "#001E67",
+  "icons": [
+    { "src": "/brand/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/brand/logo-icon.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

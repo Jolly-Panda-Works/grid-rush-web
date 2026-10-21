@@ -1,7 +1,8 @@
 import { Logo } from '../components/Logo';
 import { levelProgress } from '../../../shared/src';
 import { useT } from '../i18n';
-import { pingServer, startSearch } from '../net';
+import { useState } from 'react';
+import { getWsUrl, isNative, normalizeServer, pingServer, setServerUrl, startSearch } from '../net';
 import { profileLevel, saveProfile } from '../profile';
 import { useStore } from '../store';
 
@@ -11,6 +12,8 @@ export default function MenuScreen() {
   const settings = useStore((s) => s.settings);
   const online = useStore((s) => s.serverOnline);
   const lp = levelProgress(profile.xp);
+  const [srv, setSrv] = useState(getWsUrl());
+  const saveServer = async () => { setServerUrl(srv); setSrv(normalizeServer(srv)); useStore.setState({ serverOnline: await pingServer() }); };
   const setName = (name: string) => { const p = { ...profile, name: name.slice(0, 16) }; saveProfile(p); useStore.setState({ profile: p }); };
   const recheck = async () => useStore.setState({ serverOnline: await pingServer() });
   const setS = (patch: Partial<typeof settings>) => useStore.setState({ settings: { ...settings, ...patch } });
@@ -35,6 +38,14 @@ export default function MenuScreen() {
 
         {online === false && (
           <div className="banner warnb">{t('menu.offline')} <button className="link" onClick={recheck}>{t('menu.retry')}</button></div>
+        )}
+        {(online === false || isNative()) && (
+          <div className="serverbox">
+            <label className="field"><span className="muted small">{t('menu.server')}</span>
+              <input dir="ltr" value={srv} placeholder={t('menu.serverHint')} onChange={(e) => setSrv(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveServer()} />
+            </label>
+            <button className="btn" onClick={saveServer}>{t('menu.serverSave')}</button>
+          </div>
         )}
         <div className="menu-actions">
           <button className="btn primary big" disabled={online === false} onClick={() => startSearch(false)}>{t('menu.find')}</button>

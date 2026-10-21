@@ -6,8 +6,32 @@ import { pushToast, resetSel, useStore } from './store';
 import { tr, trErr } from './i18n';
 
 const HOST = location.hostname || 'localhost';
-export const WS_URL: string = (import.meta.env.VITE_SERVER_URL as string | undefined) || `${location.protocol === 'https:' ? 'wss' : 'ws'}://${HOST}:2567`;
-export const HTTP_URL = WS_URL.replace(/^ws/, 'http');
+const SERVER_KEY = 'gridrush.server';
+export const isNative = (): boolean => !!(window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
+// Build-time default (VITE_SERVER_URL). In a native app there is no sensible default: the player enters the address.
+const DEFAULT_WS: string = (import.meta.env.VITE_SERVER_URL as string | undefined) || (isNative() ? '' : `${location.protocol === 'https:' ? 'wss' : 'ws'}://${HOST}:2567`);
+
+export function normalizeServer(input: string): string {
+  let v = input.trim().replace(/\/+$/, '');
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) v = v.replace(/^http/i, 'ws');
+  else if (!/^wss?:\/\//i.test(v)) v = 'ws://' + v;
+  return v;
+}
+export const getWsUrl = (): string => { try { return localStorage.getItem(SERVER_KEY) || DEFAULT_WS; } catch { return DEFAULT_WS; } };
+export const getHttpUrl = (): string => getWsUrl().replace(/^ws/, 'http');
+export function setServerUrl(input: string) { try { const v = normalizeServer(input); if (v) localStorage.setItem(SERVER_KEY, v); else localStorage.removeItem(SERVER_KEY); } catch { /* ignore */ } }
+
+export async function pingServer(): Promise<boolean> {
+  if (!getWsUrl()) return false;
+  try {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 2500);
+    const r = await fetch(`${getHttpUrl()}/health`, { signal: ctl.signal });
+    clearTimeout(t);
+    return r.ok;
+  } catch { return false; }
+}
 
 let client: Client | null = null;
 let room: Room | null = null;
@@ -15,16 +39,6 @@ let token = 0;            // invalidates stale async work after cancel
 let leaving = false;
 let lastEventId = 0;
 let finalized = false;
-
-export async function pingServer(): Promise<boolean> {
-  try {
-    const ctl = new AbortController();
-    const t = setTimeout(() => ctl.abort(), 2500);
-    const r = await fetch(`${HTTP_URL}/health`, { signal: ctl.signal });
-    clearTimeout(t);
-    return r.ok;
-  } catch { return false; }
-}
 
 export async function startSearch(solo: boolean) {
   const my = ++token;
@@ -37,7 +51,8 @@ export async function startSearch(solo: boolean) {
   });
   resetSel();
   try {
-    client = new Client(WS_URL);
+    if (!getWsUrl()) throw new Error('no server');
+    client = new Client(getWsUrl());
     const opts = { name: st.profile.name, level: profileLevel(st.profile), rating: st.profile.rating, solo, lang: st.settings.lang };
     const r = solo ? await client.create('grid_rush', opts) : await client.joinOrCreate('grid_rush', opts);
     if (my !== token) { r.leave(); return; }

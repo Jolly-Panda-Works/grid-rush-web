@@ -9,10 +9,10 @@ const ITEMS: { kind: IconKind; key: string }[] = [
 ];
 
 /** Explains the symbols on the time track and on the tiles. */
-export function Legend() {
+export function Legend({ inline = false }: { inline?: boolean }) {
   const t = useT();
   return (
-    <div className="legend" aria-label={t('legend.title')}>
+    <div className={inline ? 'legend-inline' : 'legend'} aria-label={t('legend.title')}>
       {ITEMS.map((it) => (
         <span key={it.kind} className="litem"><img src={iconUrl(it.kind)} width={22} height={22} alt="" />{t(it.key)}</span>
       ))}

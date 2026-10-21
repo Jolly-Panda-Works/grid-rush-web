@@ -8,23 +8,15 @@ export interface Layout {
 }
 
 /** The opponent's board is intentionally smaller than the player's own board. */
-export function computeLayout(aspect: number): Layout {
+export function computeLayout(_aspect: number): Layout {
+  // The game is landscape-only (portrait shows a "rotate your device" screen).
   const n = TRACK_LENGTH + 1;
-  if (aspect >= 1.1) {
-    const cols = Math.ceil(n / 3);
-    const cell = Math.min(0.8, 16 / cols);
-    return {
-      landscape: true, w: 18.8, h: 13.9, cx: 0, cy: -1.75,
-      my: { x: -3.75, y: 0, scale: 1 }, opp: { x: 5.7, y: 0.4, scale: 0.6 },
-      track: { x: 0, y: -6.3, cols, cell, rowGap: cell * 1.12, rows: Math.ceil(n / cols) },
-    };
-  }
-  const cols = Math.ceil(n / 5);
-  const cell = Math.min(0.85, 9.6 / cols);
+  const cols = Math.ceil(n / 3);
+  const cell = Math.min(0.8, 16 / cols);
   return {
-    landscape: false, w: 10.4, h: 21.3, cx: 0, cy: -0.95,
-    my: { x: 0, y: -0.6, scale: 1 }, opp: { x: 0, y: 7.0, scale: 0.5 },
-    track: { x: 0, y: -7.2, cols, cell, rowGap: cell * 1.12, rows: Math.ceil(n / cols) },
+    landscape: true, w: 18.8, h: 13.9, cx: 0, cy: -1.75,
+    my: { x: -3.75, y: 0, scale: 1 }, opp: { x: 5.7, y: 0.4, scale: 0.6 },
+    track: { x: 0, y: -6.3, cols, cell, rowGap: cell * 1.12, rows: Math.ceil(n / cols) },
   };
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useT } from '../i18n';
-import { WS_URL, cancelSearch, startSearch } from '../net';
+import { getWsUrl, cancelSearch, startSearch } from '../net';
 import { profileLevel } from '../profile';
 import { useStore } from '../store';
 import { PlayerGlyph } from '../components/TileShape';
@@ -19,7 +19,7 @@ export default function MatchmakingScreen() {
     return (
       <main className="screen center">
         <h2>{t('mm.errTitle')}</h2>
-        <p className="muted">{t('mm.err', { url: WS_URL })}</p>
+        <p className="muted">{t('mm.err', { url: getWsUrl() || '-' })}</p>
         <div className="row"><button className="btn primary" onClick={() => startSearch(m.solo)}>{t('mm.again')}</button><button className="btn ghost" onClick={cancelSearch}>{t('mm.back')}</button></div>
       </main>
     );
