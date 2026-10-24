@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      # Colyseus 0.x minor versions contain breaking changes; upgrade deliberately.
+      - dependency-name: "colyseus"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "@colyseus/*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "colyseus.js"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      # Capacitor 7+ needs Java 21 / a newer Gradle; React 19 is not supported by @react-three/fiber 8.
+      - dependency-name: "@capacitor/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@react-three/fiber"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

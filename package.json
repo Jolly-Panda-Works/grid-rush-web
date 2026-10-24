@@ -3,15 +3,20 @@
   "version": "0.4.0",
   "private": true,
   "description": "Grid Rush - 2 player competitive tile placement (React Three Fiber + Colyseus)",
-  "workspaces": ["server", "client"],
+  "workspaces": [
+    "server",
+    "client"
+  ],
   "scripts": {
     "dev": "concurrently -n server,client -c cyan,magenta \"npm run dev -w server\" \"npm run dev -w client\"",
     "dev:server": "npm run dev -w server",
     "dev:client": "npm run dev -w client",
-    "build": "npm run build -w client",
-    "start": "npm run build && npm run start -w server",
+    "build": "npm run build:web",
+    "start": "npm run build:web && npm run start -w server",
     "typecheck": "npm run typecheck -w server && npm run typecheck -w client",
-    "test:bots": "npm run test:bots -w server"
+    "test:bots": "npm run test:bots -w server",
+    "test": "npm run test -w server",
+    "build:web": "npm run build -w client"
   },
   "devDependencies": {
     "concurrently": "^9.0.1"

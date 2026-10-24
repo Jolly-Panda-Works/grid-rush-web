@@ -1,0 +1,19 @@
+Grid Rush - web build
+=====================
+
+This zip is the finished game for the browser. Everything uses relative paths, so it works at any
+address and in any folder of a website.
+
+How to host it
+  1. Upload ALL files of this zip (index.html, assets/, brand/, manifest.webmanifest) to a static host:
+     GitHub Pages, Netlify, Cloudflare Pages, an nginx / Apache folder, itch.io (HTML5), ...
+  2. Open index.html through the web address (not by double-clicking the file: browsers block modules
+     on file:// addresses).
+
+Playing
+  - "Play vs bot" works offline in the browser, no server needed.
+  - Online matches need the Grid Rush game server (Colyseus). The address built into this version is
+    shown in the release notes; you can change it at any time in Settings (gear icon) -> Online server.
+    A page served over https:// needs a wss:// server address.
+
+On phones the game is portrait-only; on desktop the window size decides the layout.

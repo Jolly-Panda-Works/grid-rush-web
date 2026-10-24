@@ -2,9 +2,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { readFileSync } from 'node:fs';
 
-const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
 
 export default defineConfig({
+  // CI builds the hosted web zip with VITE_BASE=./ (works at any address/folder) and the Android app with /
+  base: process.env.VITE_BASE || '/',
   plugins: [react()],
   // CI sets VITE_APP_VERSION (the release version); locally it falls back to package.json
   define: { __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION || pkg.version) },
