@@ -157,8 +157,15 @@ if os.path.exists(os.path.join(SRC, 'loading-bar-layers.webp')):
     save(bars.crop((142, 419, 1632, 566)), 'frames/lbar-track.webp', 88)
     save(bars.crop((142, 642, 1632, 789)), 'frames/lbar-fill.webp', 88)
 
-# full-screen art for the Persian splash (the Persian name is painted in)
-for name, file in (('splash-fa', 'splash-naqsh-nabard.png'),):
+# character portraits: a 2 x 5 sheet of 300 px cells (the busts may reach a little into the cell above)
+if os.path.exists(os.path.join(SRC, 'character-avatars.webp')):
+    sheet = Image.open(os.path.join(SRC, 'character-avatars.webp')).convert('RGBA')
+    for n in range(10):
+        x, y = n % 2 * 300, n // 2 * 300
+        save(sheet.crop((x, y, x + 300, y + 300)).resize((220, 220), Image.LANCZOS), f'avatars/hero-{n + 1}.webp', 88)
+
+# splash: the medallion of tiles (no text: the logo is laid over it per language)
+for name, file in (('splash-bg', 'splash-background.webp'),):
     if os.path.exists(os.path.join(SRC, file)):
         save(Image.open(os.path.join(SRC, file)).convert('RGB'), f'screens/{name}.webp', 82)
 

@@ -16,15 +16,17 @@ export type FrameId = 'primary' | 'secondary' | 'danger' | 'modal' | 'hero' | 'o
 
 /** 12 tile motifs, each on a lapis (1) and a cream (2) ground. */
 export const ART_TILE_COUNT = 24;
+/** 24 enamel medallions, then 10 painted character portraits (indices 24..33, so older picks keep their meaning). */
 export const AVATAR_COUNT = 24;
+export const HERO_COUNT = 10;
 
 export const iconUrl = (id: IconId) => `${BASE}icons/${id}.webp`;
 export const frameUrl = (id: FrameId) => `${BASE}frames/${id}.webp`;
 export const tileUrl = (n: number) => `${BASE}tiles/tile-${(n >> 1) + 1}-${(n & 1) + 1}.webp`;
-export const avatarArtUrl = (n: number) => `${BASE}avatars/avatar-${n + 1}.webp`;
+export const avatarArtUrl = (n: number) => (n >= AVATAR_COUNT ? `${BASE}avatars/hero-${n - AVATAR_COUNT + 1}.webp` : `${BASE}avatars/avatar-${n + 1}.webp`);
 export const wordmarkUrl = (lang: 'fa' | 'en') => `${BASE}wordmark-${lang}.webp`;
 /** Full-screen art with the Persian name painted in (splash, loading). */
-export const screenArtUrl = (id: 'splash-fa' | 'loading-bg') => `${BASE}screens/${id}.webp`;
+export const screenArtUrl = (id: 'splash-bg' | 'loading-bg') => `${BASE}screens/${id}.webp`;
 
 /** The 1x1 tile the page background is tiled with: the lapis girih knot. */
 const BG_TILE = 2;

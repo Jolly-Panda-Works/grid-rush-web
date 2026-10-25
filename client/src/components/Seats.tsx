@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { BOARD_SIZE, COIN_SCORE_DIVISOR, EMPTY_CELL_PENALTY, Seat, TRACK_LENGTH, TURN_SECONDS, scoreOf } from '../../../shared/src';
 import { useT } from '../i18n';
-import { avatarFor, avatarUrl } from './Medal';
+import { avatarFor, avatarUrl, isHero } from './Medal';
 import { useStore } from '../store';
 import { Icon } from '../art';
 import { CoinIcon, PlayerGlyph } from './TileShape';
@@ -28,14 +28,15 @@ export function Portrait({ seat, size = 58 }: { seat: Seat; size?: number }) {
   const R = 46, CIRC = 2 * Math.PI * R;
   const mySeat = useStore((s) => s.mySeat);
   const myAvatar = useStore((s) => s.profile.avatar);
-  const face = avatarUrl(seat === mySeat ? myAvatar : avatarFor(g.players[seat].name));
+  const av = seat === mySeat ? myAvatar : avatarFor(g.players[seat].name);
+  const face = avatarUrl(av);
   return (
     <div className={'portrait p' + seat + (active ? ' active' : '') + (active && left !== null && left <= 10 ? ' low' : '')} style={{ width: size, height: size }}>
       <svg className="pring" viewBox="0 0 100 100" aria-hidden="true">
         <circle cx="50" cy="50" r={R} className="pr-bg" />
         {active && <circle cx="50" cy="50" r={R} className="pr-fg" strokeDasharray={CIRC} strokeDashoffset={CIRC * (1 - frac)} transform="rotate(-90 50 50)" />}
       </svg>
-      <div className="pface" style={{ backgroundImage: `url(${face})` }} />
+      <div className={'pface' + (isHero(av) ? ' hero' : '')} style={{ backgroundImage: `url(${face})` }} />
       <span className="pglyph"><PlayerGlyph seat={seat} size={Math.max(12, size * 0.26)} /></span>
       {active && left !== null && <span className="psecs num">{left}</span>}
     </div>

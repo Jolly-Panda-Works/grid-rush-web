@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { levelProgress } from '../../../shared/src';
 import { ACHIEVEMENTS, progressOf } from '../achievements';
-import { AVATARS, Medal, avatarUrl } from '../components/Medal';
+import { AVATARS, Medal, avatarUrl, isHero } from '../components/Medal';
 import { Popup } from '../components/Popup';
 import { useT } from '../i18n';
 import { profileLevel, saveProfile } from '../profile';
@@ -94,9 +94,9 @@ export default function ProfileScreen() {
             <h3>{t('prof.changeAvatar')}</h3>
             <button className="mclose" onClick={() => setPicking(false)} aria-label={t('settings.close')}>✕</button>
             <div className="mscroll"><div className="avgrid">
-              {AVATARS.map((_, i) => (
+              {AVATARS.map((i) => (
                 <button key={i} className={'avpick' + (i === profile.avatar ? ' on' : '')} onClick={() => { update({ avatar: i }); setPicking(false); }}>
-                  <span style={{ backgroundImage: `url(${avatarUrl(i)})` }} />
+                  <span className={isHero(i) ? 'hero' : ''} style={{ backgroundImage: `url(${avatarUrl(i)})` }} />
                 </button>
               ))}
             </div></div>

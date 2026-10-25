@@ -37,7 +37,7 @@ export function loadProfile(): Profile {
       };
     }
   } catch { /* ignore */ }
-  return { name: 'Player' + Math.floor(100 + Math.random() * 900), xp: 0, rating: DEFAULT_RATING, wins: 0, losses: 0, avatar: Math.floor(Math.random() * 24), stats: emptyStats(), ach: {} };
+  return { name: 'Player' + Math.floor(100 + Math.random() * 900), xp: 0, rating: DEFAULT_RATING, wins: 0, losses: 0, avatar: 24 + Math.floor(Math.random() * 10), stats: emptyStats(), ach: {} };
 }
 export function saveProfile(p: Profile) { try { localStorage.setItem(PK, JSON.stringify(p)); } catch { /* ignore */ } }
 export const profileLevel = (p: Profile) => levelFromXp(p.xp);
