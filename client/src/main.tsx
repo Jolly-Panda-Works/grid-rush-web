@@ -12,8 +12,10 @@ import '@fontsource/vazirmatn/700.css';
 import './styles.css';
 import App from './App';
 import { installArtVars, preloadArt } from './art';
+import { installPersianDigits } from './digits';
 
 installArtVars();
 void preloadArt(); // the painted tiles load while the splash plays
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);
+installPersianDigits(); // ۰-۹ on screen while the UI is in Persian

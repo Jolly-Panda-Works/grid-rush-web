@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { iconUrl as paintedIcon } from '../art';
+import { localDigits } from '../digits';
 
 /** Single source of truth for the track symbols: used by the 3D track cells AND the DOM legend. */
 export type IconKind = 'chest' | 'reward' | 'flag' | 'coin';
@@ -31,7 +32,7 @@ const texCache = new Map<string, THREE.CanvasTexture>();
 /** `numMode`: 'all' = small number on every cell (desktop); 'five' = large number only on every 5th cell (phone, small cells). */
 export function cellTexture(kind: IconKind | null, num: number, numMode: 'all' | 'five' = 'all'): THREE.CanvasTexture {
   const showNum = numMode === 'all' || num % 5 === 0;
-  const key = `${kind ?? '-'}:${showNum ? num : '_'}:${numMode}`;
+  const key = `${kind ?? '-'}:${showNum ? localDigits(String(num)) : '_'}:${numMode}`;
   const hit = texCache.get(key);
   if (hit) return hit;
   const cv = document.createElement('canvas');
@@ -45,7 +46,8 @@ export function cellTexture(kind: IconKind | null, num: number, numMode: 'all' |
     ctx.textAlign = big ? 'center' : 'right';
     ctx.textBaseline = big ? 'middle' : 'alphabetic';
     ctx.fillStyle = 'rgba(19,34,79,.85)';
-    if (big) ctx.fillText(String(num), 64, 68); else ctx.fillText(String(num), 120, 120);
+    const label = localDigits(String(num));
+    if (big) ctx.fillText(label, 64, 68); else ctx.fillText(label, 120, 120);
   }
   if (kind) loadIcon(kind).then((im) => { if (big) ctx.clearRect(0, 0, 128, 128); ctx.drawImage(im, big ? 10 : 18, big ? 10 : 4, big ? 108 : 92, big ? 108 : 92); tex.needsUpdate = true; }).catch(() => {});
   texCache.set(key, tex);
@@ -53,6 +55,7 @@ export function cellTexture(kind: IconKind | null, num: number, numMode: 'all' |
 }
 /** Small text label texture (used for the "1x1" mark on reward tiles). */
 export function textTexture(text: string, color = '#ffffff', bg?: string): THREE.CanvasTexture {
+  text = localDigits(text);
   const key = `t:${text}:${color}:${bg ?? ''}`;
   const hit = texCache.get(key);
   if (hit) return hit;

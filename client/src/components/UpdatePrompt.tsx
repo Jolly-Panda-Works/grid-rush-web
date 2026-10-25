@@ -11,7 +11,7 @@ export function UpdatePrompt() {
   return (
     <div className="overlay">
       <div className="modal small update" role="dialog" aria-modal="true" aria-label={t('update.title')}>
-        <div className="update-badge num">v{u.version}</div>
+        <div className="update-badge num" dir="ltr" data-latin>v{u.version}</div>
         <h3>{t('update.title')}</h3>
         <div className="mscroll">
         <p className="muted small">{t(u.kind === 'store' ? 'update.store' : u.kind === 'apk' ? 'update.apk' : 'update.reload')}</p>

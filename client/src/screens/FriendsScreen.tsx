@@ -61,7 +61,7 @@ export default function FriendsScreen() {
         <section className="mbody">
           <div className="mycode">
             <span className="small">{t('fr.myCode')}</span>
-            <b className="num" dir="ltr">{lists.code}</b>
+            <b className="num" dir="ltr" data-latin>{lists.code}</b>
             <button className="btn small" onClick={copy}><Icon id="copy" size={20} />{t('fr.copy')}</button>
           </div>
           <div className="addfr">

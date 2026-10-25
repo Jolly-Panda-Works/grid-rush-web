@@ -42,7 +42,7 @@ export function SettingsModal() {
           <span className="muted small">{t('acct.title')}</span>
           {account
             ? <>
-                <div className="acctline"><b>{account.linked ? t('acct.linkedGoogle') : t('acct.guest')}</b><span className="num small" dir="ltr">{account.friendCode}</span></div>
+                <div className="acctline"><b>{account.linked ? t('acct.linkedGoogle') : t('acct.guest')}</b><span className="num small" dir="ltr" data-latin>{account.friendCode}</span></div>
                 {!account.linked && <button className="btn" disabled={!canLinkGoogle()} onClick={() => needServer('off.what.google', () => linkGoogle(() => confirm(t('acct.switchConfirm'))))}>{t('acct.linkGoogle')}</button>}
                 {!account.linked && !canLinkGoogle() && <span className="muted small">{t('acct.googleUnavailable')}</span>}
               </>

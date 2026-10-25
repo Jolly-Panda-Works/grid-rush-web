@@ -10,6 +10,7 @@ import { C, PLAYER_COLORS, UI } from './colors';
 import { patternTexture, tileLook } from '../patterns';
 import { inBounds, previewFor } from './placement';
 import { textTexture } from './icons';
+import { localDigits } from '../digits';
 import { dragApi } from './dragApi';
 import { vfx } from './vfx';
 
@@ -116,7 +117,7 @@ function penaltyTexture(board: number[]): THREE.CanvasTexture {
   cv.width = cv.height = n * px;
   const c = cv.getContext('2d')!;
   c.font = '800 26px Arial, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = 'rgba(192,80,63,.6)';
-  board.forEach((v, i) => { if (v === 0) c.fillText(`−${EMPTY_CELL_PENALTY}`, (i % n) * px + px / 2, Math.floor(i / n) * px + px / 2 + 2); });
+  board.forEach((v, i) => { if (v === 0) c.fillText(localDigits(`−${EMPTY_CELL_PENALTY}`), (i % n) * px + px / 2, Math.floor(i / n) * px + px / 2 + 2); });
   const t = new THREE.CanvasTexture(cv);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;

@@ -48,7 +48,7 @@ export default function MenuScreen() {
         <button className="navtile" onClick={() => useStore.setState({ showHelp: true })}><span className="nt-ico"><Icon id="quests" size={34} /></span><span>{t('menu.how')}</span></button>
         <button className="navtile" onClick={() => useStore.setState({ showSettings: true })}><span className="nt-ico"><Icon id="settings" size={34} /></span><span>{t('menu.settings')}</span></button>
       </nav>
-      <div className="version num" dir="ltr">v{__APP_VERSION__}</div>
+      <div className="version num" dir="ltr" data-latin>v{__APP_VERSION__}</div>
     </main>
   );
 }
