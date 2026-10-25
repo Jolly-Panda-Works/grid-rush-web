@@ -15,6 +15,7 @@
 # Repository settings (Settings -> Secrets and variables -> Actions):
 #   Variables
 #     VITE_SERVER_URL   (optional) public Colyseus endpoint, e.g. wss://game.example.com
+#     VITE_STORE_URL    (optional) store page of the app; the in-app update prompt opens it instead of the release APK
 #                       Without it the apps play against bots offline and ask for a server address in Settings.
 #   Secrets (optional, for a signed Android release APK/AAB)
 #     ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
@@ -47,6 +48,8 @@ env:
   NODE_VERSION: "22"
   # The game server (repository variable VITE_SERVER_URL; empty = offline bot games only).
   VITE_SERVER_URL: ${{ vars.VITE_SERVER_URL || vars.SERVER_URL || '' }}
+  # Where the in-app update prompt sends Android players (empty = download the APK from the latest release).
+  VITE_STORE_URL: ${{ vars.VITE_STORE_URL || '' }}
 
 jobs:
   # ------------------------------------------------------------------ version

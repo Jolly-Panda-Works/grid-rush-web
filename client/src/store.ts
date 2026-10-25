@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Action, GameState, Seat } from '../../shared/src';
+import type { UpdateInfo } from './update';
 import { Profile, Settings, loadProfile, loadSettings } from './profile';
 import { nearestValid, previewFor } from './three/placement';
 
@@ -39,6 +40,7 @@ interface Store {
   oppIntent: { seat: Seat; action: Action } | null; // what the bot is about to do (shown before it plays)
   oppLog: string | null; // plain-language summary of the opponent's last action
   ribbon: RibbonMsg | null; // big banner for important moments (turn change, bonus)
+  update: UpdateInfo | null; // a newer release was found at launch
   showHelp: boolean;
   showSettings: boolean;
   confirmResign: boolean;
@@ -66,6 +68,7 @@ export const useStore = create<Store>(() => ({
   oppIntent: null,
   oppLog: null,
   ribbon: null,
+  update: null,
   showHelp: false,
   showSettings: false,
   confirmResign: false,

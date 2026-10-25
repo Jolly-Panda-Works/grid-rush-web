@@ -10,6 +10,8 @@ import MuseumScreen from './screens/MuseumScreen';
 import HowToPlay from './components/HowToPlay';
 import { RotateOverlay } from './components/RotateOverlay';
 import { SettingsModal } from './components/SettingsModal';
+import { UpdatePrompt } from './components/UpdatePrompt';
+import { checkForUpdate } from './update';
 
 export default function App() {
   const screen = useStore((s) => s.screen);
@@ -17,6 +19,7 @@ export default function App() {
   const help = useStore((s) => s.showHelp);
   const settingsOpen = useStore((s) => s.showSettings);
   useEffect(() => { document.body.dataset.screen = screen; }, [screen]);
+  useEffect(() => { checkForUpdate(); }, []); // once per launch
   useEffect(() => {
     saveSettings(settings);
     document.documentElement.classList.toggle('reduce-motion', settings.reduceMotion);
@@ -33,6 +36,7 @@ export default function App() {
       {screen === 'museum' && <MuseumScreen />}
       {help && <HowToPlay />}
       {settingsOpen && <SettingsModal />}
+      <UpdatePrompt />
       <RotateOverlay />
     </>
   );
