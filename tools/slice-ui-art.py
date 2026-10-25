@@ -148,8 +148,17 @@ for sheet, ids in GRID_SHEETS.items():
         k = 7  # a few pixels in, so slivers of the neighbouring cells stay out
         save(trim(clean_alpha(at.crop((round(x + k), round(y + k), round(x + cell - k), round(y + cell - k)))), 4).resize((160, 160), Image.LANCZOS), f'icons/{aid}.webp')
 
-# full-screen art for the Persian splash and loading screens (the Persian name and text are painted in)
-for name, file in (('splash-fa', 'splash-naqsh-nabard.png'), ('loading-fa', 'loading-naqsh-nabard.png')):
+# loading screen: the background (no text: the logo is laid over it per language) and the bar's three layers
+if os.path.exists(os.path.join(SRC, 'loading-background.webp')):
+    save(Image.open(os.path.join(SRC, 'loading-background.webp')).convert('RGB'), 'screens/loading-bg.webp', 82)
+if os.path.exists(os.path.join(SRC, 'loading-bar-layers.webp')):
+    bars = Image.open(os.path.join(SRC, 'loading-bar-layers.webp')).convert('RGBA')
+    save(bars.crop((58, 160, 1717, 340)), 'frames/lbar-frame.webp', 90)  # gold frame, transparent hole x 205..1568, y 188..309
+    save(bars.crop((142, 419, 1632, 566)), 'frames/lbar-track.webp', 88)
+    save(bars.crop((142, 642, 1632, 789)), 'frames/lbar-fill.webp', 88)
+
+# full-screen art for the Persian splash (the Persian name is painted in)
+for name, file in (('splash-fa', 'splash-naqsh-nabard.png'),):
     if os.path.exists(os.path.join(SRC, file)):
         save(Image.open(os.path.join(SRC, file)).convert('RGB'), f'screens/{name}.webp', 82)
 

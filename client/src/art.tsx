@@ -12,7 +12,7 @@ export type IconId = 'treasure' | 'firouzeh' | 'coins' | 'hourglass' | 'achievem
   | 'copy' | 'back' | 'language' | 'tip' | 'buy-tile' | 'advance' | 'turns' | 'finish' | 'scales' | 'rotate-left' | 'rotate-right'
   | 'flip' | 'bot' | 'heart-empty' | 'empty-cell' | 'engraved-coin';
 export type FrameId = 'primary' | 'secondary' | 'danger' | 'modal' | 'hero' | 'offer' | 'victory' | 'ribbon' | 'defeat'
-  | 'avatar-frame' | 'xp' | 'board-frame' | 'primary-bar' | 'modal-plain' | 'modal-orn' | 'ribbon-plain' | 'ribbon-orn' | 'victory-plain' | 'victory-orn' | 'defeat-plain' | 'defeat-orn';
+  | 'avatar-frame' | 'xp' | 'board-frame' | 'lbar-frame' | 'lbar-track' | 'lbar-fill' | 'primary-bar' | 'modal-plain' | 'modal-orn' | 'ribbon-plain' | 'ribbon-orn' | 'victory-plain' | 'victory-orn' | 'defeat-plain' | 'defeat-orn';
 
 /** 12 tile motifs, each on a lapis (1) and a cream (2) ground. */
 export const ART_TILE_COUNT = 24;
@@ -24,7 +24,7 @@ export const tileUrl = (n: number) => `${BASE}tiles/tile-${(n >> 1) + 1}-${(n & 
 export const avatarArtUrl = (n: number) => `${BASE}avatars/avatar-${n + 1}.webp`;
 export const wordmarkUrl = (lang: 'fa' | 'en') => `${BASE}wordmark-${lang}.webp`;
 /** Full-screen art with the Persian name painted in (splash, loading). */
-export const screenArtUrl = (id: 'splash-fa' | 'loading-fa') => `${BASE}screens/${id}.webp`;
+export const screenArtUrl = (id: 'splash-fa' | 'loading-bg') => `${BASE}screens/${id}.webp`;
 
 /** The 1x1 tile the page background is tiled with: the lapis girih knot. */
 const BG_TILE = 2;
