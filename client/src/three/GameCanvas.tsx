@@ -6,6 +6,7 @@ import { useStore } from '../store';
 import { BoardView } from './BoardView';
 import { TrackView } from './TrackView';
 import { VfxLayer } from './vfx';
+import { SteerLayer } from './steer';
 import { computeLayout } from './layout';
 
 function Scene() {
@@ -46,6 +47,7 @@ function Scene() {
       <BoardView seat={opp} x={layout.opp.x} y={layout.opp.y} scale={layout.opp.scale} />
       <TrackView layout={layout} />
       <VfxLayer />
+      <SteerLayer layout={layout} />
     </>
   );
 }

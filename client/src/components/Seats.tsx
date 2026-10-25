@@ -60,7 +60,7 @@ export function SeatStats({ seat, compact = false }: { seat: Seat; compact?: boo
   const sc = scoreOf(g, seat);
   const lead = sc.total - scoreOf(g, (1 - seat) as Seat).total;
   return (
-    <div className={'sstats' + (compact ? ' compact' : '')} role="button" tabIndex={0} onClick={() => setOpen((o) => !o)}>
+    <div className={'sstats' + (compact ? ' compact' : '')} data-seat={seat} role="button" tabIndex={0} onClick={() => setOpen((o) => !o)}>
       <span className="gem coin" title={t('hud.coins')}><CoinIcon size={16} /><b key={p.coins} className="num bump">{p.coins}</b><CoinDelta value={p.coins} /></span>
       <span className="gem empty" title={t('hud.empty', { p: EMPTY_CELL_PENALTY })}><EmptyIcon size={14} /><b key={sc.emptyCells} className="num bump">{sc.emptyCells}</b></span>
       {lead > 0 && <span className="leadrib num" title={t('hud.scoreNow')}>+{lead} {t('hud.lead')}</span>}

@@ -8,6 +8,7 @@ import { cellTexture } from './icons';
 import { Layout, trackCoord, trackCoordFrac, windowAlpha, windowTarget } from './layout';
 import { useForecast } from '../forecast';
 import { vfx } from './vfx';
+import { coinsTo } from './steer';
 
 const NORMAL = new THREE.Color('#F6EBCB');
 const END_TINT = new THREE.Color('#F2B49A');
@@ -106,7 +107,7 @@ function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
     delete st.pendingFx[key];
     const [x, y] = trackCoord(layout, i, view.scroll);
     useStore.setState((s) => ({ flashes: { ...s.flashes, [i]: performance.now() } }));
-    if (fx.kind === 'treasure' && fx.coins > 0) vfx('gold', x, y, 0.8);
+    if (fx.kind === 'treasure' && fx.coins > 0) { vfx('gold', x, y, 0.8); coinsTo(seat, x, y, fx.coins); }
     if (fx.kind === 'reward') {
       vfx('sparkle', x, y, 0.8);
       const b = seat === st.mySeat ? layout.my : layout.opp;
