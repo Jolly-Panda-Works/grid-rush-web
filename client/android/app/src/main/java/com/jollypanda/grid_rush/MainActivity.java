@@ -1,4 +1,4 @@
-package com.jollypanda.gridrush;
+package com.jollypanda.grid_rush;
 
 import android.os.Build;
 import android.os.Bundle;

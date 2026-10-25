@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.jollypanda.gridrush',
+  appId: 'com.jollypanda.grid_rush',
   appName: 'Grid Rush',
   webDir: 'dist',
   backgroundColor: '#001E67',

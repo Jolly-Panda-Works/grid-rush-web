@@ -80,6 +80,8 @@ npm start     # build + اجرا روی http://localhost:2567
 2. GitHub ورژن را در `package.json` بالا می‌برد، با پیام `chore(release): vX.Y.Z [skip ci]` commit می‌کند، تگ `vX.Y.Z` می‌زند و Release می‌سازد. اولین انتشار همان ورژن `package.json` است (`0.4.0`). اگر ورژن بالاتری را خودتان در `package.json` بنویسید، همان انتخاب می‌شود. از تب Actions با «Run workflow» هم می‌توان patch/minor/major را اجباری کرد.
 3. **خروجی‌های Release:** `GridRush-X.Y.Z-Android.apk` و `.aab` (امضاشده، اگر Secretها باشند)، `GridRush-X.Y.Z-Android-debug.apk`، `GridRush-X.Y.Z-Web.zip` (آماده‌ی میزبانی روی هر هاست ایستا)، `SHA256SUMS.txt` و فهرست «What's changed» از روی commitها.
 4. اندروید: `versionName` = ورژن، `versionCode` = `MAJOR*1000000 + MINOR*1000 + PATCH` (همیشه افزایشی). ورژن داخل بازی هم پایین منو دیده می‌شود.
+   - شناسه‌ی اپ (package name): `com.jollypanda.grid_rush`. این شناسه بعد از انتشار نباید عوض شود.
+   - APK دیباگ با کلید ثابت `client/android/app/debug.keystore` امضا می‌شود (عمداً داخل ریپو است، کلید دیباگ محرمانه نیست)، تا هر نسخه‌ی جدید روی نسخه‌ی قبلی نصب شود. نسخه‌های تا 0.7.0 با شناسه‌ی قدیمی و کلید تصادفی ساخته شده‌اند و یک بار باید حذف و دوباره نصب شوند.
 5. Pull Request فقط ساخت آزمایشی (`X.Y.Z-dev.<run>`) انجام می‌دهد، بدون تگ و Release.
 
 برای اینکه bump روی `main` push شود، branch protection نباید push مستقیم GitHub Actions را ببندد (Settings → Branches). در Settings → Actions → General هم «Workflow permissions» باید روی «Read and write» باشد.

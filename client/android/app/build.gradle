@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.jollypanda.gridrush"
+    namespace "com.jollypanda.grid_rush"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.jollypanda.gridrush"
+        applicationId "com.jollypanda.grid_rush"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -16,7 +16,20 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Fixed debug key, committed on purpose: CI runners otherwise create a new random debug key on every run,
+    // and Android refuses to install an update signed with a different key. Debug keys are not secret.
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
