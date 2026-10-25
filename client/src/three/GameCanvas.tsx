@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { useEffect, useMemo, useRef } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { shake } from './shake';
 import * as THREE from 'three';
 import { useStore } from '../store';
 import { BoardView } from './BoardView';
@@ -20,7 +21,19 @@ function Scene() {
     cam.position.set(layout.cx, layout.cy, z);
     cam.lookAt(layout.cx, layout.cy, 0);
     cam.updateProjectionMatrix();
+    base.current = { x: layout.cx, y: layout.cy, z: cam.position.z };
   }, [layout, aspect, camera]);
+
+  // decaying-trauma shake of the camera only (smooth sines, not random jitter); always returns to rest
+  const base = useRef({ x: 0, y: 0, z: 40 });
+  useFrame((st, dt) => {
+    if (shake.trauma <= 0) return;
+    shake.trauma = Math.max(0, shake.trauma - dt * 1.6);
+    const reduce = useStore.getState().settings.reduceMotion;
+    const k = reduce ? 0 : shake.trauma * shake.trauma, tt = st.clock.elapsedTime * 30;
+    camera.position.set(base.current.x + 0.35 * k * Math.sin(tt * 1.7), base.current.y + 0.25 * k * Math.sin(tt * 2.3), base.current.z);
+    camera.rotation.z = 0.02 * k * Math.sin(tt * 1.1);
+  });
 
   if (!game) return null;
   const opp = (1 - mySeat) as 0 | 1;

@@ -13,6 +13,17 @@ import { dragApi } from './dragApi';
 const CELL_X = (c: number) => c - (BOARD_SIZE - 1) / 2;
 const CELL_Y = (r: number) => (BOARD_SIZE - 1) / 2 - r;
 
+/** Gold shamseh medallion inlaid in a tile (one per engraved coin). */
+const SHAMSEH = (() => {
+  const sh = new THREE.Shape();
+  for (let i = 0; i < 16; i++) {
+    const r = i % 2 ? 0.17 : 0.29, a = -Math.PI / 2 + (i * Math.PI) / 8;
+    if (i) sh.lineTo(r * Math.cos(a), r * Math.sin(a)); else sh.moveTo(r * Math.cos(a), r * Math.sin(a));
+  }
+  return new THREE.ExtrudeGeometry(sh, { depth: 0.06, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 1 });
+})();
+const SHAMSEH_MAT = new THREE.MeshStandardMaterial({ color: '#F2C744', metalness: 0.55, roughness: 0.3, emissive: '#6a4a00', emissiveIntensity: 0.25 });
+
 function TileMesh({ tile }: { tile: PlacedTile }) {
   const ref = useRef<THREE.Group>(null);
   const t0 = useRef(performance.now());
@@ -22,15 +33,43 @@ function TileMesh({ tile }: { tile: PlacedTile }) {
   const cx = tile.cells.reduce((s, c) => s + CELL_X(c[1]), 0) / tile.cells.length;
   const cy = tile.cells.reduce((s, c) => s + CELL_Y(c[0]), 0) / tile.cells.length;
   const keys = useMemo(() => new Set(tile.cells.map((c) => c.join(','))), [tile]);
+  const dust = useRef<THREE.Group>(null);
+  const dustDirs = useMemo(() => Array.from({ length: 10 }, (_, i) => { const a = (i / 10) * Math.PI * 2 + Math.random() * 0.4; return [Math.cos(a), Math.sin(a), 0.6 + Math.random() * 0.6]; }), []);
+  // the tile drops onto the board, squashes on landing (volume-preserving), then settles; dust puffs out on impact
   useFrame(() => {
-    if (!ref.current) return;
+    const g = ref.current;
+    if (!g) return;
     const reduce = useStore.getState().settings.reduceMotion;
-    const k = reduce ? 1 : Math.min(1, (performance.now() - t0.current) / 240);
-    const e = 1 - Math.pow(1 - k, 3);
-    ref.current.scale.setScalar(0.55 + 0.45 * e);
+    const t = reduce ? 9 : (performance.now() - t0.current) / 1000;
+    const FALL = 0.26;
+    if (t < FALL) {
+      const k = t / FALL;
+      g.position.z = 2.2 * (1 - k * k);
+      g.scale.set(1.08, 1.08, 1);
+    } else {
+      const k = Math.min(1, (t - FALL) / 0.22);
+      const sq = Math.sin(k * Math.PI) * (1 - k) * 0.5; // squash then spring back
+      g.position.z = 0;
+      g.scale.set(1 + sq * 0.25, 1 + sq * 0.25, 1 - sq);
+    }
+    const d = dust.current;
+    if (d) {
+      const k = (t - FALL) / 0.5;
+      d.visible = k > 0 && k < 1;
+      if (d.visible) d.children.forEach((m, i) => {
+        const [dx, dy, sp] = dustDirs[i];
+        m.position.set(dx * (0.4 + k * 1.1 * sp), dy * (0.4 + k * 1.1 * sp), 0.15 + k * 0.4);
+        ((m as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = 0.75 * (1 - k);
+      });
+    }
   });
   return (
     <group ref={ref} position={[cx, cy, 0]}>
+      <group ref={dust} visible={false}>
+        {dustDirs.map((_, i) => (
+          <mesh key={i}><planeGeometry args={[0.16, 0.16]} /><meshBasicMaterial color="#FFF4DC" transparent opacity={0} depthWrite={false} /></mesh>
+        ))}
+      </group>
       {tile.cells.map(([r, c], i) => {
         const x = CELL_X(c) - cx, y = CELL_Y(r) - cy;
         return (
@@ -41,7 +80,7 @@ function TileMesh({ tile }: { tile: PlacedTile }) {
             </mesh>
             <mesh position={[0, 0, 0.36]}>
               <planeGeometry args={[0.9, 0.9]} />
-              <meshBasicMaterial map={fabric} />
+              <meshStandardMaterial map={fabric} roughness={0.28} metalness={0.05} />{/* glazed */}
             </mesh>
             {keys.has(`${r},${c + 1}`) && (
               <mesh position={[0.5, 0, 0.2]}><boxGeometry args={[0.14, 0.9, 0.3]} /><meshStandardMaterial color={color} roughness={0.75} /></mesh>
@@ -50,10 +89,7 @@ function TileMesh({ tile }: { tile: PlacedTile }) {
               <mesh position={[0, -0.5, 0.2]}><boxGeometry args={[0.9, 0.14, 0.3]} /><meshStandardMaterial color={color} roughness={0.75} /></mesh>
             )}
             {i < tile.engraved && (
-              <group position={[0, 0, 0.44]} rotation={[Math.PI / 2, 0, 0]}>
-                <mesh><cylinderGeometry args={[0.27, 0.27, 0.08, 24]} /><meshStandardMaterial color={UI.coin} roughness={0.3} metalness={0.2} /></mesh>
-                <mesh position={[0, 0.045, 0]}><cylinderGeometry args={[0.15, 0.15, 0.04, 20]} /><meshStandardMaterial color="#C98A00" roughness={0.4} /></mesh>
-              </group>
+              <mesh position={[0, 0, 0.37]} geometry={SHAMSEH} material={SHAMSEH_MAT} />
             )}
             {tile.shape === 'mono' && (
               <mesh position={[0, 0, 0.37]}><planeGeometry args={[0.8, 0.8]} /><meshBasicMaterial map={textTexture('1×1')} transparent /></mesh>
@@ -117,6 +153,8 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
     else if (a.t === 'reward') preview = { abs: [[a.r, a.c]], valid: true };
   }
   const frame = PLAYER_COLORS[seat];
+  const ghostTile = !mine && intent?.action.t === 'buy' && intent.seat === seat ? game.offer[intent.action.offer] : mine && sel.offer !== null ? game.offer[sel.offer] : null;
+  const ghostTex = useMemo(() => (ghostTile ? patternTexture(tileLook(ghostTile.uid, ghostTile.shape)) : null), [ghostTile]);
   // late game: empty cells show what they will cost
   const lateGame = mine && game.phase !== 'finished' && TRACK_LENGTH - Math.max(game.players[0].pos, game.players[1].pos) <= 8;
   const show7 = mine && game.bonus7By === null && game.phase !== 'finished';
@@ -207,10 +245,17 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
       {p.tiles.map((t) => <TileMesh key={t.uid} tile={t} />)}
       {show7 && <Bonus7Outline board={p.board} />}
       {preview && preview.abs.filter(inBounds).map(([r, c]: Cell, i) => (
-        <mesh key={'pv' + i} position={[CELL_X(c), CELL_Y(r), 0.5]}>
-          <boxGeometry args={[0.9, 0.9, 0.1]} />
-          <meshBasicMaterial color={!mine ? frame : preview.valid ? UI.success : UI.error} transparent opacity={mine ? 0.6 : 0.75} />
-        </mesh>
+        // the ghost shows the real painted tile (red-tinted where it does not fit), with a glowing rim
+        <group key={'pv' + i} position={[CELL_X(c), CELL_Y(r), 0.55]}>
+          <mesh position={[0, 0, -0.02]}>
+            <planeGeometry args={[0.98, 0.98]} />
+            <meshBasicMaterial color={!mine ? frame : preview.valid ? '#7CFFB8' : UI.error} transparent opacity={0.85} />
+          </mesh>
+          <mesh>
+            <planeGeometry args={[0.86, 0.86]} />
+            <meshBasicMaterial map={ghostTex ?? undefined} color={ghostTex ? (preview.valid ? '#ffffff' : '#ff9a8a') : !mine ? frame : UI.success} transparent opacity={ghostTex ? 0.92 : 0.7} />
+          </mesh>
+        </group>
       ))}
       <mesh position={[0, 0, 0.6]} onPointerMove={onMove} onPointerDown={onDown}>
         <planeGeometry args={[BOARD_SIZE, BOARD_SIZE]} />

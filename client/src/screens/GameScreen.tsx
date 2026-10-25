@@ -1,13 +1,12 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { TRACK_LENGTH } from '../../../shared/src';
-import { Hud } from '../components/Hud';
-import { OfferPanel } from '../components/OfferPanel';
+import { OfferPanel, TurnScroll } from '../components/OfferPanel';
+import { OppBar } from '../components/Seats';
+import { Ribbon } from '../components/Ribbon';
 import { useT } from '../i18n';
 import { Popup } from '../components/Popup';
 import { GameMenu } from '../components/GameMenu';
-import { Legend } from '../components/Legend';
 import { DragGhost } from '../components/DragGhost';
-import { TrackBar } from '../components/TrackBar';
 import { resign, send } from '../net';
 import { flipHorizontal, flipVertical, resetSel, rotate, selectOffer, useStore } from '../store';
 import { confirmPlacement } from '../actions';
@@ -50,17 +49,17 @@ export default function GameScreen() {
   if (!game) return <main className="screen center"><p className="muted">{t('game.waiting')}</p></main>;
   return (
     <main className="game">
-      <Hud />
-      <TrackBar />
+      <OppBar />
       <section className="stage">
         <Suspense fallback={<div className="center muted">{t('game.loading3d')}</div>}><GameCanvas /></Suspense>
         <PlaceBar />
+        <TurnScroll />
+        <Ribbon />
         <Popup />
         <GameMenu />
         {conn === 'reconnecting' && <div className="overlay soft"><div className="modal small">{t('game.reconnecting')}</div></div>}
         {game.phase === 'finished' && <div className="overlay soft"><div className="modal small">{t('game.over')}</div></div>}
       </section>
-      <Legend />
       <OfferPanel />
       <DragGhost />
       {confirm && (

@@ -2,7 +2,8 @@ import { Client, Room } from 'colyseus.js';
 import { Action, GameState, Seat, eloDelta, levelFromXp, xpForGame } from '../../shared/src';
 import { sfx } from './audio';
 import { saveProfile, profileLevel } from './profile';
-import { pushToast, resetSel, setSel, useStore } from './store';
+import { pushRibbon, pushToast, resetSel, setSel, useStore } from './store';
+import { TRAUMA, addTrauma } from './three/shake';
 import { nearestValid } from './three/placement';
 import { tr, trErr } from './i18n';
 import { LocalSession } from './local';
@@ -156,18 +157,20 @@ function onState(g: GameState, turnLeft: number | null) {
       if (opp && e.k === 'reward') oppLog = `${oppLog ?? ''} · ${tr('log.reward')}`;
       // Notifications only for things the player cannot already see on the screen (board, track, turn pill).
       switch (e.k) {
-        case 'buy': sfx.place(); break;
+        case 'buy': sfx.place(); addTrauma(TRAUMA.small); break;
         case 'advance': sfx.advance(); break;
         case 'treasure':
           sfx.coin();
+          if (e.seat === st.mySeat && e.coins > 0) addTrauma(TRAUMA.medium);
           useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'treasure', coins: e.coins };
           break;
         case 'reward': useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'reward', coins: 0 }; break;
-        case 'bonus7': pushToast(tr('toast.bonus7', { name: nameOf(g, e.seat) }), 'good'); sfx.bonus(); break;
+        case 'bonus7': pushRibbon(tr('rib.bonus7'), 'big', tr('toast.bonus7', { name: nameOf(g, e.seat) })); sfx.bonus(); addTrauma(TRAUMA.large); break;
         case 'turn':
           // the hand-over is the rule players miss most, so it is always announced in words
-          if (e.seat === st.mySeat) { sfx.turn(); pushToast(tr('toast.yourTurn'), 'info'); }
-          else pushToast(tr('toast.passed', { name: g.players[e.seat].name }), 'info');
+          // the hand-over is the rule players miss most: a big banner every time
+          if (e.seat === st.mySeat) { sfx.turn(); pushRibbon(tr('rib.yourTurn'), 'mine'); }
+          else pushRibbon(tr('rib.oppTurn', { name: g.players[e.seat].name }), 'opp', tr('rib.passed'));
           break;
       }
     }

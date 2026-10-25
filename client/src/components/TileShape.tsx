@@ -1,5 +1,5 @@
 import type { Cell } from '../../../shared/src';
-import { patternUrl, tileLook } from '../patterns';
+import { patternUrl, starPath, tileLook } from '../patterns';
 
 /** A tile piece drawn with its Patchwork-style fabric (the same look as on the 3D board and in the museum). */
 export function TileShape({ cells, shape, uid, engraved = 0, cell = 14 }: { cells: Cell[]; shape: string; uid: number; engraved?: number; cell?: number }) {
@@ -16,14 +16,17 @@ export function TileShape({ cells, shape, uid, engraved = 0, cell = 14 }: { cell
       {cells.map(([r, c], i) => (
         <g key={i}>
           <rect x={c * cell + 1} y={r * cell + 1} width={cell - 2} height={cell - 2} rx={3} fill={`url(#${pid})`} stroke={look.color} strokeWidth={1} />
-          {i < engraved && <circle cx={c * cell + cell / 2} cy={r * cell + cell / 2} r={cell * 0.26} fill="#FFC94D" stroke="#7a5a00" strokeWidth={1} />}
+          {i < engraved && (
+            // engraved coin = a gold shamseh (8-point star) inlaid in the tile
+            <path d={starPath(8, 9, 5.2)} transform={`translate(${c * cell + cell / 2} ${r * cell + cell / 2}) scale(${(cell * 0.36) / 9})`} fill="#F2C744" stroke="#8a5a00" strokeWidth={1.2} />
+          )}
         </g>
       ))}
     </svg>
   );
 }
 export const CoinIcon = ({ size = 14 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#FFC94D" stroke="#B88A00" /><path d="M5 5h2v2H5zM9 5h2v2H9zM5 9h2v2H5z" fill="#8a6200" /></svg>
+  <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7.2" fill="#F2C744" stroke="#9a6a00" /><circle cx="8" cy="8" r="5.4" fill="none" stroke="#C99A1E" strokeWidth=".8" /><path d={starPath(8, 4, 2.3)} transform="translate(8 8)" fill="#9a6a00" /></svg>
 );
 export const TimeIcon = ({ size = 14 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#00D9C0" strokeWidth="1.6" /><path d="M8 4v4.2l2.8 1.6" fill="none" stroke="#00D9C0" strokeWidth="1.6" strokeLinecap="square" /></svg>

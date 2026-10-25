@@ -5,6 +5,7 @@ import { nearestValid, previewFor } from './three/placement';
 
 export type Screen = 'loading' | 'menu' | 'matchmaking' | 'game' | 'results' | 'museum';
 export interface Popup { id: number; text: string; tone: 'info' | 'good' | 'warn' | 'bad' }
+export interface RibbonMsg { id: number; title: string; sub?: string; tone: 'mine' | 'opp' | 'big' }
 export interface Fx { id: number; kind: 'coins' | 'tile'; x: number; y: number; tx?: number; ty?: number; count?: number; color?: string }
 export interface PendingFx { kind: 'treasure' | 'reward'; coins: number }
 export interface MatchState {
@@ -37,6 +38,7 @@ interface Store {
   advPreview: boolean; // finger / mouse on the Advance button: preview its move on the track
   oppIntent: { seat: Seat; action: Action } | null; // what the bot is about to do (shown before it plays)
   oppLog: string | null; // plain-language summary of the opponent's last action
+  ribbon: RibbonMsg | null; // big banner for important moments (turn change, bonus)
   showHelp: boolean;
   showSettings: boolean;
   confirmResign: boolean;
@@ -63,6 +65,7 @@ export const useStore = create<Store>(() => ({
   advPreview: false,
   oppIntent: null,
   oppLog: null,
+  ribbon: null,
   showHelp: false,
   showSettings: false,
   confirmResign: false,
@@ -74,6 +77,10 @@ let popupId = 1;
 export function pushToast(text: string, tone: Popup['tone'] = 'info') {
   const id = popupId++;
   useStore.setState((s) => ({ popups: [...s.popups.slice(-5), { id, text, tone }] }));
+}
+let ribbonId = 1;
+export function pushRibbon(title: string, tone: RibbonMsg['tone'], sub?: string) {
+  useStore.setState({ ribbon: { id: ribbonId++, title, sub, tone } });
 }
 let fxId = 1;
 export function spawnFx(fx: Omit<Fx, 'id'>) {
