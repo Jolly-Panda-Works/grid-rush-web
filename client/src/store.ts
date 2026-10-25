@@ -4,7 +4,7 @@ import type { UpdateInfo } from './update';
 import { Profile, Settings, loadProfile, loadSettings } from './profile';
 import { hoverKeeping, nearestValid, placedCells } from './three/placement';
 
-export type Screen = 'loading' | 'menu' | 'matchmaking' | 'game' | 'results' | 'museum';
+export type Screen = 'splash' | 'loading' | 'menu' | 'matchmaking' | 'game' | 'results' | 'museum';
 export interface Popup { id: number; text: string; tone: 'info' | 'good' | 'warn' | 'bad' }
 export interface RibbonMsg { id: number; title: string; sub?: string; tone: 'mine' | 'opp' | 'big' }
 export interface Fx { id: number; kind: 'coins' | 'tile'; x: number; y: number; tx?: number; ty?: number; count?: number; color?: string }
@@ -54,7 +54,7 @@ interface Store {
 }
 
 export const useStore = create<Store>(() => ({
-  screen: 'loading',
+  screen: 'splash',
   profile: loadProfile(),
   settings: loadSettings(),
   serverOnline: null,

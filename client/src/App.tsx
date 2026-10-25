@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useStore } from './store';
 import { saveSettings } from './profile';
 import LoadingScreen from './screens/LoadingScreen';
+import SplashScreen from './screens/SplashScreen';
 import MenuScreen from './screens/MenuScreen';
 import MatchmakingScreen from './screens/MatchmakingScreen';
 import GameScreen from './screens/GameScreen';
@@ -28,6 +29,7 @@ export default function App() {
   }, [settings]);
   return (
     <>
+      {screen === 'splash' && <SplashScreen />}
       {screen === 'loading' && <LoadingScreen />}
       {screen === 'menu' && <MenuScreen />}
       {screen === 'matchmaking' && <MatchmakingScreen />}

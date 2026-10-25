@@ -1001,3 +1001,13 @@ html[dir='rtl'] .rewardtitle { direction: rtl; }
 .hand.holding > .gcard:not(.inhand) { filter: saturate(.4) brightness(.55); }
 .rcount { inset-inline-end: -6px; background: linear-gradient(180deg, #F27A62, #A8392A); }
 @media (max-width: 700px) { .gcard.rewardcard.inhand { width: 82px; height: 112px; } .rewardfx .rays { width: 300px; height: 300px; } }
+
+/* ===== studio splash: white, logo fades in and out ===== */
+body[data-screen='splash'] { background: #fff; }
+.splash { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: #fff; cursor: pointer; padding: 24px; }
+.splash img { width: min(68vw, 360px); height: auto; user-select: none; -webkit-user-drag: none; }
+.splash.in img { animation: splashin .7s ease-out both; }
+.splash.out img { animation: splashout .7s ease-in both; }
+.splash.out { animation: a-fadeout .7s ease-in both; }
+@keyframes splashin { from { opacity: 0; scale: .94; } to { opacity: 1; scale: 1; } }
+@keyframes splashout { from { opacity: 1; scale: 1; } to { opacity: 0; scale: 1.03; } }
