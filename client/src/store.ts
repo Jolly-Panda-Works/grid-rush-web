@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import type { Action, GameState, Seat } from '../../shared/src';
 import type { UpdateInfo } from './update';
+import type { Account } from './account';
 import { Profile, Settings, loadProfile, loadSettings } from './profile';
 import { bestFit, hoverKeeping, placedCells } from './three/placement';
 import { tr } from './i18n';
 
-export type Screen = 'splash' | 'loading' | 'profile' | 'menu' | 'matchmaking' | 'game' | 'results' | 'museum';
+export type Screen = 'splash' | 'loading' | 'profile' | 'leaderboard' | 'friends' | 'menu' | 'matchmaking' | 'game' | 'results' | 'museum';
 export interface Popup { id: number; text: string; tone: 'info' | 'good' | 'warn' | 'bad' }
 export interface RibbonMsg { id: number; title: string; sub?: string; tone: 'mine' | 'opp' | 'big' }
 export interface Fx { id: number; kind: 'coins' | 'tile'; x: number; y: number; tx?: number; ty?: number; count?: number; color?: string }
@@ -16,7 +17,7 @@ export interface MatchState {
 }
 export interface ResultInfo {
   won: boolean; ratingBefore: number; ratingAfter: number; delta: number;
-  xpGain: number; xpBefore: number; xpAfter: number; levelBefore: number; levelAfter: number; newAch?: string[];
+  xpGain: number; xpBefore: number; xpAfter: number; levelBefore: number; levelAfter: number; newAch?: string[]; practice?: boolean;
 }
 export interface Selection { offer: number | null; rot: number; flip: boolean; hover: [number, number] | null }
 export interface Orient { rot: number; flip: boolean }
@@ -49,6 +50,7 @@ interface Store {
   ribbon: RibbonMsg | null; // big banner for important moments (turn change, bonus)
   rewardCard: { id: number; seat: Seat } | null; // a 1x1 tile was just collected: show it as a card
   update: UpdateInfo | null; // a newer release was found at launch
+  account: Account | null; // my server account (null while offline / not signed in yet)
   showHelp: boolean;
   showSettings: boolean;
   confirmResign: boolean;
@@ -81,6 +83,7 @@ export const useStore = create<Store>(() => ({
   ribbon: null,
   rewardCard: null,
   update: null,
+  account: null,
   showHelp: false,
   showSettings: false,
   confirmResign: false,

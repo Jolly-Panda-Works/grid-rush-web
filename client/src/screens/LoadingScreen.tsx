@@ -3,6 +3,7 @@ import { Logo } from '../components/Logo';
 import { Spinner } from '../components/Medal';
 import { useT } from '../i18n';
 import { pingServer } from '../net';
+import { bootstrapAccount } from '../account';
 import { useStore } from '../store';
 
 export default function LoadingScreen() {
@@ -20,6 +21,7 @@ export default function LoadingScreen() {
       const ok = await pingServer();
       if (!alive) return;
       useStore.setState({ serverOnline: ok });
+      if (ok) await Promise.race([bootstrapAccount(), new Promise((r) => setTimeout(r, 4000))]); // sign in (guest) in the background of loading
       setP(0.85); setLabel(ok ? 'loading.online' : 'loading.offline');
       await new Promise((r) => setTimeout(r, Math.max(0, 1500 - (performance.now() - t0))));
       if (!alive) return;

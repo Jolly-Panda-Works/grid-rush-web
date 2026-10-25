@@ -65,7 +65,7 @@ export default function ResultsScreen() {
       {done && (
         <>
           <div className="progress num">
-            <div>{t('res.rating')} <b>{res.ratingAfter}</b> <span dir="ltr" className={res.delta >= 0 ? 'up' : 'down'}>({res.delta >= 0 ? '+' : ''}{res.delta})</span></div>
+            <div>{t('res.rating')} <b>{res.ratingAfter}</b> {res.practice ? <span className="muted small">{t('res.practice')}</span> : <span dir="ltr" className={res.delta >= 0 ? 'up' : 'down'}>({res.delta >= 0 ? '+' : ''}{res.delta})</span>}</div>
             <div>{t('res.xp', { n: res.xpGain })} <b>{res.levelAfter}</b>{res.levelAfter > res.levelBefore && <span className="tag good">{t('res.levelUp')}</span>}</div>
             <div className="xp"><div style={{ width: `${Math.min(100, lp.ratio * 100)}%` }} /></div>
           </div>

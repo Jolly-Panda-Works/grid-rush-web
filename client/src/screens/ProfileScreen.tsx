@@ -6,6 +6,7 @@ import { Popup } from '../components/Popup';
 import { useT } from '../i18n';
 import { profileLevel, saveProfile } from '../profile';
 import { useStore } from '../store';
+import { syncProgress } from '../account';
 
 /** Profile: avatar (tap to change), name (tap to edit), level with XP, rating, then stats and achievements. */
 export default function ProfileScreen() {
@@ -16,8 +17,8 @@ export default function ProfileScreen() {
   const [editing, setEditing] = useState(false);
   const lp = levelProgress(profile.xp);
   const s = profile.stats;
-  const update = (patch: Partial<typeof profile>) => { const p = { ...profile, ...patch }; saveProfile(p); useStore.setState({ profile: p }); };
-  const finishEdit = () => { if (!profile.name.trim()) update({ name: 'Player' }); setEditing(false); };
+  const update = (patch: Partial<typeof profile>) => { const p = { ...profile, ...patch }; saveProfile(p); useStore.setState({ profile: p }); if (patch.avatar !== undefined) void syncProgress(); };
+  const finishEdit = () => { if (!profile.name.trim()) update({ name: 'Player' }); setEditing(false); void syncProgress(); };
   const games = s.games;
   const pct = (n: number) => (games ? Math.round((n / games) * 100) : 0);
   const fmtDate = (ms: number) => new Date(ms).toLocaleDateString(lang === 'fa' ? 'fa-IR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });

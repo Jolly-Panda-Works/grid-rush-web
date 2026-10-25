@@ -41,6 +41,8 @@ export default function MenuScreen() {
       </div>
 
       <nav className="navtiles">
+        <button className="navtile" onClick={() => useStore.setState({ screen: 'leaderboard' })}><span className="nt-ico">🏆</span><span>{t('lb.short')}</span></button>
+        <button className="navtile" onClick={() => useStore.setState({ screen: 'friends' })}><span className="nt-ico">👥</span><span>{t('fr.title')}</span></button>
         <button className="navtile" onClick={() => useStore.setState({ screen: 'museum' })}><span className="nt-ico">🏛</span><span>{t('museum.title')}</span></button>
         <button className="navtile" onClick={() => useStore.setState({ showHelp: true })}><span className="nt-ico">📜</span><span>{t('menu.how')}</span></button>
         <button className="navtile" onClick={() => useStore.setState({ showSettings: true })}><span className="nt-ico">⚙</span><span>{t('menu.settings')}</span></button>

@@ -4,6 +4,8 @@ import { saveSettings } from './profile';
 import LoadingScreen from './screens/LoadingScreen';
 import SplashScreen from './screens/SplashScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import LeaderboardScreen from './screens/LeaderboardScreen';
+import FriendsScreen from './screens/FriendsScreen';
 import MenuScreen from './screens/MenuScreen';
 import MatchmakingScreen from './screens/MatchmakingScreen';
 import GameScreen from './screens/GameScreen';
@@ -38,6 +40,8 @@ export default function App() {
       {screen === 'results' && <ResultsScreen />}
       {screen === 'museum' && <MuseumScreen />}
       {screen === 'profile' && <ProfileScreen />}
+      {screen === 'leaderboard' && <LeaderboardScreen />}
+      {screen === 'friends' && <FriendsScreen />}
       {help && <HowToPlay />}
       {settingsOpen && <SettingsModal />}
       <UpdatePrompt />

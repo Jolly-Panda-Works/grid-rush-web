@@ -1091,3 +1091,33 @@ html[dir='rtl'] .ppbody { direction: rtl; }
 .newach b { color: #FFE07A; font: 800 14px var(--head); width: 100%; text-align: center; }
 .achchip { padding: 3px 10px; border-radius: 10px; color: var(--ink); font-weight: 800; background: radial-gradient(ellipse at 50% 0%, #FFFBEF, #F3E5BE); border: 1.5px solid #E8B730; animation: a-slam .4s cubic-bezier(.2,1.4,.4,1) .4s both; }
 html[dir='rtl'] .profile { direction: rtl; }
+
+/* ===== leaderboard, friends, player card, account ===== */
+.screen.social { justify-content: flex-start; align-items: stretch; text-align: start; gap: 8px; max-width: 720px; margin: 0 auto; width: 100%; padding: max(10px, env(safe-area-inset-top)) 12px 12px; overflow: hidden; height: 100%; color: #fff; }
+html[dir='rtl'] .social { direction: rtl; }
+.lblist { display: flex; flex-direction: column; gap: 6px; }
+.lbrow, .frrow { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px; border-radius: 12px; text-align: start; font: inherit; color: var(--ink);
+  background: radial-gradient(ellipse at 50% 0%, #FFFBEF, #F3E5BE); border: 1.5px solid rgba(184,138,42,.6); animation: a-rise .3s ease-out both; }
+.lbrow { cursor: pointer; } .lbrow.me { border-color: #1BA3B8; box-shadow: 0 0 0 2px rgba(27,163,184,.5); }
+.lbrow.top1 { border-color: #E8B730; } .lbrank { width: 30px; text-align: center; font: 800 16px var(--head); }
+.lbname { flex: 1; min-width: 0; display: flex; flex-direction: column; } .lbname b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 14px var(--head); }
+.lbname small { color: var(--ink-muted); font-weight: 700; } .lbval { font: 800 16px var(--head); color: #1F3C88; }
+.lbmine { padding-top: 6px; border-top: 2px solid rgba(232,183,48,.5); }
+.mycode { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; color: var(--ink); background: radial-gradient(ellipse at 50% 0%, #FFFBEF, #F3E5BE); border: 2px solid #E8B730; }
+.mycode b { flex: 1; font: 800 22px var(--head); letter-spacing: .12em; color: #1F3C88; }
+.addfr { display: flex; gap: 8px; } .addfr input { flex: 1; min-width: 0; font: 800 16px var(--head); letter-spacing: .1em; padding: 8px 12px; border-radius: 10px; border: 2px solid #E8B730; background: #FFFBEF; color: var(--ink); user-select: text; -webkit-user-select: text; }
+.frwho { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: start; cursor: pointer; }
+.frav { position: relative; flex: none; } .frav .dot { position: absolute; bottom: 0; right: 0; margin: 0; border: 2px solid #fff; width: 11px; height: 11px; }
+.fract { display: flex; gap: 6px; flex: none; }
+.playercard .pc-top { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.pc-facts { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; } .pc-facts .gem { font-size: 13px; }
+.onl { font-size: 12px; font-weight: 700; color: var(--ink-muted); }
+.pc-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+.pc-stats div { display: flex; flex-direction: column; align-items: center; padding: 6px 2px; border-radius: 10px; background: rgba(255,255,255,.55); border: 1px solid rgba(184,138,42,.5); }
+.pc-stats b { font: 800 16px var(--head); } .pc-stats span { font-size: 10.5px; color: var(--ink-muted); font-weight: 700; text-align: center; }
+.pc-ach { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-bottom: 8px; }
+.pc-a { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; font-size: 15px; filter: grayscale(1); opacity: .35; background: rgba(0,0,0,.06); }
+.pc-a.on { filter: none; opacity: 1; background: radial-gradient(circle, #FFE07A, #E3A030); }
+.acctbox { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px; color: var(--ink); background: rgba(255,255,255,.45); border: 1.5px solid rgba(184,138,42,.6); }
+.acctline { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.navtiles { grid-template-columns: repeat(5, 1fr); gap: 6px; } .navtile { font-size: 11.5px; padding: 8px 2px; } .navtile .nt-ico { font-size: 21px; }

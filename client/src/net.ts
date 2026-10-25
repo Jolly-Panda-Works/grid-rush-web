@@ -8,6 +8,7 @@ import { nearestValid } from './three/placement';
 import { tr, trErr } from './i18n';
 import { LocalSession } from './local';
 import { addToCollection } from './museum';
+import { matchToken, syncProgress } from './account';
 import { GameSummary, newlyUnlocked } from './achievements';
 import { BOT_TIER_NAMES } from '../../shared/src';
 
@@ -65,7 +66,7 @@ export async function startSearch(solo: boolean) {
   if (!getWsUrl()) return startLocal(my, true);
   try {
     client = new Client(getWsUrl());
-    const opts = { name: st.profile.name, level: profileLevel(st.profile), rating: st.profile.rating, solo: false, lang: st.settings.lang };
+    const opts = { name: st.profile.name, level: profileLevel(st.profile), rating: st.profile.rating, solo: false, lang: st.settings.lang, token: matchToken() };
     const r = await client.joinOrCreate('grid_rush', opts);
     if (my !== token) { r.leave(); return; }
     room = r;
@@ -119,6 +120,13 @@ function bind(r: Room, my: number) {
   r.onMessage('state', (m: { state: GameState; turnLeft: number | null }) => onState(m.state, m.turnLeft));
   r.onMessage('intent', (m: { seat: Seat; action: Action }) => useStore.setState({ oppIntent: m }));
   r.onMessage('notice', (m: { code: string; name: string }) => pushToast(tr('toast.timeout', { name: m.name }), 'warn'));
+  // the server owns the rating: take its value after an online match
+  r.onMessage('rating', (m: { rating: number; delta: number }) => {
+    const s = useStore.getState();
+    const profile = { ...s.profile, rating: m.rating };
+    saveProfile(profile);
+    useStore.setState({ profile, result: s.result ? { ...s.result, ratingAfter: m.rating, delta: m.delta } : s.result });
+  });
   r.onMessage('error', (m: { msg: string }) => { pushToast(trErr(m.msg), 'bad'); sfx.bad(); });
   r.onLeave(async (code: number) => {
     if (my !== token || leaving) return;
@@ -199,7 +207,8 @@ function finalize(g: GameState) {
   const won = g.result!.winner === me;
   const p = st.profile;
   const opp = g.players[1 - me];
-  const delta = eloDelta(p.rating, opp.rating, won);
+  const practice = !!local; // offline games against the bot are practice: XP and stats, but no rating change
+  const delta = practice ? 0 : eloDelta(p.rating, opp.rating, won);
   const xpGain = xpForGame(won);
   const sc = g.result!.scores[me], my = g.players[me];
   const summary: GameSummary = {
@@ -222,9 +231,10 @@ function finalize(g: GameState) {
   addToCollection({ tiles: g.players[me].tiles, score: g.result!.scores[me].total, won, opp: opp.name });
   const info = {
     won, ratingBefore: p.rating, ratingAfter: next.rating, delta, xpGain, xpBefore: p.xp, xpAfter: next.xp,
-    levelBefore: levelFromXp(p.xp), levelAfter: levelFromXp(next.xp), newAch: fresh,
+    levelBefore: levelFromXp(p.xp), levelAfter: levelFromXp(next.xp), newAch: fresh, practice,
   };
   useStore.setState({ profile: next, result: info });
+  void syncProgress();
   (won ? sfx.win : sfx.lose)();
   setTimeout(() => { if (useStore.getState().game === g || useStore.getState().game?.phase === 'finished') useStore.setState({ screen: 'results' }); }, 1800);
 }
