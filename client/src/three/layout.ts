@@ -37,20 +37,23 @@ export function computeLayout(aspect: number): Layout {
       },
     };
   }
-  // Phone: my board (frame 10.4) at y=0, the track strip above it, the small opponent board on top.
-  const win = 11, cell = 0.92, step = 0.96, oppScale = 0.45;
+  // Phone, top to bottom: the time-track strip (left of the menu button), the opponent board (right) with the
+  // player panels on its left, my board (frame 10.4) at y=0.
+  const win = 9, cell = 0.92, step = 0.96, oppScale = 0.45;
   const plateW = win * step + 0.4, plateH = cell + 0.42;
-  const ty = 5.2 + 0.4 + plateH / 2;
-  const oy = ty + plateH / 2 + 0.4 + 5.2 * oppScale;
-  const top = oy + 5.2 * oppScale, bottom = -5.2;
+  const MENU_ROOM = 1.35; // the menu button floats in the top-right corner
+  const tx = 5.6 - MENU_ROOM - (plateW + 0.25) / 2;
+  const oy = 5.2 + 0.4 + 5.2 * oppScale;
+  const ty = oy + 5.2 * oppScale + 0.4 + plateH / 2;
+  const top = ty + plateH / 2, bottom = -5.2;
   return {
     landscape: false, w: 11.2, h: top - bottom + 0.5, cx: 0, cy: (top + bottom) / 2,
     // the opponent board sits on the right, the player panels fill the space on its left
     my: { x: 0, y: 0, scale: 1 }, opp: { x: 5.6 - 5.2 * oppScale - 0.15, y: oy, scale: oppScale },
     info: { x0: -5.5, x1: 5.6 - 2 * 5.2 * oppScale - 0.45, y0: oy - 5.2 * oppScale, y1: oy + 5.2 * oppScale },
     track: {
-      x: 0, y: ty, cell, vertical: false, window: win, lineLen: n, lines: 1, step, across: 0,
-      plate: { x: 0, y: ty, w: plateW, h: plateH },
+      x: tx, y: ty, cell, vertical: false, window: win, lineLen: n, lines: 1, step, across: 0,
+      plate: { x: tx, y: ty, w: plateW, h: plateH },
     },
   };
 }

@@ -1,7 +1,8 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { TRACK_LENGTH } from '../../../shared/src';
 import { OfferPanel, TurnScroll } from '../components/OfferPanel';
-import { OppBar, PlayerPanels } from '../components/Seats';
+import { PlayerPanels } from '../components/Seats';
+import { GameMenu } from '../components/GameMenu';
 import { Ribbon } from '../components/Ribbon';
 import { RewardCardFx } from '../components/RewardCard';
 import { useT } from '../i18n';
@@ -49,7 +50,6 @@ export default function GameScreen() {
   if (!game) return <main className="screen center"><p className="muted">{t('game.waiting')}</p></main>;
   return (
     <main className="game">
-      <OppBar />
       <section className="stage">
         <Suspense fallback={<div className="center muted">{t('game.loading3d')}</div>}><GameCanvas /></Suspense>
         <PlaceBar />
@@ -58,6 +58,7 @@ export default function GameScreen() {
         <RewardCardFx />
         <Popup />
         <PlayerPanels />
+        <GameMenu />
         {conn === 'reconnecting' && <div className="overlay soft"><div className="modal small">{t('game.reconnecting')}</div></div>}
         {game.phase === 'finished' && <div className="overlay soft"><div className="modal small">{t('game.over')}</div></div>}
       </section>
