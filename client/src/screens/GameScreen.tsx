@@ -67,7 +67,7 @@ export default function GameScreen() {
           <div className="modal small" onClick={(e) => e.stopPropagation()}>
             <h3>{t('game.resignTitle')}</h3>
             <p className="muted">{t('game.resignText')}</p>
-            <div className="row"><button className="btn danger" onClick={resign}>{t('game.resign')}</button><button className="btn ghost" onClick={() => useStore.setState({ confirmResign: false })}>Keep playing</button></div>
+            <div className="row"><button className="btn danger" onClick={resign}>{t('game.resign')}</button><button className="btn ghost" onClick={() => useStore.setState({ confirmResign: false })}>{t('game.keep')}</button></div>
           </div>
         </div>
       )}

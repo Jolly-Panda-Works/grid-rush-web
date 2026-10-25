@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Logo } from '../components/Logo';
+import { Spinner } from '../components/Medal';
 import { useT } from '../i18n';
 import { pingServer } from '../net';
 import { useStore } from '../store';
@@ -31,9 +32,10 @@ export default function LoadingScreen() {
     <main className="screen center loading">
       <Logo size={64} stacked />
       <div className="tagline">{t('tagline')}</div>
-      <div className="bar"><div style={{ width: `${p * 100}%` }} /></div>
+      <Spinner size={64} />
+      <div className="goldbar"><div style={{ width: `${p * 100}%` }} /></div>
       <div className="muted small">{t(label)}</div>
-      <div className="tip muted small">{t('tip.' + tipIdx)}</div>
+      <div className="scroll-note small">💡 {t('tip.' + tipIdx)}</div>
     </main>
   );
 }

@@ -15,9 +15,10 @@ export function GameMenu() {
         <>
           <div className="gmenu-scrim" onClick={close} />
           <div className="gmenu" role="menu">
-            <button role="menuitem" onClick={() => { close(); useStore.setState({ showHelp: true }); }}>{t('game.help')}</button>
-            <button role="menuitem" onClick={() => useStore.setState({ settings: { ...settings, sound: !settings.sound } })}>{t('menu.sound')}: {settings.sound ? '✓' : '✕'}</button>
-            <button role="menuitem" className="danger" onClick={() => { close(); useStore.setState({ confirmResign: true }); }}>{t('game.resign')}</button>
+            <button role="menuitem" onClick={() => { close(); useStore.setState({ showHelp: true }); }}><span className="gi">📜</span>{t('game.help')}</button>
+            <button role="menuitem" onClick={() => useStore.setState({ settings: { ...settings, sound: !settings.sound } })}><span className="gi">{settings.sound ? '🔊' : '🔇'}</span>{t('menu.sound')}<span className={'tswitch' + (settings.sound ? ' on' : '')}><i /></span></button>
+            <button role="menuitem" onClick={() => useStore.setState({ settings: { ...settings, reduceMotion: !settings.reduceMotion } })}><span className="gi">✨</span>{t('menu.reduce')}<span className={'tswitch' + (settings.reduceMotion ? ' on' : '')}><i /></span></button>
+            <button role="menuitem" className="danger" onClick={() => { close(); useStore.setState({ confirmResign: true }); }}><span className="gi">🏳</span>{t('game.resign')}</button>
           </div>
         </>
       )}

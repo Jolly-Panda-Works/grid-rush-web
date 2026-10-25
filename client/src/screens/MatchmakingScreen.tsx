@@ -3,7 +3,7 @@ import { useT } from '../i18n';
 import { getWsUrl, cancelSearch, startSearch } from '../net';
 import { profileLevel } from '../profile';
 import { useStore } from '../store';
-import { PlayerGlyph } from '../components/TileShape';
+import { Medal, Spinner } from '../components/Medal';
 
 export default function MatchmakingScreen() {
   const t = useT();
@@ -30,28 +30,28 @@ export default function MatchmakingScreen() {
       <main className="screen center found">
         <div className="vs">
           <div className="vcard opp">
-            <PlayerGlyph seat={(1 - mySeat) as 0 | 1} size={30} />
+            <Medal seat={(1 - mySeat) as 0 | 1} size={64} level={opp.level} />
             <div className="vtext">
               <h3>{opp.name}{opp.isBot && <span className="tag bot">{t('mm.botTag', { tier: t('tier.' + opp.botTier) })}</span>}</h3>
               <div className="muted num">{t('hud.lv', { n: opp.level })} · {opp.rating}</div>
             </div>
           </div>
-          <div className="vsmark">VS</div>
+          <div className="vsmark"><span>VS</span></div>
           <div className="vcard me">
-            <PlayerGlyph seat={mySeat} size={30} />
+            <Medal seat={mySeat} size={64} level={profileLevel(profile)} />
             <div className="vtext">
               <h3>{me.name}</h3>
               <div className="muted num">{t('hud.lv', { n: profileLevel(profile) })} · {me.rating}</div>
             </div>
           </div>
         </div>
-        <p className="muted">{game.current === mySeat ? t('mm.youStart') : t('mm.oppStarts', { name: opp.name })} {t('mm.ready')}</p>
+        <p className="scroll-note">{game.current === mySeat ? t('mm.youStart') : t('mm.oppStarts', { name: opp.name })} {t('mm.ready')}</p>
       </main>
     );
   }
   return (
     <main className="screen center">
-      <div className="radar" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <i key={i} style={{ animationDelay: `${i * 0.12}s` }} />)}</div>
+      <Spinner size={96} />
       <h2>{m.status === 'connecting' ? t('mm.connecting') : m.solo ? t('mm.prepBot') : t('mm.finding')}</h2>
       {m.status === 'searching' && !m.solo && <p className="muted">{t('mm.wait', { s: left })}</p>}
       <button className="btn ghost" onClick={cancelSearch}>{t('mm.cancel')}</button>
