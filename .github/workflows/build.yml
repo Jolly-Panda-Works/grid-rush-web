@@ -1,5 +1,9 @@
-# Builds Grid Rush for Android and the web, and publishes a GitHub Release with both: the
-# Android app (APK/AAB) and a ready-to-host web build (GridRush-X.Y.Z-Web.zip).
+# Builds Grid Rush for Android and the web, and publishes a GitHub Release with: the Android app (APK/AAB),
+# a ready-to-host web build (GridRush-X.Y.Z-Web.zip) and, when the signing key is set, one build per store:
+#   GridRush-X.Y.Z-GooglePlay.aab  -> upload to Google Play Console
+#   GridRush-X.Y.Z-CafeBazaar.apk  -> upload to Cafe Bazaar (Pishkhan)
+# A store build's update prompt opens its own store page instead of downloading an APK from GitHub
+# (stores do not allow apps to install updates themselves).
 #
 # Versions (automatic): every push to main that changes the game is released.
 #   The commits since the last release decide the bump (Conventional Commits):
@@ -19,7 +23,9 @@
 #                       Without it the apps play against bots offline and ask for a server address in Settings.
 #     PLAY_GAMES_APP_ID          (optional) Play Games Services project id (Play Console); enables "Link Google Play Games"
 #     VITE_PLAY_GAMES_CLIENT_ID  (optional) OAuth *Web* client id of the same Google Cloud project (the server uses its secret)
-#   Secrets (optional, for a signed Android release APK/AAB)
+#     PLAY_STORE_URL    (optional) the Google Play page; default https://play.google.com/store/apps/details?id=com.jollypanda.grid_rush
+#     BAZAAR_STORE_URL  (optional) the Cafe Bazaar page; default https://cafebazaar.ir/app/com.jollypanda.grid_rush
+#   Secrets (optional, for a signed Android release APK/AAB and the store builds)
 #     ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
 
 name: Build
@@ -299,11 +305,98 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  # ------------------------------------------------------------------ store builds
+  store:
+    name: Store build (${{ matrix.store }})
+    needs: [version, test]
+    if: needs.version.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - store: GooglePlay
+            gradle: bundleRelease
+            output: bundle/release/app-release.aab
+            ext: aab
+          - store: CafeBazaar
+            gradle: assembleRelease
+            output: apk/release/app-release.apk
+            ext: apk
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      VITE_APP_VERSION: ${{ needs.version.outputs.version }}
+      VITE_BASE: /
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      # the update prompt of this build opens its own store page
+      VITE_STORE_URL: ${{ matrix.store == 'GooglePlay' && (vars.PLAY_STORE_URL || 'https://play.google.com/store/apps/details?id=com.jollypanda.grid_rush') || (vars.BAZAAR_STORE_URL || 'https://cafebazaar.ir/app/com.jollypanda.grid_rush') }}
+    steps:
+      - name: Signing key
+        if: env.HAS_KEYSTORE != 'true'
+        run: echo "::notice::No signing key in the repository secrets, so there is no ${{ matrix.store }} build (stores only take signed apps)."
+      - uses: actions/checkout@v5
+        if: env.HAS_KEYSTORE == 'true'
+        with:
+          ref: ${{ needs.version.outputs.sha }}
+      - uses: actions/setup-node@v5
+        if: env.HAS_KEYSTORE == 'true'
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - uses: actions/setup-java@v5
+        if: env.HAS_KEYSTORE == 'true'
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        if: env.HAS_KEYSTORE == 'true'
+      - name: Build the web app and sync Android
+        if: env.HAS_KEYSTORE == 'true'
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+          npm run build:web
+          (cd client && npx cap sync android)
+      - name: Set version and Play Games id
+        if: env.HAS_KEYSTORE == 'true'
+        working-directory: client/android
+        run: |
+          sed -i -E "s/versionCode [0-9]+/versionCode ${{ needs.version.outputs.code }}/" app/build.gradle
+          sed -i -E "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
+          if [ -n "$PLAY_GAMES_APP_ID" ]; then
+            sed -i -E "s#(name=\"game_services_project_id\"[^>]*>)[^<]*<#\1${PLAY_GAMES_APP_ID}<#" app/src/main/res/values/strings.xml
+          fi
+      - name: Build signed ${{ matrix.store }} ${{ matrix.ext }}
+        if: env.HAS_KEYSTORE == 'true'
+        working-directory: client/android
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '\r\n ' | base64 --decode > "$RUNNER_TEMP/release.keystore"
+          chmod +x gradlew
+          ./gradlew ${{ matrix.gradle }} --no-daemon \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/release.keystore" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          cp "app/build/outputs/${{ matrix.output }}" "$GITHUB_WORKSPACE/out/GridRush-$VERSION-${{ matrix.store }}.${{ matrix.ext }}"
+      - uses: actions/upload-artifact@v4
+        if: env.HAS_KEYSTORE == 'true'
+        with:
+          name: grid-rush-store-${{ matrix.store }}
+          path: out/*
+          if-no-files-found: error
+          retention-days: 1
+
   # ------------------------------------------------------------------ release
   release:
     name: GitHub Release
-    needs: [version, web, android]
-    if: needs.version.outputs.release == 'true'
+    needs: [version, web, android, store]
+    if: needs.version.outputs.release == 'true' && !cancelled() && needs.web.result == 'success' && needs.android.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -327,6 +420,8 @@ jobs:
           mkdir -p release
           # The Android app and the ready-to-host web build.
           cp artifacts/grid-rush-android/* release/
+          # One build per store (only when the signing key is set).
+          for d in artifacts/grid-rush-store-*; do [ -d "$d" ] && cp "$d"/* release/; done
           cp artifacts/grid-rush-web/* release/
           (cd release && sha256sum * > SHA256SUMS.txt)
           ls -la release

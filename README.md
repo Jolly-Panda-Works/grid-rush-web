@@ -115,6 +115,12 @@ npm start     # build + اجرا روی http://localhost:2567
 
 keystore را جای امن نگه دارید. اگر گم شود، نمی‌توانید آپدیت همان اپ را منتشر کنید.
 
+**نسخه‌ی فروشگاه‌ها:** وقتی Secretهای امضا تنظیم باشند، هر Release دو فایل جدا هم دارد:
+- `GridRush-X.Y.Z-GooglePlay.aab` برای Google Play Console (Play فقط AAB قبول می‌کند).
+- `GridRush-X.Y.Z-CafeBazaar.apk` برای پیشخان کافه‌بازار.
+
+در این دو نسخه پیام «نسخه‌ی جدید» صفحه‌ی همان فروشگاه را باز می‌کند و APK را از GitHub دانلود نمی‌کند (فروشگاه‌ها اجازه‌ی نصب آپدیت از بیرون را نمی‌دهند). آدرس پیش‌فرض صفحه‌ها `play.google.com/store/apps/details?id=com.jollypanda.grid_rush` و `cafebazaar.ir/app/com.jollypanda.grid_rush` است و با Variables ریپو `PLAY_STORE_URL` و `BAZAAR_STORE_URL` عوض می‌شود. versionCode هر نسخه بزرگ‌تر از قبلی است، پس همین فایل‌ها مستقیم قابل آپلودند. برای Google Play پیشنهاد می‌شود «Play App Signing» را فعال کنید و همین keystore را به عنوان upload key معرفی کنید.
+
 **تست:** `npm test` قوانین بازی (Advance، نوبت، خزانه، کاشی ۱×۱، ۷×۷، امتیاز، Tie-break) و بات‌ها را بررسی می‌کند و در CI قبل از هر انتشار اجرا می‌شود.
 
 **آدرس سرور بازی (برای بازی آنلاین):** روی گوشی `localhost` معنی ندارد و سرور Colyseus باید جایی قابل‌دسترسی اجرا شود. یا در Variables ریپو `VITE_SERVER_URL` را بگذارید (متغیر قدیمی `SERVER_URL` هم کار می‌کند) (مثلاً `wss://game.example.com`)، یا خالی بگذارید تا بازیکن در منوی اپ «آدرس سرور» را وارد کند (مثلاً `192.168.1.20:2567` برای تست در شبکه‌ی خانگی). این آدرس روی دستگاه ذخیره می‌شود. برای محیط واقعی از `wss://` استفاده کنید.
