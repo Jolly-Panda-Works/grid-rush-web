@@ -2,6 +2,7 @@ import { REWARD_POSITIONS, Seat, TRACK_LENGTH, TREASURE_POSITIONS, engravedTotal
 import { useForecast } from '../forecast';
 import { useT } from '../i18n';
 import { useStore } from '../store';
+import { Icon } from '../art';
 import { iconUrl } from '../three/icons';
 
 /** Cells before the finish at which the game warns that it is about to end. */
@@ -38,7 +39,7 @@ export function NextGem() {
   const toEnd = TRACK_LENGTH - Math.max(g.players[0].pos, g.players[1].pos);
   const empty = <span className="gem next num slot-empty" aria-hidden="true"><b>0</b></span>; // keeps its place in the layout
   if (g.phase === 'finished') return empty;
-  if (toEnd <= END_WARN) return <span key={toEnd} className="gem warn num" title={t('bar.end', { d: toEnd })}>🏁<b>{toEnd}</b></span>;
+  if (toEnd <= END_WARN) return <span key={toEnd} className="gem warn num" title={t('bar.end', { d: toEnd })}><Icon id="finish" size={18} /><b>{toEnd}</b></span>;
   const nextT = TREASURE_POSITIONS.find((p) => p > me.pos);
   if (nextT === undefined) return empty;
   const pays = engravedTotal(me);

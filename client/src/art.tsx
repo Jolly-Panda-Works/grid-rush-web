@@ -5,7 +5,12 @@
 const BASE = `${import.meta.env.BASE_URL}art/`;
 
 export type IconId = 'treasure' | 'firouzeh' | 'coins' | 'hourglass' | 'achievement' | 'crown' | 'lock' | 'gift' | 'museum'
-  | 'trophy' | 'quests' | 'calendar' | 'pawn-azure' | 'pawn-coral' | 'settings' | 'heart';
+  | 'trophy' | 'quests' | 'calendar' | 'pawn-azure' | 'pawn-coral' | 'settings' | 'heart'
+  | 'ach-first_win' | 'ach-wins_10' | 'ach-wins_50' | 'ach-games_25' | 'ach-streak_3' | 'ach-bonus7' | 'ach-full_board' | 'ach-score_15'
+  | 'ach-rich' | 'ach-treasure_5' | 'ach-tiles_100' | 'ach-beat_master' | 'ach-museum' | 'rank-gold' | 'rank-silver' | 'rank-bronze'
+  | 'play' | 'match' | 'friends' | 'add-friend' | 'menu' | 'sound-on' | 'sound-off' | 'motion' | 'resign' | 'close' | 'confirm' | 'edit'
+  | 'copy' | 'back' | 'language' | 'tip' | 'buy-tile' | 'advance' | 'turns' | 'finish' | 'scales' | 'rotate-left' | 'rotate-right'
+  | 'flip' | 'bot' | 'heart-empty' | 'empty-cell' | 'engraved-coin';
 export type FrameId = 'primary' | 'secondary' | 'danger' | 'modal' | 'hero' | 'offer' | 'victory' | 'ribbon' | 'defeat'
   | 'avatar-frame' | 'xp' | 'board-frame' | 'primary-bar' | 'modal-plain' | 'modal-orn' | 'ribbon-plain' | 'ribbon-orn' | 'victory-plain' | 'victory-orn' | 'defeat-plain' | 'defeat-orn';
 
@@ -18,6 +23,8 @@ export const frameUrl = (id: FrameId) => `${BASE}frames/${id}.webp`;
 export const tileUrl = (n: number) => `${BASE}tiles/tile-${(n >> 1) + 1}-${(n & 1) + 1}.webp`;
 export const avatarArtUrl = (n: number) => `${BASE}avatars/avatar-${n + 1}.webp`;
 export const wordmarkUrl = (lang: 'fa' | 'en') => `${BASE}wordmark-${lang}.webp`;
+/** Full-screen art with the Persian name painted in (splash, loading). */
+export const screenArtUrl = (id: 'splash-fa' | 'loading-fa') => `${BASE}screens/${id}.webp`;
 
 /** The 1x1 tile the page background is tiled with: the lapis girih knot. */
 const BG_TILE = 2;
@@ -27,6 +34,7 @@ export function installArtVars() {
   const ids: FrameId[] = ['primary-bar', 'secondary', 'danger', 'modal-plain', 'modal-orn', 'ribbon-plain', 'ribbon-orn', 'victory-plain', 'victory-orn', 'defeat-plain', 'defeat-orn'];
   for (const id of ids) document.documentElement.style.setProperty(`--art-${id}`, `url("${frameUrl(id)}")`);
   document.documentElement.style.setProperty('--art-bg-tile', `url("${tileUrl(BG_TILE)}")`);
+  document.documentElement.style.setProperty('--art-icon-close', `url("${iconUrl('close')}")`);
 }
 
 /** Decoded tile images: the 3D board paints them into textures, which needs them loaded up front. */

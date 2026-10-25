@@ -1275,3 +1275,36 @@ body[data-screen='game'] { background: radial-gradient(ellipse at 50% 42%, rgba(
 .lu-xp span { position: absolute; inset: 0; display: grid; place-items: center; font: 700 10px var(--head); color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.6); }
 .lu-body .btn { min-width: 11em; animation: a-pop .4s cubic-bezier(.2,1.6,.4,1) 1.3s both; }
 html[dir='rtl'] .lu-xp div { inset: 0 0 0 auto; transform-origin: right; }
+
+/* painted close button on dialogs (the ✕ text stays for screen readers' sake but is hidden) */
+.mclose { width: 38px; height: 38px; border: 0; border-radius: 0; box-shadow: none; color: transparent; font-size: 0; filter: drop-shadow(0 2px 3px rgba(0,0,20,.45));
+  background: var(--art-icon-close) center / contain no-repeat; }
+.pt-ico .aicon { filter: drop-shadow(0 2px 3px rgba(0,0,30,.5)); }
+.lbrank .aicon { display: block; margin: -4px auto; }
+.gmenu-btn .aicon, .pb .aicon { pointer-events: none; }
+.rules .ri { display: grid; place-items: center; width: 34px; flex: none; }
+.pc-a { width: 34px; height: 34px; background: none !important; }
+.pc-a.on .aicon { filter: drop-shadow(0 1px 2px rgba(0,0,20,.4)); }
+.ach-ico .aicon { width: 36px; height: 36px; }
+.achcard.done .ach-ico { background: none; box-shadow: none; }
+
+/* ---- Persian splash and loading: full-screen painted art (fitted to the height, centred; the sides may crop) ---- */
+.splash-art, .loading-art { position: fixed; inset: 0; display: grid; place-items: center; overflow: hidden; background: #001036; }
+.splash-art img { height: 100vh; height: 100dvh; width: auto; max-width: none; }
+.splash-art img { animation: a-fade .6s ease-out both, a-zoomin 2.4s ease-out both; }
+@keyframes a-zoomin { from { scale: 1.06; } to { scale: 1; } }
+.ld-art { position: relative; height: 100vh; height: 100dvh; aspect-ratio: 852 / 1846; animation: a-fade .4s ease-out both; }
+.ld-art img { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* the painted bar's inner track: x 95..755, y 1432..1488 of 852 x 1846 */
+.ld-track { position: absolute; left: 11.15%; width: 77.5%; top: 77.57%; height: 3.03%; border-radius: 999px; overflow: hidden; background: #001338; box-shadow: inset 0 2px 4px rgba(0,0,0,.6); }
+.ld-track div { height: 100%; transition: width .4s ease-out; border-radius: inherit;
+  background: repeating-linear-gradient(60deg, rgba(255,255,255,.18) 0 2px, transparent 2px 14px), repeating-linear-gradient(-60deg, rgba(255,255,255,.18) 0 2px, transparent 2px 14px), linear-gradient(180deg, #6fe6f2, #10a9c4 55%, #087d99); box-shadow: 0 0 10px rgba(80,230,240,.6); }
+html[dir='rtl'] .ld-track div { margin-inline-start: 0; }
+.ld-tip { position: absolute; left: 8%; right: 8%; top: 89%; display: block; color: #E2D0A0; text-align: center; animation: a-rise .5s ease-out .4s both; }
+.museum-hero { display: block; flex: none; margin: -4px auto 2px; width: clamp(110px, 20vh, 170px); height: auto; filter: drop-shadow(0 8px 14px rgba(0,0,20,.5)); animation: a-pop .5s cubic-bezier(.2,1.4,.4,1) .1s both; }
+.ld-tip .aicon { margin-inline-end: 4px; vertical-align: -5px; }
+/* locked achievements show their own icon in grey with a small lock */
+.ach-ico { position: relative; }
+.achcard:not(.done) .ach-ico .aicon:first-child { filter: grayscale(1) brightness(.75); opacity: .7; }
+.ach-ico .ach-lock { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)) !important; opacity: 1 !important; }
+.pc-a:not(.on) .aicon { filter: grayscale(1) brightness(.8); }

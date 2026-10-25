@@ -49,7 +49,7 @@ export default function FriendsScreen() {
     <main className="screen social">
       <header className="mhead">
         <button className="btn small" onClick={() => useStore.setState({ screen: 'menu' })}>{t('mm.back')}</button>
-        <h2>👥 {t('fr.title')}</h2>
+        <h2><Icon id="friends" size={30} /> {t('fr.title')}</h2>
         <span />
       </header>
       {lists === null && <div className="offnote small">{t('acct.needServer')}</div>}
@@ -58,11 +58,11 @@ export default function FriendsScreen() {
           <div className="mycode">
             <span className="small">{t('fr.myCode')}</span>
             <b className="num" dir="ltr">{lists.code}</b>
-            <button className="btn small" onClick={copy}>{t('fr.copy')}</button>
+            <button className="btn small" onClick={copy}><Icon id="copy" size={20} />{t('fr.copy')}</button>
           </div>
           <div className="addfr">
             <input dir="ltr" value={code} maxLength={8} placeholder={t('fr.codeHint')} onChange={(e) => setCode(e.target.value.toUpperCase())} onKeyDown={(e) => e.key === 'Enter' && add()} />
-            <button className="btn primary" disabled={busy || code.trim().length < 6} onClick={add}>{t('fr.add')}</button>
+            <button className="btn primary" disabled={busy || code.trim().length < 6} onClick={add}><Icon id="add-friend" size={22} />{t('fr.add')}</button>
           </div>
           {lists.incoming.length > 0 && (
             <>

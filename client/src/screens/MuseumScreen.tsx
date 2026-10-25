@@ -51,9 +51,10 @@ export default function MuseumScreen() {
     <main className="screen museum">
       <header className="mhead">
         <button className="btn small" onClick={() => useStore.setState({ screen: 'menu' })}>{t('mm.back')}</button>
-        <h2>🏛 {t('museum.title')}</h2>
+        <h2>{t('museum.title')}</h2>
         <span className="mpoints num" title={t('museum.pointsHint', { xp: XP_PER_VOTE })}><Icon id="heart" size={18} />{mine?.points ?? 0}</span>
       </header>
+      <Icon id="museum" size={150} className="museum-hero" />
       <div className="mtabs" role="tablist">
         <button role="tab" aria-selected={tab === 'mine'} className={tab === 'mine' ? 'on' : ''} onClick={() => setTab('mine')}>{t('museum.mine')}</button>
         <button role="tab" aria-selected={tab === 'explore'} className={tab === 'explore' ? 'on' : ''} onClick={() => setTab('explore')}>{t('museum.explore')}</button>
@@ -89,7 +90,7 @@ export default function MuseumScreen() {
                     <span className={'tag ' + (c.won ? 'good' : '')}>{c.won ? t('res.win') : t('res.lose')}</span>
                     <span className="muted small num">{t('museum.score', { n: c.score })}</span>
                   </figcaption>
-                  <button className="btn small" disabled={!mine || full || busy === c.id} onClick={() => exhibit(c)}>🏛 {t('museum.exhibit')}</button>
+                  <button className="btn small" disabled={!mine || full || busy === c.id} onClick={() => exhibit(c)}><Icon id="museum" size={20} />{t('museum.exhibit')}</button>
                 </figure>
               ))}
             </div>
@@ -111,7 +112,7 @@ export default function MuseumScreen() {
                   <BoardArt tiles={e.tiles} size={140} />
                   <figcaption><b className="mowner">{e.ownerName}</b><span className="muted small num">{t('museum.score', { n: e.score })}</span></figcaption>
                   <button className={'btn small vote' + (e.voted ? ' on' : '')} disabled={e.mine || busy === e.id} onClick={() => vote(e)}>
-                    <span key={String(e.voted)} className="heart">{e.voted ? '❤' : '♡'}</span> <span className="num">{e.votes}</span>{e.mine ? ` · ${t('museum.yours')}` : ''}
+                    <span key={String(e.voted)} className="heart"><Icon id={e.voted ? 'heart' : 'heart-empty'} size={20} /></span> <span className="num">{e.votes}</span>{e.mine ? ` · ${t('museum.yours')}` : ''}
                   </button>
                 </figure>
               ))}

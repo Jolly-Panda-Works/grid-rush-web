@@ -24,13 +24,13 @@ export default function ProfileScreen() {
   const pct = (n: number) => (games ? Math.round((n / games) * 100) : 0);
   const fmtDate = (ms: number) => new Date(ms).toLocaleDateString(lang === 'fa' ? 'fa-IR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   const stats: [React.ReactNode, string, string][] = [
-    ['🎲', t('prof.games'), String(games)],
+    [<Icon id="ach-games_25" size={26} />, t('prof.games'), String(games)],
     [<Icon id="trophy" size={26} />, t('prof.wins'), `${profile.wins} · ${pct(profile.wins)}%`],
-    ['🔥', t('prof.bestStreak'), String(s.bestStreak)],
-    ['⭐', t('prof.bestScore'), s.bestScore === null ? '—' : String(s.bestScore)],
-    ['⚖', t('prof.avgScore'), s.scoredGames ? (s.totalScore / s.scoredGames).toFixed(1) : '—'],
-    ['▦', t('prof.bonus7'), String(s.bonus7)],
-    ['🧩', t('prof.fullBoards'), String(s.fullBoards)],
+    [<Icon id="ach-streak_3" size={26} />, t('prof.bestStreak'), String(s.bestStreak)],
+    [<Icon id="ach-score_15" size={26} />, t('prof.bestScore'), s.bestScore === null ? '—' : String(s.bestScore)],
+    [<Icon id="scales" size={26} />, t('prof.avgScore'), s.scoredGames ? (s.totalScore / s.scoredGames).toFixed(1) : '—'],
+    [<Icon id="ach-bonus7" size={26} />, t('prof.bonus7'), String(s.bonus7)],
+    [<Icon id="ach-full_board" size={26} />, t('prof.fullBoards'), String(s.fullBoards)],
     [<Icon id="museum" size={26} />, t('prof.tiles'), String(s.tiles)],
     [<Icon id="treasure" size={26} />, t('prof.treasures'), `${s.treasures} · +${s.treasureCoins}`],
     [<Icon id="gift" size={26} />, t('prof.rewards'), String(s.rewards)],
@@ -47,13 +47,13 @@ export default function ProfileScreen() {
       <section className="profhero">
         <button className="avbtn" onClick={() => setPicking(true)} aria-label={t('prof.changeAvatar')}>
           <Medal size={92} avatar={profile.avatar} level={profileLevel(profile)} />
-          <span className="avedit" aria-hidden="true">✎</span>
+          <span className="avedit" aria-hidden="true"><Icon id="edit" size={22} /></span>
         </button>
         <div className="profmain">
           {editing
             ? <input className="nameedit" autoFocus value={profile.name} maxLength={16} aria-label={t('menu.name')}
                 onChange={(e) => update({ name: e.target.value.slice(0, 16) })} onBlur={finishEdit} onKeyDown={(e) => e.key === 'Enter' && finishEdit()} />
-            : <button className="namebtn big" onClick={() => setEditing(true)} title={t('menu.editName')}><span>{profile.name}</span><span className="pen" aria-hidden="true">✎</span></button>}
+            : <button className="namebtn big" onClick={() => setEditing(true)} title={t('menu.editName')}><span>{profile.name}</span><span className="pen" aria-hidden="true"><Icon id="edit" size={20} /></span></button>}
           <div className="lvline num"><span className="lvtag">{t('menu.lv', { n: profileLevel(profile) })}</span><span className="muted small">{lp.into}/{lp.needed} XP</span></div>
           <div className="xpbar"><div style={{ width: `${Math.min(100, lp.ratio * 100)}%` }} /></div>
           <div className="profstats num"><span className="gem">{t('menu.wl', { w: profile.wins, l: profile.losses })}</span></div>
@@ -74,7 +74,7 @@ export default function ProfileScreen() {
             const pr = progressOf(profile, a);
             return (
               <div key={a.id} className={'achcard' + (pr.done ? ' done' : '')}>
-                <span className="ach-ico" aria-hidden="true">{pr.done ? a.icon : <Icon id="lock" size={30} />}</span>
+                <span className="ach-ico" aria-hidden="true"><Icon id={a.icon} size={36} />{!pr.done && <Icon id="lock" size={18} className="ach-lock" />}</span>
                 <div className="ach-body">
                   <b>{t('ach.' + a.id)}</b>
                   <span className="small">{t('ach.' + a.id + '.d')}</span>

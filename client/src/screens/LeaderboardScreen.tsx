@@ -25,7 +25,7 @@ export default function LeaderboardScreen() {
   const meInTop = !!board?.rows.some((r) => r.me);
   const row = (r: Row) => (
     <button key={r.id + (r.me ? '-me' : '')} className={'lbrow' + (r.me ? ' me' : '') + (r.rank <= 3 ? ' top' + r.rank : '')} onClick={() => setOpen(r.id)}>
-      <span className="lbrank num">{r.rank <= 3 ? ['🥇', '🥈', '🥉'][r.rank - 1] : r.rank}</span>
+      <span className="lbrank num">{r.rank <= 3 ? <Icon id={(['rank-gold', 'rank-silver', 'rank-bronze'] as const)[r.rank - 1]} size={34} /> : r.rank}</span>
       <Medal size={38} avatar={r.avatar} />
       <span className="lbname"><b>{r.me ? `${r.name} (${t('you')})` : r.name}</b><small className="num">{t('menu.lv', { n: r.level })} · {t('menu.wl', { w: r.wins, l: r.losses })}</small></span>
       <span className="lbval num">{value(r)}</span>

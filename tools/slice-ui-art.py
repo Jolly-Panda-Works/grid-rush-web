@@ -93,6 +93,66 @@ for a in manifest['assets']:
         f = f.crop(f.getchannel('A').point(lambda v: 255 if v > 24 else 0).getbbox())
         save(f, f'frames/{aid}.webp', 90)
 
+# icon sheets laid out as a 4x4 grid in the order of docs/icons-needed.md (not in the kit's manifest)
+GRID_SHEETS = {
+    'achievements-atlas.png': ['ach-first_win', 'ach-wins_10', 'ach-wins_50', 'ach-games_25', 'ach-streak_3', 'ach-bonus7', 'ach-full_board',
+                               'ach-score_15', 'ach-rich', 'ach-treasure_5', 'ach-tiles_100', 'ach-beat_master', 'ach-museum',
+                               'rank-gold', 'rank-silver', 'rank-bronze'],
+    'ui-icons-atlas.png': ['play', 'match', 'friends', 'add-friend', 'menu', 'sound-on', 'sound-off', 'motion', 'resign', 'close',
+                           'confirm', 'edit', 'copy', 'back', 'language', 'tip'],
+    'game-icons-atlas.png': ['buy-tile', 'advance', 'turns', 'finish', 'scales', 'rotate-left', 'rotate-right', 'flip', 'bot',
+                             'heart-empty', 'empty-cell', 'engraved-coin'],
+}
+
+
+def clean_alpha(img):
+    """Drop the faint matte specks the generator leaves around a cut-out: weak alpha goes, and so does anything
+    not connected to the object itself."""
+    a = img.getchannel('A').point(lambda v: 0 if v < 90 else v)
+    small = a.resize((a.width // 4, a.height // 4)).point(lambda v: 255 if v > 0 else 0)
+    w, h = small.size
+    px = small.load()
+    seen, comps = set(), []
+    for y in range(h):
+        for x in range(w):
+            if px[x, y] and (x, y) not in seen:
+                comp, stack = [], [(x, y)]
+                seen.add((x, y))
+                while stack:
+                    cx, cy = stack.pop()
+                    comp.append((cx, cy))
+                    for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)):
+                        if 0 <= nx < w and 0 <= ny < h and px[nx, ny] and (nx, ny) not in seen:
+                            seen.add((nx, ny))
+                            stack.append((nx, ny))
+                comps.append(comp)
+    biggest = max((len(c) for c in comps), default=0)
+    best = [p for c in comps if len(c) >= max(12, biggest * 0.04) for p in c]  # the object and its sizeable parts (a flame, a gem)
+    keep = Image.new('L', small.size)
+    kp = keep.load()
+    for x, y in best:
+        kp[x, y] = 255
+    keep = keep.filter(ImageFilter.MaxFilter(5)).resize(a.size)
+    out = img.copy()
+    out.putalpha(Image.composite(a, Image.new('L', a.size), keep))
+    return out
+
+
+for sheet, ids in GRID_SHEETS.items():
+    if not os.path.exists(os.path.join(SRC, sheet)):
+        continue
+    at = Image.open(os.path.join(SRC, sheet)).convert('RGBA')
+    cell = at.width / 4
+    for n, aid in enumerate(ids):
+        x, y = n % 4 * cell, n // 4 * cell
+        k = 7  # a few pixels in, so slivers of the neighbouring cells stay out
+        save(trim(clean_alpha(at.crop((round(x + k), round(y + k), round(x + cell - k), round(y + cell - k)))), 4).resize((160, 160), Image.LANCZOS), f'icons/{aid}.webp')
+
+# full-screen art for the Persian splash and loading screens (the Persian name and text are painted in)
+for name, file in (('splash-fa', 'splash-naqsh-nabard.png'), ('loading-fa', 'loading-naqsh-nabard.png')):
+    if os.path.exists(os.path.join(SRC, file)):
+        save(Image.open(os.path.join(SRC, file)).convert('RGB'), f'screens/{name}.webp', 82)
+
 # Persian logotype: «نقش‌نبرد», the game's Persian name
 for lang, file in (('en', 'wordmark-en.png'), ('fa', 'wordmark-naqsh-nabard-fa.png')):
     w = Image.open(os.path.join(SRC, file)).convert('RGBA')

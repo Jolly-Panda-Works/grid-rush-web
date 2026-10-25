@@ -37,7 +37,7 @@ export function PlayerCard({ id, onClose, children }: { id: string; onClose: () 
               <div><b>{p.stats.bestScore ?? '—'}</b><span>{t('prof.bestScore')}</span></div>
               <div><b>{p.stats.bonus7 ?? 0}</b><span>{t('prof.bonus7')}</span></div>
             </div>
-            <div className="pc-ach">{ACHIEVEMENTS.map((a) => <span key={a.id} className={'pc-a' + (p.ach[a.id] ? ' on' : '')} title={t('ach.' + a.id)}>{a.icon}</span>)}</div>
+            <div className="pc-ach">{ACHIEVEMENTS.map((a) => <span key={a.id} className={'pc-a' + (p.ach[a.id] ? ' on' : '')} title={t('ach.' + a.id)}><Icon id={a.icon} size={26} /></span>)}</div>
             {children}
           </>
         )}

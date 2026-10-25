@@ -4,11 +4,12 @@ import { Spinner } from '../components/Medal';
 import { useT } from '../i18n';
 import { pingServer } from '../net';
 import { bootstrapAccount } from '../account';
-import { preloadArt } from '../art';
+import { Icon, preloadArt, screenArtUrl } from '../art';
 import { useStore } from '../store';
 
 export default function LoadingScreen() {
   const t = useT();
+  const lang = useStore((s) => s.settings.lang);
   const [p, setP] = useState(0.05);
   const [label, setLabel] = useState('loading.fonts');
   const [tipIdx] = useState(() => Math.floor(Math.random() * 4));
@@ -31,6 +32,18 @@ export default function LoadingScreen() {
     })();
     return () => { alive = false; };
   }, []);
+  if (lang === 'fa') {
+    // the painted loading art; the real progress runs inside its painted bar
+    return (
+      <main className="loading-art">
+        <div className="ld-art">
+          <img src={screenArtUrl('loading-fa')} alt="نقش‌نبرد" draggable={false} />
+          <div className="ld-track"><div style={{ width: `${p * 100}%` }} /></div>
+          <div className="ld-tip small"><Icon id="tip" size={22} /> {t('tip.' + tipIdx)}</div>
+        </div>
+      </main>
+    );
+  }
   return (
     <main className="screen center loading">
       <Logo size={64} stacked />
@@ -38,7 +51,7 @@ export default function LoadingScreen() {
       <Spinner size={64} />
       <div className="goldbar"><div style={{ width: `${p * 100}%` }} /></div>
       <div className="muted small">{t(label)}</div>
-      <div className="scroll-note small">💡 {t('tip.' + tipIdx)}</div>
+      <div className="scroll-note small"><Icon id="tip" size={22} /> {t('tip.' + tipIdx)}</div>
     </main>
   );
 }

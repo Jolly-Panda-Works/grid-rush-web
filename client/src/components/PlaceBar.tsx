@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { cellsKey, transformCells } from '../../../shared/src';
 import { confirmPlacement } from '../actions';
+import { Icon } from '../art';
 import { useT } from '../i18n';
 import { flipHorizontal, resetSel, rotate, setOrientation, useStore } from '../store';
 import { dragApi } from '../three/dragApi';
@@ -44,10 +45,10 @@ export function PlaceBar() {
   return (
     <div ref={box} className={'placebar' + (flipDown ? ' down' : '')} style={{ left, top: at.y }} onPointerDown={(e) => e.stopPropagation()}>
       <div className="pbrow">
-        <button className="pb ok" disabled={!pv.valid} onClick={confirmPlacement} aria-label={t('place.ok')}>✓<span>{t('place.ok')}</span></button>
-        {!reward && <button className="pb" onClick={() => rotate()} aria-label={t('offer.rotate')} title={t('offer.rotate')}>⟳</button>}
-        {!reward && <button className="pb" onClick={() => flipHorizontal()} aria-label={t('offer.flip')} title={t('offer.flip')}>⇋</button>}
-        {!reward && <button className="pb" onClick={resetSel} aria-label={t('offer.cancel')} title={t('offer.cancel')}>✕</button>}
+        <button className="pb ok" disabled={!pv.valid} onClick={confirmPlacement} aria-label={t('place.ok')}><Icon id="confirm" size={20} /><span>{t('place.ok')}</span></button>
+        {!reward && <button className="pb" onClick={() => rotate()} aria-label={t('offer.rotate')} title={t('offer.rotate')}><Icon id="rotate-right" size={24} /></button>}
+        {!reward && <button className="pb" onClick={() => flipHorizontal()} aria-label={t('offer.flip')} title={t('offer.flip')}><Icon id="flip" size={24} /></button>}
+        {!reward && <button className="pb" onClick={resetSel} aria-label={t('offer.cancel')} title={t('offer.cancel')}><Icon id="close" size={22} /></button>}
       </div>
       {showStrip && tile && (
         <div className="pbstrip" role="radiogroup" aria-label={t('place.shapes')}>

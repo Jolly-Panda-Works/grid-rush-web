@@ -133,7 +133,7 @@ export default function ResultsScreen() {
           {!!res.newAch?.length && (
             <div className="newach">
               <b>{t('ach.new')}</b>
-              {res.newAch.map((id) => { const a = ACHIEVEMENTS.find((x) => x.id === id); return <span key={id} className="achchip">{a?.icon} {t('ach.' + id)}</span>; })}
+              {res.newAch.map((id) => { const a = ACHIEVEMENTS.find((x) => x.id === id); return <span key={id} className="achchip">{a && <Icon id={a.icon} size={22} />} {t('ach.' + id)}</span>; })}
             </div>
           )}
           <div className="row">

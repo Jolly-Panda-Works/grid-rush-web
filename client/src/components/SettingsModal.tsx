@@ -3,12 +3,13 @@ import { useT } from '../i18n';
 import { getWsUrl, normalizeServer, pingServer, setServerUrl } from '../net';
 import { useStore } from '../store';
 import { bootstrapAccount, canLinkGoogle, linkGoogle } from '../account';
+import { Icon, IconId } from '../art';
 
 /** A tile-styled on/off switch. */
-function Toggle({ on, onChange, label, icon }: { on: boolean; onChange: (v: boolean) => void; label: string; icon: string }) {
+function Toggle({ on, onChange, label, icon }: { on: boolean; onChange: (v: boolean) => void; label: string; icon: IconId }) {
   return (
     <button className={'trow' + (on ? ' on' : '')} role="switch" aria-checked={on} onClick={() => onChange(!on)}>
-      <span className="tr-ico" aria-hidden="true">{icon}</span>
+      <span className="tr-ico" aria-hidden="true"><Icon id={icon} size={26} /></span>
       <span className="tr-l">{label}</span>
       <span className="tswitch" aria-hidden="true"><i /></span>
     </button>
@@ -35,8 +36,8 @@ export function SettingsModal() {
           <button className={settings.lang === 'fa' ? 'on' : ''} onClick={() => setS({ lang: 'fa' })} lang="fa">فارسی</button>
           <button className={settings.lang === 'en' ? 'on' : ''} onClick={() => setS({ lang: 'en' })} lang="en">English</button>
         </div>
-        <Toggle icon="🔊" label={t('menu.sound')} on={settings.sound} onChange={(v) => setS({ sound: v })} />
-        <Toggle icon="✨" label={t('menu.reduce')} on={settings.reduceMotion} onChange={(v) => setS({ reduceMotion: v })} />
+        <Toggle icon={settings.sound ? 'sound-on' : 'sound-off'} label={t('menu.sound')} on={settings.sound} onChange={(v) => setS({ sound: v })} />
+        <Toggle icon="motion" label={t('menu.reduce')} on={settings.reduceMotion} onChange={(v) => setS({ reduceMotion: v })} />
         <div className="acctbox">
           <span className="muted small">{t('acct.title')}</span>
           {account

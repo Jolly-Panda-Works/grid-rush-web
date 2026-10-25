@@ -3,7 +3,8 @@ import { BOARD_SIZE, COIN_SCORE_DIVISOR, EMPTY_CELL_PENALTY, Seat, TRACK_LENGTH,
 import { useT } from '../i18n';
 import { avatarFor, avatarUrl } from './Medal';
 import { useStore } from '../store';
-import { CoinIcon, EmptyIcon, PlayerGlyph } from './TileShape';
+import { Icon } from '../art';
+import { CoinIcon, PlayerGlyph } from './TileShape';
 import { NextGem, TrackLine } from './TrackBar';
 import { GameMenu } from './GameMenu';
 import { dragApi } from '../three/dragApi';
@@ -67,7 +68,7 @@ export function SeatStats({ seat, compact = false }: { seat: Seat; compact?: boo
   return (
     <div className={'sstats' + (compact ? ' compact' : '')} data-seat={seat} role="button" tabIndex={0} onClick={() => setOpen((o) => !o)}>
       <span className="gem coin" title={t('hud.coins')}><CoinIcon size={16} /><b key={p.coins} className="num bump">{p.coins}</b><CoinDelta value={p.coins} /></span>
-      <span className="gem empty" title={t('hud.empty', { p: EMPTY_CELL_PENALTY })}><EmptyIcon size={14} /><b key={sc.emptyCells} className="num bump">{sc.emptyCells}</b></span>
+      <span className="gem empty" title={t('hud.empty', { p: EMPTY_CELL_PENALTY })}><Icon id="empty-cell" size={17} /><b key={sc.emptyCells} className="num bump">{sc.emptyCells}</b></span>
       {seat === mySeat && <NextGem />}
       {open && (
         <div className="pdetail" onClick={(e) => { e.stopPropagation(); setOpen(false); }}>
@@ -111,7 +112,7 @@ function PlayerPanel({ seat }: { seat: Seat }) {
       <div className="ppbody">
         <span className="ppname">
           <span className="n">{seat === mySeat ? t('you') : p.name}</span>
-          {seat !== mySeat && p.isBot && <span className="botdot" title={t('bot')}>🤖</span>}
+          {seat !== mySeat && p.isBot && <span className="botdot" title={t('bot')}><Icon id="bot" size={18} /></span>}
           {!p.connected && <span className="tag warn">{t('offline')}</span>}
         </span>
         <SeatStats seat={seat} compact />
