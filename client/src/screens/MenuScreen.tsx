@@ -1,35 +1,28 @@
-import { useState } from 'react';
 import { Logo } from '../components/Logo';
 import { Medal } from '../components/Medal';
 import { levelProgress } from '../../../shared/src';
 import { useT } from '../i18n';
 import { startSearch } from '../net';
-import { profileLevel, saveProfile } from '../profile';
+import { profileLevel } from '../profile';
 import { useStore } from '../store';
 
-/** Main menu as a game lobby: profile plate on top, the logo, two big play tiles, and a row of icon tiles.
+/** Main menu as a game lobby: profile plate on top (opens the profile), the logo, two big play tiles, and a row of icon tiles.
  *  Fixed layout (never scrolls). Bot games work offline, so no play tile depends on the server. */
 export default function MenuScreen() {
   const t = useT();
   const profile = useStore((s) => s.profile);
   const online = useStore((s) => s.serverOnline);
-  const [editing, setEditing] = useState(false);
   const lp = levelProgress(profile.xp);
-  const setName = (name: string) => { const p = { ...profile, name: name.slice(0, 16) }; saveProfile(p); useStore.setState({ profile: p }); };
-  const finishEdit = () => { if (!profile.name.trim()) setName('Player'); setEditing(false); };
   return (
     <main className="screen menu lobby">
-      <header className="profplate">
-        <Medal seat={0} size={58} level={profileLevel(profile)} />
+      <button className="profplate" onClick={() => useStore.setState({ screen: 'profile' })} aria-label={t('prof.title')}>
+        <Medal size={58} level={profileLevel(profile)} avatar={profile.avatar} />
         <div className="profinfo">
-          {editing
-            ? <input className="nameedit" autoFocus value={profile.name} maxLength={16} aria-label={t('menu.name')}
-                onChange={(e) => setName(e.target.value)} onBlur={finishEdit} onKeyDown={(e) => e.key === 'Enter' && finishEdit()} />
-            : <button className="namebtn" onClick={() => setEditing(true)} title={t('menu.editName')}><span>{profile.name}</span><span className="pen" aria-hidden="true">✎</span></button>}
+          <span className="namebtn"><span>{profile.name}</span><span className="pen" aria-hidden="true">›</span></span>
           <div className="xpbar" title={`${lp.into}/${lp.needed} XP`}><div style={{ width: `${Math.min(100, lp.ratio * 100)}%` }} /><span className="num">{lp.into}/{lp.needed}</span></div>
           <div className="profstats num"><span className="gem">🏆 {profile.rating}</span><span className="gem">{t('menu.wl', { w: profile.wins, l: profile.losses })}</span></div>
         </div>
-      </header>
+      </button>
 
       <div className="lobby-hero">
         <Logo size={56} stacked />

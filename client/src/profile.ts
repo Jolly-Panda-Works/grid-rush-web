@@ -1,17 +1,43 @@
 import { DEFAULT_RATING, levelFromXp } from '../../shared/src';
 
-export interface Profile { name: string; xp: number; rating: number; wins: number; losses: number; museumSeen?: number } // museumSeen = museum votes already turned into XP
+/** Lifetime statistics shown on the profile (all counted on this device). */
+export interface Stats {
+  games: number; streak: number; bestStreak: number;
+  bestScore: number | null; totalScore: number; scoredGames: number; // games that recorded a score (older saves have none)
+  bonus7: number; fullBoards: number; tiles: number; treasures: number; treasureCoins: number; rewards: number;
+  botMasterWins: number;
+}
+export interface Profile {
+  name: string; xp: number; rating: number; wins: number; losses: number;
+  museumSeen?: number; // museum votes already turned into XP
+  avatar: number;      // index into AVATARS
+  stats: Stats;
+  ach: Record<string, number>; // achievement id -> unlock time
+}
 export interface Settings { reduceMotion: boolean; sound: boolean; lang: 'en' | 'fa' }
 
 const PK = 'gridrush.profile.v1';
 const SK = 'gridrush.settings.v1';
 
+export const emptyStats = (): Stats => ({
+  games: 0, streak: 0, bestStreak: 0, bestScore: null, totalScore: 0, scoredGames: 0,
+  bonus7: 0, fullBoards: 0, tiles: 0, treasures: 0, treasureCoins: 0, rewards: 0, botMasterWins: 0,
+});
+
 export function loadProfile(): Profile {
   try {
     const p = JSON.parse(localStorage.getItem(PK) || 'null');
-    if (p && typeof p.name === 'string') return { name: p.name, xp: p.xp | 0, rating: p.rating | 0 || DEFAULT_RATING, wins: p.wins | 0, losses: p.losses | 0, museumSeen: p.museumSeen | 0 };
+    if (p && typeof p.name === 'string') {
+      const wins = p.wins | 0, losses = p.losses | 0;
+      // older saves have no stats yet: start them from the win / loss record
+      const stats: Stats = { ...emptyStats(), games: wins + losses, ...(p.stats ?? {}) };
+      return {
+        name: p.name, xp: p.xp | 0, rating: p.rating | 0 || DEFAULT_RATING, wins, losses, museumSeen: p.museumSeen | 0,
+        avatar: Number.isInteger(p.avatar) ? p.avatar : 0, stats, ach: p.ach && typeof p.ach === 'object' ? p.ach : {},
+      };
+    }
   } catch { /* ignore */ }
-  return { name: 'Player' + Math.floor(100 + Math.random() * 900), xp: 0, rating: DEFAULT_RATING, wins: 0, losses: 0 };
+  return { name: 'Player' + Math.floor(100 + Math.random() * 900), xp: 0, rating: DEFAULT_RATING, wins: 0, losses: 0, avatar: Math.floor(Math.random() * 12), stats: emptyStats(), ach: {} };
 }
 export function saveProfile(p: Profile) { try { localStorage.setItem(PK, JSON.stringify(p)); } catch { /* ignore */ } }
 export const profileLevel = (p: Profile) => levelFromXp(p.xp);

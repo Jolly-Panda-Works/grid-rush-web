@@ -3,6 +3,7 @@ import { useStore } from './store';
 import { saveSettings } from './profile';
 import LoadingScreen from './screens/LoadingScreen';
 import SplashScreen from './screens/SplashScreen';
+import ProfileScreen from './screens/ProfileScreen';
 import MenuScreen from './screens/MenuScreen';
 import MatchmakingScreen from './screens/MatchmakingScreen';
 import GameScreen from './screens/GameScreen';
@@ -36,6 +37,7 @@ export default function App() {
       {screen === 'game' && <GameScreen />}
       {screen === 'results' && <ResultsScreen />}
       {screen === 'museum' && <MuseumScreen />}
+      {screen === 'profile' && <ProfileScreen />}
       {help && <HowToPlay />}
       {settingsOpen && <SettingsModal />}
       <UpdatePrompt />

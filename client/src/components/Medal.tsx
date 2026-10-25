@@ -1,13 +1,28 @@
 import type { Seat } from '../../../shared/src';
-import { patternUrl, starPath, tileLook } from '../patterns';
+import { PATTERNS, patternUrl, starPath, tileLook } from '../patterns';
 import { PlayerGlyph } from './TileShape';
 
-/** A hero medallion outside the game (menu, matchmaking): a painted tile face with the player's marker in a gold rim. */
-export function Medal({ seat, size = 64, level }: { seat: Seat; size?: number; level?: number }) {
-  const face = patternUrl(tileLook(seat === 0 ? 7 : 12, 'x'));
+/** Avatars: painted-tile medallions, one of each design × two grounds (picked once from the tile looks). */
+export const AVATARS: number[] = (() => {
+  const seen = new Set<string>(), out: number[] = [];
+  for (let uid = 1; out.length < PATTERNS.length * 2 && uid < 5000; uid++) {
+    const l = tileLook(uid, 'x'), key = `${l.pattern}:${l.color}`;
+    const perPattern = out.filter((u) => tileLook(u, 'x').pattern === l.pattern).length;
+    if (!seen.has(key) && perPattern < 2) { seen.add(key); out.push(uid); }
+  }
+  return out;
+})();
+export const avatarUrl = (i: number) => patternUrl(tileLook(AVATARS[((i % AVATARS.length) + AVATARS.length) % AVATARS.length], 'x'));
+/** A stable avatar for players who did not pick one (bots, opponents): from their name. */
+export const avatarFor = (name: string) => [...name].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % AVATARS.length;
+
+/** A hero medallion outside the game (menu, matchmaking, profile): the avatar in a gold rim, an optional level star,
+ *  and the player's track marker as a small badge. */
+export function Medal({ seat, size = 64, level, avatar }: { seat?: Seat; size?: number; level?: number; avatar: number }) {
   return (
-    <div className={'medalion p' + seat} style={{ width: size, height: size }}>
-      <div className="pface" style={{ backgroundImage: `url(${face})` }}><PlayerGlyph seat={seat} size={size * 0.42} /></div>
+    <div className="medalion" style={{ width: size, height: size }}>
+      <div className="pface" style={{ backgroundImage: `url(${avatarUrl(avatar)})` }} />
+      {seat !== undefined && <span className="pglyph"><PlayerGlyph seat={seat} size={Math.max(12, size * 0.24)} /></span>}
       {level !== undefined && <span className="lvstar num" aria-label={`Lv ${level}`}>{level}</span>}
     </div>
   );

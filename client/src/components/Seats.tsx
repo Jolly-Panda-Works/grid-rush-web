@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { BOARD_SIZE, COIN_SCORE_DIVISOR, EMPTY_CELL_PENALTY, Seat, TRACK_LENGTH, TURN_SECONDS, scoreOf } from '../../../shared/src';
 import { useT } from '../i18n';
-import { patternUrl, tileLook } from '../patterns';
+import { avatarFor, avatarUrl } from './Medal';
 import { useStore } from '../store';
 import { CoinIcon, EmptyIcon, PlayerGlyph } from './TileShape';
 import { NextGem, TrackLine } from './TrackBar';
@@ -25,14 +25,17 @@ export function Portrait({ seat, size = 58 }: { seat: Seat; size?: number }) {
   const left = useTurnLeft();
   const frac = active && left !== null ? Math.min(1, left / TURN_SECONDS) : 1;
   const R = 46, CIRC = 2 * Math.PI * R;
-  const face = patternUrl(tileLook(seat === 0 ? 7 : 12, 'x'));
+  const mySeat = useStore((s) => s.mySeat);
+  const myAvatar = useStore((s) => s.profile.avatar);
+  const face = avatarUrl(seat === mySeat ? myAvatar : avatarFor(g.players[seat].name));
   return (
     <div className={'portrait p' + seat + (active ? ' active' : '') + (active && left !== null && left <= 10 ? ' low' : '')} style={{ width: size, height: size }}>
       <svg className="pring" viewBox="0 0 100 100" aria-hidden="true">
         <circle cx="50" cy="50" r={R} className="pr-bg" />
         {active && <circle cx="50" cy="50" r={R} className="pr-fg" strokeDasharray={CIRC} strokeDashoffset={CIRC * (1 - frac)} transform="rotate(-90 50 50)" />}
       </svg>
-      <div className="pface" style={{ backgroundImage: `url(${face})` }}><PlayerGlyph seat={seat} size={size * 0.42} /></div>
+      <div className="pface" style={{ backgroundImage: `url(${face})` }} />
+      <span className="pglyph"><PlayerGlyph seat={seat} size={Math.max(12, size * 0.26)} /></span>
       {active && left !== null && <span className="psecs num">{left}</span>}
     </div>
   );

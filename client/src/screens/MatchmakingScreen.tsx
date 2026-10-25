@@ -3,7 +3,7 @@ import { useT } from '../i18n';
 import { getWsUrl, cancelSearch, startSearch } from '../net';
 import { profileLevel } from '../profile';
 import { useStore } from '../store';
-import { Medal, Spinner } from '../components/Medal';
+import { Medal, Spinner, avatarFor } from '../components/Medal';
 
 export default function MatchmakingScreen() {
   const t = useT();
@@ -30,7 +30,7 @@ export default function MatchmakingScreen() {
       <main className="screen center found">
         <div className="vs">
           <div className="vcard opp">
-            <Medal seat={(1 - mySeat) as 0 | 1} size={64} level={opp.level} />
+            <Medal seat={(1 - mySeat) as 0 | 1} size={64} level={opp.level} avatar={avatarFor(opp.name)} />
             <div className="vtext">
               <h3>{opp.name}{opp.isBot && <span className="tag bot">{t('mm.botTag', { tier: t('tier.' + opp.botTier) })}</span>}</h3>
               <div className="muted num">{t('hud.lv', { n: opp.level })} · {opp.rating}</div>
@@ -38,7 +38,7 @@ export default function MatchmakingScreen() {
           </div>
           <div className="vsmark"><span>VS</span></div>
           <div className="vcard me">
-            <Medal seat={mySeat} size={64} level={profileLevel(profile)} />
+            <Medal seat={mySeat} size={64} level={profileLevel(profile)} avatar={profile.avatar} />
             <div className="vtext">
               <h3>{me.name}</h3>
               <div className="muted num">{t('hud.lv', { n: profileLevel(profile) })} · {me.rating}</div>

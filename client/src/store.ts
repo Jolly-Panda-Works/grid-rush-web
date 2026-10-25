@@ -5,7 +5,7 @@ import { Profile, Settings, loadProfile, loadSettings } from './profile';
 import { bestFit, hoverKeeping, placedCells } from './three/placement';
 import { tr } from './i18n';
 
-export type Screen = 'splash' | 'loading' | 'menu' | 'matchmaking' | 'game' | 'results' | 'museum';
+export type Screen = 'splash' | 'loading' | 'profile' | 'menu' | 'matchmaking' | 'game' | 'results' | 'museum';
 export interface Popup { id: number; text: string; tone: 'info' | 'good' | 'warn' | 'bad' }
 export interface RibbonMsg { id: number; title: string; sub?: string; tone: 'mine' | 'opp' | 'big' }
 export interface Fx { id: number; kind: 'coins' | 'tile'; x: number; y: number; tx?: number; ty?: number; count?: number; color?: string }
@@ -16,7 +16,7 @@ export interface MatchState {
 }
 export interface ResultInfo {
   won: boolean; ratingBefore: number; ratingAfter: number; delta: number;
-  xpGain: number; xpBefore: number; xpAfter: number; levelBefore: number; levelAfter: number;
+  xpGain: number; xpBefore: number; xpAfter: number; levelBefore: number; levelAfter: number; newAch?: string[];
 }
 export interface Selection { offer: number | null; rot: number; flip: boolean; hover: [number, number] | null }
 export interface Orient { rot: number; flip: boolean }

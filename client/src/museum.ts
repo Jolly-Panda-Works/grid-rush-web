@@ -55,6 +55,7 @@ export const voteExhibit = (id: string) => api<{ votes: number; voted: boolean }
 export async function publishBoard(tiles: PlacedTile[], score: number, title = ''): Promise<boolean> {
   const name = useStore.getState().profile.name;
   const r = await api<Exhibit>('/exhibits', { method: 'POST', body: JSON.stringify({ pid: playerId(), name, title, tiles, score }) });
+  if (r) unlockAchievement('museum');
   return !!r;
 }
 
@@ -67,4 +68,14 @@ export function claimVotes(points: number) {
   saveProfile(next);
   useStore.setState({ profile: next });
   pushToast(tr('museum.newVotes', { n: fresh, xp: fresh * XP_PER_VOTE }), 'good');
+}
+
+/** Unlock a one-off achievement (if not unlocked yet) and announce it. */
+export function unlockAchievement(id: string) {
+  const p = useStore.getState().profile;
+  if (p.ach[id]) return;
+  const next = { ...p, ach: { ...p.ach, [id]: Date.now() } };
+  saveProfile(next);
+  useStore.setState({ profile: next });
+  pushToast(tr('ach.unlocked', { name: tr('ach.' + id) }), 'good');
 }

@@ -8,6 +8,7 @@ import { nearestValid } from './three/placement';
 import { tr, trErr } from './i18n';
 import { LocalSession } from './local';
 import { addToCollection } from './museum';
+import { GameSummary, newlyUnlocked } from './achievements';
 import { BOT_TIER_NAMES } from '../../shared/src';
 
 const HOST = location.hostname || 'localhost';
@@ -47,11 +48,12 @@ let lastEventId = 0;
 let finalized = false;
 let gotFirst = false;
 let local: LocalSession | null = null;   // offline game running inside the app
+let mine = { treasures: 0, treasureCoins: 0, rewards: 0 }; // my counts in the current game (for stats / achievements)
 
 export async function startSearch(solo: boolean) {
   const my = ++token;
   leaveRoom();
-  leaving = false; finalized = false; lastEventId = 0; gotFirst = false;
+  leaving = false; finalized = false; lastEventId = 0; gotFirst = false; mine = { treasures: 0, treasureCoins: 0, rewards: 0 };
   const st = useStore.getState();
   useStore.setState({
     screen: 'matchmaking', game: null, result: null, connection: 'ok', popups: [], fx: [], pendingFx: {}, drag: null, orient: {}, rotAnim: null,
@@ -160,11 +162,12 @@ function onState(g: GameState, turnLeft: number | null) {
         case 'buy': sfx.place(); addTrauma(TRAUMA.small); break;
         case 'advance': sfx.advance(); break;
         case 'treasure':
+          if (e.seat === st.mySeat) { mine.treasures++; mine.treasureCoins += e.coins; }
           sfx.coin();
           if (e.seat === st.mySeat && e.coins > 0) addTrauma(TRAUMA.medium);
           useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'treasure', coins: e.coins };
           break;
-        case 'reward': useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'reward', coins: 0 }; break;
+        case 'reward': if (e.seat === st.mySeat) mine.rewards++; useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'reward', coins: 0 }; break;
         case 'bonus7': pushRibbon(tr('rib.bonus7'), 'big', tr('toast.bonus7', { name: nameOf(g, e.seat) })); sfx.bonus(); addTrauma(TRAUMA.large); break;
         case 'turn':
           // the hand-over is the rule players miss most, so it is always announced in words
@@ -198,12 +201,28 @@ function finalize(g: GameState) {
   const opp = g.players[1 - me];
   const delta = eloDelta(p.rating, opp.rating, won);
   const xpGain = xpForGame(won);
-  const next = { ...p, rating: Math.max(100, p.rating + delta), xp: p.xp + xpGain, wins: p.wins + (won ? 1 : 0), losses: p.losses + (won ? 0 : 1) };
+  const sc = g.result!.scores[me], my = g.players[me];
+  const summary: GameSummary = {
+    won, score: sc.total, empty: sc.emptyCells, coins: sc.coins, bonus7: my.bonus7, tiles: my.tiles.length,
+    treasures: mine.treasures, vsBotTier: opp.isBot ? opp.botTier : null,
+  };
+  const s = p.stats;
+  const streak = won ? s.streak + 1 : 0;
+  const stats = {
+    ...s, games: s.games + 1, streak, bestStreak: Math.max(s.bestStreak, streak),
+    bestScore: s.bestScore === null ? sc.total : Math.max(s.bestScore, sc.total), totalScore: s.totalScore + sc.total, scoredGames: s.scoredGames + 1,
+    bonus7: s.bonus7 + (my.bonus7 ? 1 : 0), fullBoards: s.fullBoards + (sc.emptyCells === 0 ? 1 : 0), tiles: s.tiles + my.tiles.length,
+    treasures: s.treasures + mine.treasures, treasureCoins: s.treasureCoins + mine.treasureCoins, rewards: s.rewards + mine.rewards,
+    botMasterWins: s.botMasterWins + (won && opp.isBot && opp.botTier >= 5 ? 1 : 0),
+  };
+  const next = { ...p, rating: Math.max(100, p.rating + delta), xp: p.xp + xpGain, wins: p.wins + (won ? 1 : 0), losses: p.losses + (won ? 0 : 1), stats };
+  const fresh = g.result!.reason === 'forfeit' || g.result!.reason === 'timeout' ? newlyUnlocked(next, { ...summary, coins: 0, treasures: 0 }) : newlyUnlocked(next, summary);
+  if (fresh.length) next.ach = { ...next.ach, ...Object.fromEntries(fresh.map((id) => [id, Date.now()])) };
   saveProfile(next);
   addToCollection({ tiles: g.players[me].tiles, score: g.result!.scores[me].total, won, opp: opp.name });
   const info = {
     won, ratingBefore: p.rating, ratingAfter: next.rating, delta, xpGain, xpBefore: p.xp, xpAfter: next.xp,
-    levelBefore: levelFromXp(p.xp), levelAfter: levelFromXp(next.xp),
+    levelBefore: levelFromXp(p.xp), levelAfter: levelFromXp(next.xp), newAch: fresh,
   };
   useStore.setState({ profile: next, result: info });
   (won ? sfx.win : sfx.lose)();

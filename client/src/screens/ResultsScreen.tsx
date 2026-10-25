@@ -5,6 +5,7 @@ import { Popup } from '../components/Popup';
 import { PlayerGlyph } from '../components/TileShape';
 import { useT } from '../i18n';
 import { publishBoard } from '../museum';
+import { ACHIEVEMENTS } from '../achievements';
 import { backToMenu, startSearch } from '../net';
 import { pushToast, useStore } from '../store';
 
@@ -68,6 +69,12 @@ export default function ResultsScreen() {
             <div>{t('res.xp', { n: res.xpGain })} <b>{res.levelAfter}</b>{res.levelAfter > res.levelBefore && <span className="tag good">{t('res.levelUp')}</span>}</div>
             <div className="xp"><div style={{ width: `${Math.min(100, lp.ratio * 100)}%` }} /></div>
           </div>
+          {!!res.newAch?.length && (
+            <div className="newach">
+              <b>{t('ach.new')}</b>
+              {res.newAch.map((id) => { const a = ACHIEVEMENTS.find((x) => x.id === id); return <span key={id} className="achchip">{a?.icon} {t('ach.' + id)}</span>; })}
+            </div>
+          )}
           <div className="row">
             <button className="btn primary big" onClick={() => startSearch(solo)}>{t('res.again')}</button>
             <button className="btn" disabled={saved !== 'idle' || g.players[mySeat].tiles.length === 0} onClick={exhibit}>🏛 {saved === 'done' ? t('museum.inMuseum') : t('museum.exhibit')}</button>
