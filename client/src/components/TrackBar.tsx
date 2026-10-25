@@ -37,12 +37,12 @@ export function NextGem() {
   const me = g.players[useStore((s) => s.mySeat)];
   const toEnd = TRACK_LENGTH - Math.max(g.players[0].pos, g.players[1].pos);
   if (g.phase === 'finished') return null;
-  if (toEnd <= END_WARN) return <span className="gem warn num" title={t('bar.end', { d: toEnd })}>🏁<b>{toEnd}</b></span>;
+  if (toEnd <= END_WARN) return <span key={toEnd} className="gem warn num" title={t('bar.end', { d: toEnd })}>🏁<b>{toEnd}</b></span>;
   const nextT = TREASURE_POSITIONS.find((p) => p > me.pos);
   if (nextT === undefined) return null;
   const pays = engravedTotal(me);
   return (
-    <span className="gem next num" title={pays > 0 ? t('bar.next', { d: nextT - me.pos, c: pays }) : t('bar.nextZero', { d: nextT - me.pos })}>
+    <span key={nextT - me.pos} className="gem next num" title={pays > 0 ? t('bar.next', { d: nextT - me.pos, c: pays }) : t('bar.nextZero', { d: nextT - me.pos })}>
       <img src={iconUrl('chest')} alt="" /><b>{nextT - me.pos}</b>{pays > 0 && <small>+{pays}</small>}
     </span>
   );

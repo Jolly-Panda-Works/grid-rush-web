@@ -110,7 +110,7 @@ export default function MuseumScreen() {
                   <BoardArt tiles={e.tiles} size={140} />
                   <figcaption><b className="mowner">{e.ownerName}</b><span className="muted small num">{t('museum.score', { n: e.score })}</span></figcaption>
                   <button className={'btn small vote' + (e.voted ? ' on' : '')} disabled={e.mine || busy === e.id} onClick={() => vote(e)}>
-                    {e.voted ? '❤' : '♡'} <span className="num">{e.votes}</span>{e.mine ? ` · ${t('museum.yours')}` : ''}
+                    <span key={String(e.voted)} className="heart">{e.voted ? '❤' : '♡'}</span> <span className="num">{e.votes}</span>{e.mine ? ` · ${t('museum.yours')}` : ''}
                   </button>
                 </figure>
               ))}

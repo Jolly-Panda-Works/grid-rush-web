@@ -102,7 +102,7 @@ export function OfferPanel() {
         {g.next && (
           <div className="pile" title={t('offer.nextTitle')}>
             <span className="pile-back" /><span className="pile-back b2" />
-            <div className="pile-top"><TileShape cells={g.next.cells} shape={g.next.shape} uid={g.next.uid} engraved={g.next.engraved} cell={8} /></div>
+            <div className="pile-top" key={g.next.uid}><TileShape cells={g.next.cells} shape={g.next.shape} uid={g.next.uid} engraved={g.next.engraved} cell={8} /></div>
             <span className="pile-l">{t('offer.next')}</span>
           </div>
         )}
