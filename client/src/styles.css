@@ -1373,3 +1373,9 @@ html[dir='rtl'] .lb-fill { clip-path: inset(0 0 0 calc((1 - var(--p)) * 100%) ro
 /* ---- splash: the title over the painted tile medallion ---- */
 .sp-logo { position: absolute; left: 6%; right: 6%; top: 3.5%; display: flex; justify-content: center; animation: a-pop .7s cubic-bezier(.2,1.4,.4,1) .2s both; }
 .sp-logo .logo-img { width: 100% !important; max-width: 440px; max-height: 12vh; height: auto; object-fit: contain; filter: drop-shadow(0 6px 16px rgba(0,0,20,.8)); }
+/* the loading art's ceiling starts high: a soft navy fade at the top keeps the logo and tagline readable */
+.ld-art::before { content: ''; position: absolute; inset: 0 0 auto; height: 26%; z-index: 1; pointer-events: none;
+  background: linear-gradient(180deg, rgba(4,16,58,.92) 0%, rgba(4,16,58,.75) 55%, rgba(4,16,58,0) 100%); }
+.ld-logo { z-index: 2; top: 3%; }
+.ld-logo .logo-img { max-height: 11vh; }
+.ld-logo .tagline { text-shadow: 0 2px 4px rgba(0,0,0,.85); }
