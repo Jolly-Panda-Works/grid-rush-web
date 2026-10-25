@@ -3,34 +3,35 @@ import path from 'path';
 import { randomUUID } from 'crypto';
 import express, { Request, Response, Router } from 'express';
 import { BOARD_SIZE, Cell, PlacedTile, SHAPE_IDS } from '../../shared/src';
+import { db, tx } from './db';
 
 /**
  * Museum: players exhibit finished boards, other players vote for them; every vote is a museum point for the owner.
- * Storage is a single JSON file (no database yet). Players are identified by a random id their device generates
- * (not an account: good enough for a first version, not tamper-proof).
+ * Stored in the server database (an older museum.json is imported once). Players are identified by a random id
+ * their device generates (not an account: good enough for a first version, not tamper-proof).
  */
 export const MAX_EXHIBITS_PER_PLAYER = 6;
 
-interface Exhibit {
-  id: string; ownerId: string; ownerName: string; title: string;
-  tiles: PlacedTile[]; score: number; createdAt: number; voters: string[];
+// one-time import of the museum.json file used before the database existed
+const OLD_FILE = process.env.MUSEUM_FILE || path.resolve(__dirname, '../data/museum.json');
+if (fs.existsSync(OLD_FILE) && !db.prepare('SELECT 1 FROM exhibits LIMIT 1').get()) {
+  try {
+    const old = JSON.parse(fs.readFileSync(OLD_FILE, 'utf8')) as { id: string; ownerId: string; ownerName: string; title: string; tiles: PlacedTile[]; score: number; createdAt: number; voters: string[] }[];
+    tx(() => {
+      for (const e of old) {
+        db.prepare('INSERT OR IGNORE INTO exhibits (id, owner_id, owner_name, title, tiles, score, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .run(e.id, e.ownerId, e.ownerName, e.title, JSON.stringify(e.tiles), e.score, e.createdAt);
+        for (const v of e.voters) db.prepare('INSERT OR IGNORE INTO votes (exhibit_id, voter_id) VALUES (?, ?)').run(e.id, v);
+      }
+    });
+    fs.renameSync(OLD_FILE, OLD_FILE + '.imported');
+  } catch (err) { console.warn('[museum] could not import', OLD_FILE, err); }
 }
 
-const FILE = process.env.MUSEUM_FILE || path.resolve(__dirname, '../data/museum.json');
-let exhibits: Exhibit[] = [];
-try { exhibits = JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch { exhibits = []; }
-
-let saveTimer: NodeJS.Timeout | null = null;
-function save() {
-  if (saveTimer) return;
-  saveTimer = setTimeout(() => {
-    saveTimer = null;
-    fs.mkdirSync(path.dirname(FILE), { recursive: true });
-    const tmp = FILE + '.tmp';
-    fs.writeFileSync(tmp, JSON.stringify(exhibits));
-    fs.renameSync(tmp, FILE);
-  }, 300);
-}
+interface Row { id: string; owner_id: string; owner_name: string; title: string; tiles: string; score: number; created_at: number; votes: number; voted: number }
+/** Exhibits with their vote count and whether the viewer (first parameter) voted. */
+const SELECT = `SELECT e.*, (SELECT COUNT(*) FROM votes v WHERE v.exhibit_id = e.id) AS votes,
+  (SELECT COUNT(*) FROM votes v WHERE v.exhibit_id = e.id AND v.voter_id = ?) AS voted FROM exhibits e`;
 
 const validPid = (v: unknown): v is string => typeof v === 'string' && /^[a-z0-9-]{8,64}$/i.test(v);
 const clean = (v: unknown, max: number) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f]/g, '').trim().slice(0, max) : '');
@@ -56,9 +57,9 @@ function validTiles(v: unknown): PlacedTile[] | null {
   return out;
 }
 
-const view = (e: Exhibit, pid?: string) => ({
-  id: e.id, ownerName: e.ownerName, title: e.title, tiles: e.tiles, score: e.score, createdAt: e.createdAt,
-  votes: e.voters.length, mine: !!pid && e.ownerId === pid, voted: !!pid && e.voters.includes(pid),
+const view = (e: Row, pid?: string) => ({
+  id: e.id, ownerName: e.owner_name, title: e.title, tiles: JSON.parse(e.tiles), score: e.score, createdAt: e.created_at,
+  votes: e.votes, mine: !!pid && e.owner_id === pid, voted: !!e.voted,
 });
 
 export function museumRouter(): Router {
@@ -67,19 +68,18 @@ export function museumRouter(): Router {
 
   // Explore: everybody's exhibits, best first or newest first
   r.get('/exhibits', (req: Request, res: Response) => {
-    const pid = validPid(req.query.pid) ? req.query.pid : undefined;
-    const sort = req.query.sort === 'new' ? 'new' : 'top';
+    const pid = validPid(req.query.pid) ? req.query.pid : '';
+    const order = req.query.sort === 'new' ? 'e.created_at DESC' : 'votes DESC, e.created_at DESC';
     const limit = Math.max(1, Math.min(60, Number(req.query.limit) || 30));
-    const list = [...exhibits].sort((a, b) => (sort === 'new' ? b.createdAt - a.createdAt : b.voters.length - a.voters.length || b.createdAt - a.createdAt));
-    res.json(list.slice(0, limit).map((e) => view(e, pid)));
+    res.json((db.prepare(`${SELECT} ORDER BY ${order} LIMIT ?`).all(pid, limit) as unknown as Row[]).map((e) => view(e, pid)));
   });
 
   // My museum + my museum points (= votes received)
   r.get('/me', (req: Request, res: Response) => {
     if (!validPid(req.query.pid)) return res.status(400).json({ error: 'bad player id' });
     const pid = req.query.pid;
-    const mine = exhibits.filter((e) => e.ownerId === pid).sort((a, b) => b.createdAt - a.createdAt);
-    res.json({ exhibits: mine.map((e) => view(e, pid)), points: mine.reduce((n, e) => n + e.voters.length, 0), max: MAX_EXHIBITS_PER_PLAYER });
+    const mine = db.prepare(`${SELECT} WHERE e.owner_id = ? ORDER BY e.created_at DESC`).all(pid, pid) as unknown as Row[];
+    res.json({ exhibits: mine.map((e) => view(e, pid)), points: mine.reduce((n, e) => n + e.votes, 0), max: MAX_EXHIBITS_PER_PLAYER });
   });
 
   r.post('/exhibits', (req: Request, res: Response) => {
@@ -87,22 +87,19 @@ export function museumRouter(): Router {
     if (!validPid(pid)) return res.status(400).json({ error: 'bad player id' });
     const tiles = validTiles(req.body.tiles);
     if (!tiles) return res.status(400).json({ error: 'bad board' });
-    if (exhibits.filter((e) => e.ownerId === pid).length >= MAX_EXHIBITS_PER_PLAYER) return res.status(409).json({ error: 'museum full' });
-    const e: Exhibit = {
-      id: randomUUID(), ownerId: pid, ownerName: clean(req.body.name, 16) || 'Player', title: clean(req.body.title, 40),
-      tiles, score: Number.isFinite(req.body.score) ? Math.round(req.body.score) : 0, createdAt: Date.now(), voters: [],
-    };
-    exhibits.push(e);
-    save();
-    res.json(view(e, pid));
+    const count = (db.prepare('SELECT COUNT(*) AS n FROM exhibits WHERE owner_id = ?').get(pid) as { n: number }).n;
+    if (count >= MAX_EXHIBITS_PER_PLAYER) return res.status(409).json({ error: 'museum full' });
+    const id = randomUUID();
+    db.prepare('INSERT INTO exhibits (id, owner_id, owner_name, title, tiles, score, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .run(id, pid, clean(req.body.name, 16) || 'Player', clean(req.body.title, 40), JSON.stringify(tiles), Number.isFinite(req.body.score) ? Math.round(req.body.score) : 0, Date.now());
+    res.json(view(db.prepare(`${SELECT} WHERE e.id = ?`).get(pid, id) as unknown as Row, pid));
   });
 
   r.delete('/exhibits/:id', (req: Request, res: Response) => {
-    const i = exhibits.findIndex((e) => e.id === req.params.id);
-    if (i < 0) return res.status(404).json({ error: 'not found' });
-    if (exhibits[i].ownerId !== req.query.pid) return res.status(403).json({ error: 'not yours' });
-    exhibits.splice(i, 1);
-    save();
+    const e = db.prepare('SELECT owner_id FROM exhibits WHERE id = ?').get(req.params.id) as { owner_id: string } | undefined;
+    if (!e) return res.status(404).json({ error: 'not found' });
+    if (e.owner_id !== req.query.pid) return res.status(403).json({ error: 'not yours' });
+    db.prepare('DELETE FROM exhibits WHERE id = ?').run(req.params.id);
     res.json({ ok: true });
   });
 
@@ -110,13 +107,13 @@ export function museumRouter(): Router {
   r.post('/exhibits/:id/vote', (req: Request, res: Response) => {
     const { pid } = req.body ?? {};
     if (!validPid(pid)) return res.status(400).json({ error: 'bad player id' });
-    const e = exhibits.find((x) => x.id === req.params.id);
+    const e = db.prepare('SELECT owner_id FROM exhibits WHERE id = ?').get(req.params.id) as { owner_id: string } | undefined;
     if (!e) return res.status(404).json({ error: 'not found' });
-    if (e.ownerId === pid) return res.status(403).json({ error: 'own exhibit' });
-    const k = e.voters.indexOf(pid);
-    if (k >= 0) e.voters.splice(k, 1); else e.voters.push(pid);
-    save();
-    res.json({ votes: e.voters.length, voted: k < 0 });
+    if (e.owner_id === pid) return res.status(403).json({ error: 'own exhibit' });
+    const had = db.prepare('DELETE FROM votes WHERE exhibit_id = ? AND voter_id = ?').run(req.params.id, pid).changes > 0;
+    if (!had) db.prepare('INSERT INTO votes (exhibit_id, voter_id) VALUES (?, ?)').run(req.params.id, pid);
+    const votes = (db.prepare('SELECT COUNT(*) AS n FROM votes WHERE exhibit_id = ?').get(req.params.id) as { n: number }).n;
+    res.json({ votes, voted: !had });
   });
 
   return r;

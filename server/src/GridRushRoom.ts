@@ -3,8 +3,10 @@ import {
   Action, BOT_INTENT_MS, BOT_THINK_MS, Cell, GameState, MATCH_WAIT_MS, PlayerInit, Seat, TURN_SECONDS,
   applyAction, botTierFor, chooseAction, createGame, forfeit, other, BOT_TIER_NAMES,
 } from '../../shared/src';
+import { applyOnlineResult, userByToken } from './accounts';
+import { levelFromXp } from '../../shared/src';
 
-interface Human { name: string; level: number; rating: number; lang: 'en' | 'fa' }
+interface Human { name: string; level: number; rating: number; lang: 'en' | 'fa'; userId: string | null }
 interface Participant { sid: string | null; init: PlayerInit }
 
 const BOT_NAMES_FA = ['آرش', 'نیکا', 'کیان', 'سارا', 'رها', 'پارسا', 'مهان', 'آوا', 'سپهر', 'نوین', 'دانا', 'یاسی'];
@@ -55,12 +57,15 @@ export class GridRushRoom extends Room {
   }
 
   /* ---------------- lobby ---------------- */
-  onJoin(client: Client, options: { name?: string; level?: number; rating?: number; lang?: string }) {
+  onJoin(client: Client, options: { name?: string; level?: number; rating?: number; lang?: string; token?: string }) {
+    // signed-in players play with their server profile (name, level, rating); guests without a token as before
+    const user = userByToken(options?.token);
     this.humans.set(client.sessionId, {
-      name: cleanName(options?.name),
-      level: cleanNum(options?.level, 1, 99, 1),
-      rating: cleanNum(options?.rating, 100, 4000, 1000),
+      name: user ? user.name : cleanName(options?.name),
+      level: user ? levelFromXp(user.xp) : cleanNum(options?.level, 1, 99, 1),
+      rating: user ? user.rating : cleanNum(options?.rating, 100, 4000, 1000),
       lang: options?.lang === 'fa' ? 'fa' : 'en',
+      userId: user?.id ?? null,
     });
     if (this.humans.size === 1) {
       const wait = this.solo ? 1800 : Number(process.env.MATCH_WAIT_MS || MATCH_WAIT_MS);
@@ -172,7 +177,20 @@ export class GridRushRoom extends Room {
     this.onFinished();
   }
 
+  private finishedOnce = false;
   private onFinished() {
+    if (this.finishedOnce) return;
+    this.finishedOnce = true;
+    // the server owns the rating: update it for every signed-in player and tell their client the new value
+    const g = this.game;
+    if (g?.result) {
+      for (const [sid, seat] of this.seatOf) {
+        const h = this.humans.get(sid);
+        if (!h?.userId) continue;
+        const r = applyOnlineResult(h.userId, g.players[other(seat)].rating, g.result.winner === seat);
+        if (r) this.clients.find((c) => c.sessionId === sid)?.send('rating', r);
+      }
+    }
     this.clock.setTimeout(() => this.disconnect(), 90_000);
   }
 
