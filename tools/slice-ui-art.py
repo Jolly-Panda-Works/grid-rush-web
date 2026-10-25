@@ -128,6 +128,10 @@ def lift_ornament(name, x0, x1, y0, y1, clean, band=False):
 
 
 lift_ornament('modal', 144, 218, 0, 96, [(129, 139), (223, 233)], band=True)
+# the ribbons' gem mounts sit on a stretched middle too
+lift_ornament('ribbon', 95, 232, 0, 64, [(74, 92), (234, 252)], band=True)
+lift_ornament('victory', 104, 274, 0, 72, [(84, 102), (278, 296)])
+lift_ornament('defeat', 102, 250, 0, 72, [(82, 100), (252, 270)])
 
 
 def glaze_recolor(src, name, top, bottom):
