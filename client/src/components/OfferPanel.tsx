@@ -9,6 +9,7 @@ import { dragApi } from '../three/dragApi';
 import { nearestValid, previewFor } from '../three/placement';
 import { CoinIcon, TileShape, TimeIcon } from './TileShape';
 import { SeatPortrait, SeatStats } from './Seats';
+import { RewardCardFace } from './RewardCard';
 import { sfx } from '../audio';
 
 const DRAG_THRESHOLD = 8;
@@ -24,6 +25,7 @@ export function OfferPanel() {
   const me = g.players[mySeat];
   const myTurn = g.current === mySeat && g.phase === 'playing';
   const locked = !myTurn;
+  const placing = g.current === mySeat && g.phase === 'placing_reward';
   const suppressClick = useRef(false);
   const oppMove = intent && intent.seat !== mySeat && g.current === intent.seat ? intent.action : null;
 
@@ -78,7 +80,8 @@ export function OfferPanel() {
         <SeatStats seat={mySeat} />
       </div>
 
-      <div className="hand">
+      <div className={'hand' + (placing ? ' holding' : '')}>
+        {placing && <div className="gcard rewardcard inhand sel" aria-label={t('reward.title')}><RewardCardFace count={g.pendingRewards} /></div>}
         {g.offer.map((tile, i) => {
           const afford = me.coins >= tile.coinCost;
           const fits = canPlaceAny(me.board, tile.cells);

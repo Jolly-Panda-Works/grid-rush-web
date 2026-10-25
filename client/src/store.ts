@@ -45,6 +45,7 @@ interface Store {
   oppIntent: { seat: Seat; action: Action } | null; // what the bot is about to do (shown before it plays)
   oppLog: string | null; // plain-language summary of the opponent's last action
   ribbon: RibbonMsg | null; // big banner for important moments (turn change, bonus)
+  rewardCard: { id: number; seat: Seat } | null; // a 1x1 tile was just collected: show it as a card
   update: UpdateInfo | null; // a newer release was found at launch
   showHelp: boolean;
   showSettings: boolean;
@@ -75,6 +76,7 @@ export const useStore = create<Store>(() => ({
   oppIntent: null,
   oppLog: null,
   ribbon: null,
+  rewardCard: null,
   update: null,
   showHelp: false,
   showSettings: false,
@@ -91,6 +93,11 @@ export function pushToast(text: string, tone: Popup['tone'] = 'info') {
 let ribbonId = 1;
 export function pushRibbon(title: string, tone: RibbonMsg['tone'], sub?: string) {
   useStore.setState({ ribbon: { id: ribbonId++, title, sub, tone } });
+}
+let rewardId = 1;
+/** Show the "you got a 1x1 tile" card (or the opponent's version) right when the marker reaches the reward cell. */
+export function pushRewardCard(seat: Seat) {
+  useStore.setState({ rewardCard: { id: rewardId++, seat } });
 }
 let fxId = 1;
 export function spawnFx(fx: Omit<Fx, 'id'>) {

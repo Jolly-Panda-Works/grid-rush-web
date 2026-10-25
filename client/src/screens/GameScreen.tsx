@@ -3,6 +3,7 @@ import { TRACK_LENGTH } from '../../../shared/src';
 import { OfferPanel, TurnScroll } from '../components/OfferPanel';
 import { OppBar } from '../components/Seats';
 import { Ribbon } from '../components/Ribbon';
+import { RewardCardFx } from '../components/RewardCard';
 import { useT } from '../i18n';
 import { Popup } from '../components/Popup';
 import { GameMenu } from '../components/GameMenu';
@@ -55,6 +56,7 @@ export default function GameScreen() {
         <PlaceBar />
         <TurnScroll />
         <Ribbon />
+        <RewardCardFx />
         <Popup />
         <GameMenu />
         {conn === 'reconnecting' && <div className="overlay soft"><div className="modal small">{t('game.reconnecting')}</div></div>}

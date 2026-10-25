@@ -2,7 +2,7 @@ import { memo, useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { REWARD_POSITIONS, Seat, TRACK_LENGTH, TREASURE_POSITIONS } from '../../../shared/src';
-import { removeFx, spawnFx, useStore } from '../store';
+import { pushRewardCard, removeFx, spawnFx, useStore } from '../store';
 import { C, PLAYER_COLORS, UI } from './colors';
 import { cellTexture } from './icons';
 import { Layout, trackCoord, trackCoordFrac, windowAlpha, windowTarget } from './layout';
@@ -91,6 +91,7 @@ function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
     if (fx.kind === 'treasure' && fx.coins > 0) { vfx('gold', x, y, 0.8); coinsTo(seat, x, y, fx.coins); }
     if (fx.kind === 'reward') {
       vfx('sparkle', x, y, 0.8);
+      pushRewardCard(seat);
       const b = seat === st.mySeat ? layout.my : layout.opp;
       spawnFx({ kind: 'tile', x, y, tx: b.x, ty: b.y, color: C.emerald });
     }

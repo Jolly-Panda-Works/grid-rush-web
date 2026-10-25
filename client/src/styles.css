@@ -966,3 +966,38 @@ html, body { overflow: hidden; width: 100%; position: fixed; inset: 0; touch-act
 .pbstrip .pbshape:nth-child(5) { animation-delay: .12s; } .pbstrip .pbshape:nth-child(6) { animation-delay: .15s; } .pbstrip .pbshape:nth-child(n+7) { animation-delay: .18s; }
 .pbtip { font-size: 10.5px; font-weight: 700; color: rgba(255,240,200,.85); white-space: nowrap; }
 html[dir='rtl'] .pbtip { direction: rtl; }
+
+/* ===== 1x1 reward card: appears with light rays, then flies to its owner ===== */
+.rewardfx { position: absolute; inset: 0; z-index: 26; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; pointer-events: none; }
+.rewardfx .rays { position: absolute; width: 360px; height: 360px; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(255,224,122,.55) 0deg 10deg, rgba(255,224,122,0) 10deg 24deg);
+  -webkit-mask: radial-gradient(circle, #000 18%, transparent 68%); mask: radial-gradient(circle, #000 18%, transparent 68%);
+  animation: a-fade .3s ease-out both, rayspin 6s linear infinite; }
+@keyframes rayspin { to { rotate: 360deg; } }
+.gcard.rewardcard { position: relative; width: 112px; height: 150px; margin: 0; cursor: default; --rot: 0deg; --drop: 0px; box-shadow: 0 0 0 2px #FFE07A, 0 0 34px rgba(255,224,122,.9), 0 12px 24px rgba(0,0,20,.6); }
+.gcard.rewardcard::before { background: var(--girih) center / 26px, linear-gradient(180deg, #2fb67e, #12603f); background-blend-mode: soft-light, normal; }
+.rewardcard .cart { inset: 22px 12px 24px; }
+.rewardcard .cart svg { width: 52%; height: auto; }
+.r11 { position: absolute; bottom: 4px; font: 800 13px var(--head); color: #0d6b41; }
+.rib-reward { background: linear-gradient(180deg, #F5C531, #C98A00); color: #3a2200; }
+.rewardfx.in .rewardcard { animation: a-rewardin .6s cubic-bezier(.2,1.3,.4,1) both; }
+@keyframes a-rewardin { 0% { opacity: 0; scale: .2; rotate: y 180deg; } 60% { opacity: 1; scale: 1.15; rotate: y 0deg; } 100% { opacity: 1; scale: 1; rotate: y 0deg; } }
+.rewardtitle { position: relative; display: flex; flex-direction: column; align-items: center; padding: 6px 22px; text-align: center; color: #3a2200;
+  background: linear-gradient(180deg, #FFE07A, #E3A030); clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); filter: drop-shadow(0 6px 10px rgba(0,0,20,.5)); }
+.rewardtitle b { font: 800 19px var(--head); } .rewardtitle small { font-size: 12px; font-weight: 700; }
+.rewardfx.opp .rewardtitle { background: linear-gradient(180deg, #F27A62, #A8392A); color: #fff; }
+.rewardfx.in .rewardtitle { animation: a-drop .4s cubic-bezier(.2,1.4,.4,1) .25s both; }
+.rewardfx.out .rewardcard { animation: a-reward-tome .45s cubic-bezier(.5,0,.8,.4) both; }
+.rewardfx.opp.out .rewardcard { animation-name: a-reward-toopp; }
+.rewardfx.out .rewardtitle, .rewardfx.out .rays { animation: a-fadeout .3s ease-in both; }
+@keyframes a-reward-tome { to { opacity: 0; translate: 0 70vh; scale: .45; } }
+@keyframes a-reward-toopp { to { opacity: 0; translate: 0 -60vh; scale: .3; } }
+@keyframes a-fadeout { to { opacity: 0; } }
+html[dir='rtl'] .rewardtitle { direction: rtl; }
+/* while placing it, the reward card is held in front of the (locked) hand */
+.hand { position: relative; }
+.gcard.rewardcard.inhand { position: absolute; left: 50%; bottom: 2px; z-index: 4; width: 92px; height: 124px; translate: -50% 0;
+  transform: translateY(-18px) scale(1.06); animation: a-pop .45s cubic-bezier(.2,1.6,.4,1) .2s both; }
+.hand.holding > .gcard:not(.inhand) { filter: saturate(.4) brightness(.55); }
+.rcount { inset-inline-end: -6px; background: linear-gradient(180deg, #F27A62, #A8392A); }
+@media (max-width: 700px) { .gcard.rewardcard.inhand { width: 82px; height: 112px; } .rewardfx .rays { width: 300px; height: 300px; } }
