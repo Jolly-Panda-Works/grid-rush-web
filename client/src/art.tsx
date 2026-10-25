@@ -19,11 +19,14 @@ export const tileUrl = (n: number) => `${BASE}tiles/tile-${(n >> 1) + 1}-${(n & 
 export const avatarArtUrl = (n: number) => `${BASE}avatars/avatar-${n + 1}.webp`;
 export const wordmarkUrl = (lang: 'fa' | 'en') => `${BASE}wordmark-${lang}.webp`;
 
-/** The frames the stylesheet paints buttons, dialogs and ribbons with, as CSS variables (--art-<id>), so their
+/** The 1x1 tile the page background is tiled with: the lapis girih knot. */
+const BG_TILE = 2;
+/** The frames the stylesheet paints buttons, dialogs and ribbons with (and the background tile), as CSS variables (--art-<id>), so their
  *  paths follow Vite's base like every other asset. */
 export function installArtVars() {
   const ids: FrameId[] = ['primary-plain', 'primary-orn', 'secondary', 'danger', 'modal-plain', 'modal-orn', 'ribbon', 'victory', 'defeat'];
   for (const id of ids) document.documentElement.style.setProperty(`--art-${id}`, `url("${frameUrl(id)}")`);
+  document.documentElement.style.setProperty('--art-bg-tile', `url("${tileUrl(BG_TILE)}")`);
 }
 
 /** Decoded tile images: the 3D board paints them into textures, which needs them loaded up front. */

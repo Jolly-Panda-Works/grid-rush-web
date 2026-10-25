@@ -1167,3 +1167,9 @@ html[dir='rtl'] .social { direction: rtl; }
 .results h1.win, .results h1.lose { padding: .25em 1.6em .5em; background: var(--art-victory) center / 100% 100% no-repeat; color: #fff; text-shadow: 0 2px 0 rgba(120,60,0,.6), 0 0 10px rgba(120,60,0,.4); }
 .results h1.lose { background-image: var(--art-defeat); text-shadow: 0 2px 0 rgba(90,20,10,.6); }
 .playtile.primary { padding-bottom: clamp(20px, 3.2vh, 28px); } /* clear the gilded bottom rim and its gem */
+
+/* the page is a wall of painted 1x1 tiles under a navy wash (text and the board stay readable), with a vignette */
+body { background: radial-gradient(ellipse at 50% 40%, rgba(0,0,0,0) 35%, rgba(0,0,20,.6) 100%), linear-gradient(rgba(4,18,70,.62), rgba(2,10,46,.72)),
+  var(--art-bg-tile, none) center / 76px 76px repeat, #0c2468; background-blend-mode: normal; background-attachment: fixed; }
+body[data-screen='game'] { background: radial-gradient(ellipse at 50% 42%, rgba(0,0,0,0) 35%, rgba(0,0,20,.6) 100%), linear-gradient(rgba(4,18,70,.7), rgba(2,10,46,.78)),
+  var(--art-bg-tile, none) center / 64px 64px repeat, #0c2468; background-blend-mode: normal; }
