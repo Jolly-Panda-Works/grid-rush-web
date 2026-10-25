@@ -1341,3 +1341,17 @@ html[dir='rtl'] .ld-track div { margin-inline-start: 0; }
 
 .srvnote p { margin: 4px 0 6px; color: var(--ink); line-height: 1.7; text-align: center; }
 .srv-ico { display: block; margin: 0 auto; filter: drop-shadow(0 4px 6px rgba(0,0,20,.35)); animation: a-pop .45s cubic-bezier(.2,1.6,.4,1) .1s both; }
+
+/* ---- scrollbars: a slim gold-leaf rod with a turquoise inlay in a lapis groove (cream groove inside dialogs) ---- */
+/* (Chrome / the Android WebView ignore ::-webkit-scrollbar once scrollbar-color is set, so that is only for the others) */
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: #E3A71A rgba(0, 12, 50, .45); }
+  .modal * { scrollbar-color: #C98A00 rgba(184, 138, 42, .2); }
+}
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { margin: 6px; border-radius: 9px; background: rgba(0, 12, 50, .45); box-shadow: inset 0 0 0 1px rgba(227, 167, 26, .35), inset 0 2px 3px rgba(0, 0, 0, .45); }
+::-webkit-scrollbar-thumb { border-radius: 9px; border: 1px solid #6b4500;
+  background: linear-gradient(90deg, transparent 38%, #17A8F0 38% 62%, transparent 62%) center / 100% 70% no-repeat, linear-gradient(90deg, #FFE07A, #E3A71A 45%, #A86F00); }
+::-webkit-scrollbar-thumb:active { background: linear-gradient(90deg, transparent 38%, #6fe6f2 38% 62%, transparent 62%) center / 100% 70% no-repeat, linear-gradient(90deg, #FFF0A8, #F2B83A 45%, #B87C00); }
+::-webkit-scrollbar-corner { background: transparent; }
+.modal ::-webkit-scrollbar-track { background: rgba(184, 138, 42, .18); box-shadow: inset 0 0 0 1px rgba(184, 138, 42, .45), inset 0 1px 2px rgba(90, 60, 0, .25); }
