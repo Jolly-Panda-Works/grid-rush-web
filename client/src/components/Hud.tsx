@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { BOARD_SIZE, Seat, TRACK_LENGTH, scoreOf } from '../../../shared/src';
+import { BOARD_SIZE, EMPTY_CELL_PENALTY, Seat, TRACK_LENGTH, TURN_SECONDS, scoreOf } from '../../../shared/src';
 import { useT } from '../i18n';
 import { useStore } from '../store';
-import { CoinIcon, PlayerGlyph } from './TileShape';
+import { CoinIcon, EmptyIcon, PlayerGlyph } from './TileShape';
 
-/** One player: name, coins and score (clearly labelled). Tap the card for the rest (position, board, level, rating). */
+/** One player: name, coins, empty cells and who is ahead. Tap the card for the full score breakdown. */
 function PlayerCard({ seat, align }: { seat: Seat; align: 'left' | 'right' }) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -13,6 +13,7 @@ function PlayerCard({ seat, align }: { seat: Seat; align: 'left' | 'right' }) {
   const p = g.players[seat];
   const active = g.current === seat && g.phase !== 'finished';
   const sc = scoreOf(g, seat);
+  const lead = sc.total - scoreOf(g, (1 - seat) as Seat).total;
   const filled = BOARD_SIZE * BOARD_SIZE - sc.emptyCells;
   return (
     <div className={`pcard ${align} ${active ? 'active' : ''} p${seat}`} role="button" tabIndex={0} aria-expanded={open}
@@ -25,11 +26,18 @@ function PlayerCard({ seat, align }: { seat: Seat; align: 'left' | 'right' }) {
       </div>
       <div className="prow stats">
         <span className="stat" title={t('hud.coins')}><CoinIcon size={15} /><b className="num">{p.coins}</b></span>
-        <span className="stat score" title={t('hud.score')}><small>{t('hud.scoreShort')}</small><b className="num" dir="ltr">{sc.total > 0 ? '+' : ''}{sc.total}</b></span>
+        <span className="stat empty" title={t('hud.empty', { p: EMPTY_CELL_PENALTY })}><EmptyIcon size={14} /><b className="num">{sc.emptyCells}</b></span>
+        {lead > 0 && <span className="lead num" title={t('hud.scoreNow')}><b dir="ltr">+{lead}</b> {t('hud.lead')}</span>}
+        {lead === 0 && seat === mySeat && <span className="lead tie" title={t('hud.scoreNow')}>{t('hud.tied')}</span>}
         {p.bonus7 && <span className="tag good">7×7</span>}
       </div>
       {open && (
         <div className="pdetail" onClick={(e) => e.stopPropagation()}>
+          <div className="dhead">{t('hud.scoreNow')}</div>
+          <div><span>{t('res.coins')}</span><b className="num">{sc.coins}</b></div>
+          {sc.bonus > 0 && <div><span>{t('res.bonus')}</span><b className="num">+{sc.bonus}</b></div>}
+          <div><span>{t('res.empty', { n: sc.emptyCells, p: EMPTY_CELL_PENALTY })}</span><b className="num" dir="ltr">−{sc.penalty}</b></div>
+          <div className="dtotal"><span>{t('res.final')}</span><b className="num" dir="ltr">{sc.total}</b></div>
           <div><span>{t('hud.position')}</span><b className="num">{p.pos}/{TRACK_LENGTH}</b></div>
           <div><span>{t('hud.filled')}</span><b className="num">{filled}/{BOARD_SIZE * BOARD_SIZE}</b></div>
           <div><span>{t('menu.lv', { n: p.level })}</span><b className="num">{t('menu.rating', { n: p.rating })}</b></div>
@@ -39,7 +47,7 @@ function PlayerCard({ seat, align }: { seat: Seat; align: 'left' | 'right' }) {
   );
 }
 
-/** Fixed-size centre block (no layout jumps): an arrow pointing at the player whose turn it is, plus the timer. */
+/** Fixed-size centre block (no layout jumps): whose turn it is in words, an arrow to that player, and a timer ring. */
 export function TurnPill() {
   const g = useStore((s) => s.game)!;
   const mySeat = useStore((s) => s.mySeat);
@@ -51,11 +59,23 @@ export function TurnPill() {
   const mine = g.current === mySeat;
   const left = turnLeft === null ? null : Math.max(0, Math.round(turnLeft - (performance.now() - recv) / 1000));
   const finished = g.phase === 'finished';
+  const R = 13, CIRC = 2 * Math.PI * R;
+  const frac = left === null ? 1 : Math.min(1, left / TURN_SECONDS);
   return (
     <div className={'turnpill ' + (finished ? 'done' : mine ? 'me' : 'opp') + (left !== null && left <= 10 ? ' low' : '')}
       title={mine ? t('turn.you') : t('turn.opp')} aria-live="polite">
-      <span className="arrow" aria-hidden="true">{finished ? '■' : mine ? '◀' : '▶'}</span>
-      <span className="secs num">{left === null ? '' : `${left}`}</span>
+      <span className="tlabel">{finished ? t('turn.overShort') : mine ? t('turn.youShort') : t('turn.oppShort')}</span>
+      <span className="trow">
+        <span className="arrow" aria-hidden="true">{!finished && mine ? '◀' : ''}</span>
+        <span className={'ring' + (left === null ? ' off' : '')}>
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="16" cy="16" r={R} className="rbg" />
+            <circle cx="16" cy="16" r={R} className="rfg" strokeDasharray={CIRC} strokeDashoffset={CIRC * (1 - frac)} transform="rotate(-90 16 16)" />
+          </svg>
+          <span className="secs num">{left === null || finished ? '' : left}</span>
+        </span>
+        <span className="arrow" aria-hidden="true">{!finished && !mine ? '▶' : ''}</span>
+      </span>
     </div>
   );
 }

@@ -24,3 +24,7 @@ export const TimeIcon = ({ size = 14 }: { size?: number }) => (
 export const PlayerGlyph = ({ seat, size = 16 }: { seat: 0 | 1; size?: number }) => seat === 0
   ? <svg width={size} height={size} viewBox="0 0 16 16" aria-label="circle"><circle cx="8" cy="8" r="6.5" fill="#2F80FF" /></svg>
   : <svg width={size} height={size} viewBox="0 0 16 16" aria-label="diamond"><path d="M8 1l7 7-7 7-7-7z" fill="#FF5A5F" /></svg>;
+/** An empty board cell (each one costs points at the end). */
+export const EmptyIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2" fill="#fff" stroke="#B0503F" strokeWidth="1.6" strokeDasharray="3 2" /></svg>
+);

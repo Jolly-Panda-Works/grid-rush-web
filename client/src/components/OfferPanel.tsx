@@ -1,5 +1,7 @@
 import { useRef } from 'react';
-import { TRACK_LENGTH, TREASURE_POSITIONS, canPlaceAny, engravedTotal, transformCells } from '../../../shared/src';
+import { TRACK_LENGTH, canPlaceAny, transformCells } from '../../../shared/src';
+import { Forecast, advanceSteps, useForecast } from '../forecast';
+import { iconUrl } from '../three/icons';
 import { useT, tr } from '../i18n';
 import { send } from '../net';
 import { flipHorizontal, flipVertical, pushToast, resetSel, setSel, useStore } from '../store';
@@ -58,21 +60,17 @@ export function OfferPanel() {
   };
 
   const nextTile = g.next;
-  // RULE v0.4: Advance jumps to exactly (opponent position + 1)
-  const advSteps = Math.min(TRACK_LENGTH - me.pos, Math.max(1, opp.pos + 1 - me.pos));
+  const advSteps = advanceSteps(g, mySeat);
   const advEnds = me.pos + advSteps >= TRACK_LENGTH;
-  const selTile = !locked && sel.offer !== null ? g.offer[sel.offer] : null;
+  const fc = useForecast();
 
-  let hint: { cls: string; text: string };
+  let hint: { cls: string; text: string; out?: Forecast };
   if (finished) hint = { cls: 'wait', text: t('offer.over') };
   else if (placing) hint = { cls: 'place', text: t('offer.placeReward', { n: g.pendingRewards }) };
   else if (!myTurn) hint = { cls: 'wait', text: t('offer.playing', { name: opp.name, bot: opp.isBot ? t('offer.botSuffix') : '' }) };
-  else if (selTile) {
-    const np = Math.min(TRACK_LENGTH, me.pos + selTile.timeCost);
-    const tre = TREASURE_POSITIONS.filter((p) => p > me.pos && p <= np).length;
-    const gain = tre * (engravedTotal(me) + selTile.engraved);
-    hint = { cls: '', text: `${np > opp.pos ? t('offer.passes') : t('offer.keeps')}${tre ? ` · ${t('offer.tre', { n: tre, c: gain })}` : ''}${np >= TRACK_LENGTH ? ` · ${t('offer.ends')}` : ''}` };
-  } else hint = { cls: '', text: t('offer.hint') };
+  else if (fc) hint = { cls: 'out', text: `${fc.kind}:${fc.to}`, out: fc }; // what the selected tile / Advance would do
+  else hint = { cls: '', text: t('offer.hint') };
+  const setAdv = (on: boolean) => { if (useStore.getState().advPreview !== on) useStore.setState({ advPreview: on }); };
 
   const select = (i: number) => { sfx.turn(); setSel({ offer: sel.offer === i ? null : i, hover: null }); }; // (rotation / flip stay as they are)
 
@@ -88,11 +86,15 @@ export function OfferPanel() {
             <button key={tile.uid} className={'card ' + (sel.offer === i && !locked ? 'sel ' : '') + (locked ? 'locked ' : blocked ? 'dis' : '')} disabled={locked || blocked}
               onPointerDown={(e) => startDrag(e, i)} onClick={() => { if (!suppressClick.current) select(i); }}
               title={locked ? '' : !afford ? t('offer.noCoins') : !fits ? t('offer.noRoom') : t('offer.select', { n: i + 1 })}>
+              {tile.engraved > 0 && (
+                <span className="engbadge num" title={t('offer.engBadge', { n: tile.engraved })}><img src={iconUrl('chest')} alt="" />+{tile.engraved}</span>
+              )}
               <div className="shape"><TileShape cells={shown} shape={tile.shape} engraved={tile.engraved} cell={16} /></div>
               <div className="costs num">
-                <span className={!afford ? 'bad' : ''}><CoinIcon /> {tile.coinCost}</span>
-                <span><TimeIcon /> {tile.timeCost}</span>
+                <span className={'cchip coin' + (!afford ? ' bad' : '')}><CoinIcon /> {tile.coinCost}</span>
+                <span className="cchip time"><TimeIcon /> {tile.timeCost}</span>
               </div>
+              {!locked && blocked && <span className="why">{!afford ? t('offer.short', { n: tile.coinCost - me.coins }) : t('offer.room')}</span>}
             </button>
           );
         })}
@@ -108,18 +110,42 @@ export function OfferPanel() {
         )}
       </div>
       <div className="actions">
-        <div className={'hint ' + hint.cls}><span key={hint.text} className="hint-t">{hint.text}{hint.cls === 'wait' && !finished && <span className="dots" />}</span></div>
+        <div className={'hint ' + hint.cls}>
+          {hint.out ? <Outcome key={hint.text} fc={hint.out} oppName={opp.name} /> : (
+            <span key={hint.text} className="hint-t">{hint.text}{hint.cls === 'wait' && !finished && <span className="dots" />}</span>
+          )}
+        </div>
         <div className="tools">
           <button className="btn ghost" disabled={locked} onClick={() => setSel({ rot: (sel.rot + 1) % 4 })} title={t('offer.rotate')}><span className="ico">⟳</span><span className="lbl">{t('offer.rotate')} <kbd>R</kbd></span></button>
           <button className="btn ghost" disabled={locked} onClick={flipHorizontal} title={t('offer.flip')}><span className="ico">↔</span><span className="lbl">{t('offer.flip')} <kbd>F</kbd></span></button>
           <button className="btn ghost" disabled={locked} onClick={flipVertical} title={t('offer.flipV')}><span className="ico">↕</span><span className="lbl">{t('offer.flipV')} <kbd>V</kbd></span></button>
           <button className="btn ghost" disabled={locked || (sel.offer === null && sel.rot === 0 && !sel.flip)} onClick={resetSel} title={t('offer.cancel')}><span className="ico">✕</span><span className="lbl">{t('offer.cancel')} <kbd>Esc</kbd></span></button>
         </div>
-        <button className={'btn primary adv ' + (advEnds && !locked ? 'danger' : '')} disabled={locked} onClick={() => { sfx.advance(); resetSel(); send.advance(); }}>
-          {t('offer.advance')} <kbd>A</kbd>
-          <small>{t('offer.advInfo', { n: advSteps })}{advEnds ? t('offer.advEnds') : ''}</small>
+        {/* finger down / mouse over = preview the jump on the track; releasing on the button confirms it */}
+        <button className={'btn primary adv ' + (advEnds && !locked ? 'danger' : '')} disabled={locked}
+          onPointerEnter={(e) => { if (e.pointerType === 'mouse' && sel.offer === null) setAdv(true); }}
+          onPointerDown={() => { if (sel.offer !== null) resetSel(); setAdv(true); }}
+          onPointerLeave={() => setAdv(false)} onPointerCancel={() => setAdv(false)}
+          onClick={() => { setAdv(false); sfx.advance(); resetSel(); send.advance(); }}>
+          <span className="advtop">{t('offer.advance')} <kbd>A</kbd></span>
+          <span className="advgain num"><CoinIcon size={18} /> +{advSteps}</span>
+          <small>{t('offer.advCells', { n: advSteps })}{advEnds ? ` · ${t('offer.advEnds')}` : ''}</small>
         </button>
       </div>
     </footer>
+  );
+}
+
+/** Plain-language result of the action being previewed: who plays next, plus what it collects or ends. */
+function Outcome({ fc, oppName }: { fc: Forecast; oppName: string }) {
+  const t = useT();
+  return (
+    <span className="outcome">
+      <span className={'ochip ' + (fc.passes ? 'pass' : 'keep')}>{fc.passes ? t('out.pass', { name: oppName }) : t('out.keep')}</span>
+      {fc.advanceCoins > 0 && <span className="ochip gain num"><CoinIcon size={13} /> {t('out.coins', { c: fc.advanceCoins })}</span>}
+      {fc.treasures.length > 0 && <span className="ochip gain num"><img src={iconUrl('chest')} alt="" /> {t('out.tre', { c: fc.treasureCoins })}</span>}
+      {fc.rewards.length > 0 && <span className="ochip reward">{t('out.reward')}</span>}
+      {fc.ends && <span className="ochip end">{t('out.ends')}</span>}
+    </span>
   );
 }

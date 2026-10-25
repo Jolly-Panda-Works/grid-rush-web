@@ -7,6 +7,7 @@ import { Popup } from '../components/Popup';
 import { GameMenu } from '../components/GameMenu';
 import { Legend } from '../components/Legend';
 import { DragGhost } from '../components/DragGhost';
+import { TrackBar } from '../components/TrackBar';
 import { resign, send } from '../net';
 import { flipHorizontal, flipVertical, resetSel, setSel, useStore } from '../store';
 
@@ -46,6 +47,7 @@ export default function GameScreen() {
   return (
     <main className="game">
       <Hud />
+      <TrackBar />
       <section className="stage">
         <Suspense fallback={<div className="center muted">{t('game.loading3d')}</div>}><GameCanvas /></Suspense>
         <Popup />

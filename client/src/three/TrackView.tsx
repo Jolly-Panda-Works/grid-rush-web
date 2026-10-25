@@ -5,15 +5,22 @@ import { REWARD_POSITIONS, Seat, TRACK_LENGTH, TREASURE_POSITIONS } from '../../
 import { removeFx, spawnFx, useStore } from '../store';
 import { C, PLAYER_COLORS, UI } from './colors';
 import { cellTexture } from './icons';
-import { Layout, trackCoord, trackCoordFrac } from './layout';
+import { Layout, trackCoord, trackCoordFrac, windowAlpha, windowTarget } from './layout';
+import { useForecast } from '../forecast';
 
 const NORMAL = new THREE.Color('#F6EBCB');
 const END_TINT = new THREE.Color('#F2B49A');
 
-function TrackCell({ i, layout }: { i: number; layout: Layout }) {
+/** Shared, per-frame state of the track: the centre of the phone window (fractional track index). */
+const view = { scroll: -1 };
+
+type PathMark = 'path' | 'land' | null;
+
+function TrackCell({ i, layout, mark, hit }: { i: number; layout: Layout; mark: PathMark; hit: boolean }) {
   const ref = useRef<THREE.Group>(null);
+  const hl = useRef<THREE.MeshBasicMaterial>(null);
   const rewardTaken = useStore((s) => s.game!.rewardTaken);
-  const [x, y] = trackCoord(layout, i);
+  const mySeat = useStore((s) => s.mySeat);
   const cell = layout.track.cell;
   const treasure = TREASURE_POSITIONS.includes(i);
   const ri = REWARD_POSITIONS.indexOf(i);
@@ -25,26 +32,46 @@ function TrackCell({ i, layout }: { i: number; layout: Layout }) {
     if (reward) return '#BDEBD2';
     return NORMAL.clone().lerp(END_TINT, (i / TRACK_LENGTH) * 0.9).getStyle();
   }, [i, finish, treasure, reward]);
-  // Treasure = chest, reward = 1x1 tile, finish = checkered flag; every cell shows its index.
-  const tex = useMemo(() => cellTexture(finish ? 'flag' : treasure ? 'chest' : reward ? 'reward' : null, i, layout.track.vertical ? 'five' : 'all'), [i, finish, treasure, reward, layout.track.vertical]);
+  // Treasure = chest, reward = 1x1 tile, finish = checkered flag; numbers on every cell (desktop) or every 5th (phone).
+  const big = layout.track.vertical || layout.track.window > 0;
+  const tex = useMemo(() => cellTexture(finish ? 'flag' : treasure ? 'chest' : reward ? 'reward' : null, i, big ? 'five' : 'all'), [i, finish, treasure, reward, big]);
+  const [sx, sy] = trackCoord(layout, i);
 
-  useFrame(() => {
-    if (!ref.current) return;
-    const t0 = useStore.getState().flashes[i];
+  useFrame((st) => {
+    const g = ref.current;
+    if (!g) return;
+    const s = useStore.getState();
+    const t0 = s.flashes[i];
     let k = 1;
-    if (t0 && !useStore.getState().settings.reduceMotion) {
+    if (t0 && !s.settings.reduceMotion) {
       const dt = (performance.now() - t0) / 1000;
       if (dt < 0.9) k = 1 + 0.5 * Math.exp(-dt * 3.5) * Math.abs(Math.sin(dt * 9));
     }
-    ref.current.scale.setScalar(k);
+    if (hit && !s.settings.reduceMotion) k *= 1 + 0.1 * Math.abs(Math.sin(st.clock.elapsedTime * 4));
+    let a = 1;
+    if (layout.track.window) {
+      a = windowAlpha(layout, i, view.scroll);
+      const [x, y] = trackCoord(layout, i, view.scroll);
+      g.position.set(x, y, 0);
+    }
+    g.visible = a > 0.01;
+    g.scale.setScalar(k * (0.4 + 0.6 * a));
+    if (hl.current) hl.current.opacity = (mark === 'land' ? 0.75 : hit ? 0.65 : 0.38) * a;
   });
 
   return (
-    <group ref={ref} position={[x, y, 0]}>
+    <group ref={ref} position={[sx, sy, 0]}>
       <mesh position={[0, 0, 0.05]}>
         <boxGeometry args={[cell * 0.92, cell * 0.92, 0.12]} />
         <meshStandardMaterial color={base} roughness={0.8} />
       </mesh>
+      {(mark || hit) && (
+        // preview of the selected action: the cells my marker would cross, the landing cell, and what it collects
+        <mesh position={[0, 0, 0.112]}>
+          <planeGeometry args={[cell * (mark === 'land' ? 0.98 : 0.92), cell * (mark === 'land' ? 0.98 : 0.92)]} />
+          <meshBasicMaterial ref={hl} color={hit ? C.saffron : PLAYER_COLORS[mySeat]} transparent opacity={0.4} depthWrite={false} />
+        </mesh>
+      )}
       <mesh position={[0, 0, 0.115]}>
         <planeGeometry args={[cell * 0.9, cell * 0.9]} />
         <meshBasicMaterial map={tex} transparent />
@@ -53,13 +80,22 @@ function TrackCell({ i, layout }: { i: number; layout: Layout }) {
   );
 }
 
+function MarkerMesh({ seat, cell, ghost = false }: { seat: Seat; cell: number; ghost?: boolean }) {
+  const color = PLAYER_COLORS[seat];
+  const mat = <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.25} transparent={ghost} opacity={ghost ? 0.5 : 1} depthWrite={!ghost} />;
+  return seat === 0
+    ? <mesh rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[cell * 0.27, cell * 0.27, 0.35, 24]} />{mat}</mesh>
+    : <mesh rotation={[0, 0, Math.PI / 4]}><boxGeometry args={[cell * 0.42, cell * 0.42, 0.35]} />{mat}</mesh>;
+}
+
+const laneOf = (layout: Layout, seat: Seat) => (seat === 0 ? 1 : -1) * layout.track.cell * 0.17;
+
 /** Marker. Effects fire at the moment the (animated) marker actually passes a cell. */
 function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
   const ref = useRef<THREE.Group>(null);
   const disp = useRef<number>(useStore.getState().game!.players[seat].pos);
   const lastInt = useRef(Math.floor(disp.current + 1e-6));
   const cell = layout.track.cell;
-  const color = PLAYER_COLORS[seat];
 
   const onPass = (i: number) => {
     const st = useStore.getState();
@@ -67,7 +103,7 @@ function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
     const fx = st.pendingFx[key];
     if (!fx) return;
     delete st.pendingFx[key];
-    const [x, y] = trackCoord(layout, i);
+    const [x, y] = trackCoord(layout, i, view.scroll);
     useStore.setState((s) => ({ flashes: { ...s.flashes, [i]: performance.now() } }));
     if (fx.kind === 'treasure' && fx.coins > 0) spawnFx({ kind: 'coins', x, y, count: Math.min(12, 3 + fx.coins * 2) });
     if (fx.kind === 'reward') {
@@ -89,28 +125,30 @@ function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
     const cur = Math.floor(disp.current + 1e-6);
     if (cur > lastInt.current) { for (let i = lastInt.current + 1; i <= cur; i++) onPass(i); lastInt.current = cur; }
     else if (cur < lastInt.current) lastInt.current = cur;
-    const [x, y] = trackCoordFrac(layout, disp.current);
-    const lane = (seat === 0 ? 1 : -1) * cell * 0.17;
+    const [x, y] = trackCoordFrac(layout, disp.current, view.scroll);
+    const lane = laneOf(layout, seat);
     if (layout.track.vertical) ref.current.position.set(x - lane, y, 0.5); else ref.current.position.set(x, y + lane, 0.5);
+    ref.current.visible = windowAlpha(layout, disp.current, view.scroll) > 0.3;
     const active = g.current === seat && g.phase !== 'finished';
     const pulse = active && !s.settings.reduceMotion ? 1 + 0.12 * Math.sin(st.clock.elapsedTime * 5) : 1;
     ref.current.scale.setScalar(pulse * (active ? 1.12 : 0.95));
   });
-  return (
-    <group ref={ref}>
-      {seat === 0 ? (
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[cell * 0.27, cell * 0.27, 0.35, 24]} />
-          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.25} />
-        </mesh>
-      ) : (
-        <mesh rotation={[0, 0, Math.PI / 4]}>
-          <boxGeometry args={[cell * 0.42, cell * 0.42, 0.35]} />
-          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.25} />
-        </mesh>
-      )}
-    </group>
-  );
+  return <group ref={ref}><MarkerMesh seat={seat} cell={cell} /></group>;
+}
+
+/** Semi-transparent copy of my marker where the selected action would put it. */
+function GhostMarker({ layout, to }: { layout: Layout; to: number }) {
+  const ref = useRef<THREE.Group>(null);
+  const mySeat = useStore((s) => s.mySeat);
+  useFrame((st) => {
+    if (!ref.current) return;
+    const [x, y] = trackCoord(layout, to, view.scroll);
+    const lane = laneOf(layout, mySeat);
+    const bob = useStore.getState().settings.reduceMotion ? 0 : 0.12 * Math.sin(st.clock.elapsedTime * 4);
+    if (layout.track.vertical) ref.current.position.set(x - lane, y, 0.75 + bob); else ref.current.position.set(x, y + lane, 0.75 + bob);
+    ref.current.visible = windowAlpha(layout, to, view.scroll) > 0.3;
+  });
+  return <group ref={ref}><MarkerMesh seat={mySeat} cell={layout.track.cell} ghost /></group>;
 }
 
 /* ---------- effects ---------- */
@@ -179,6 +217,23 @@ function FxLayer() {
 export function TrackView({ layout }: { layout: Layout }) {
   const cells = useMemo(() => Array.from({ length: TRACK_LENGTH + 1 }, (_, i) => i), []);
   const { plate } = layout.track;
+  const fc = useForecast();
+
+  // Phone: keep both markers and the preview ghost inside the scrolling window.
+  useFrame((_, dt) => {
+    if (!layout.track.window) return;
+    const s = useStore.getState();
+    const g = s.game;
+    if (!g) return;
+    const a = g.players[0].pos, b = g.players[1].pos;
+    const hi = fc ? Math.max(a, b, fc.to) : Math.max(a, b);
+    const target = windowTarget(layout, Math.min(a, b), hi, g.players[g.current].pos);
+    if (view.scroll < 0 || s.settings.reduceMotion) view.scroll = target;
+    else view.scroll += (target - view.scroll) * Math.min(1, dt * 6);
+  });
+
+  const markOf = (i: number): PathMark => (!fc || i <= fc.from || i > fc.to ? null : i === fc.to ? 'land' : 'path');
+  const hitOf = (i: number) => !!fc && (fc.treasures.includes(i) || fc.rewards.includes(i));
   return (
     <group>
       <mesh position={[plate.x, plate.y, -0.09]}>
@@ -189,9 +244,10 @@ export function TrackView({ layout }: { layout: Layout }) {
         <boxGeometry args={[plate.w, plate.h, 0.08]} />
         <meshStandardMaterial color={UI.plate} roughness={1} />
       </mesh>
-      {cells.map((i) => <TrackCell key={i} i={i} layout={layout} />)}
+      {cells.map((i) => <TrackCell key={i} i={i} layout={layout} mark={markOf(i)} hit={hitOf(i)} />)}
       <Marker seat={0} layout={layout} />
       <Marker seat={1} layout={layout} />
+      {fc && <GhostMarker layout={layout} to={fc.to} />}
       <FxLayer />
     </group>
   );

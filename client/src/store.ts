@@ -33,6 +33,7 @@ interface Store {
   fx: Fx[];
   pendingFx: Record<string, PendingFx>;
   drag: { x: number; y: number } | null;
+  advPreview: boolean; // finger / mouse on the Advance button: preview its move on the track
   showHelp: boolean;
   showSettings: boolean;
   confirmResign: boolean;
@@ -56,6 +57,7 @@ export const useStore = create<Store>(() => ({
   fx: [],
   pendingFx: {},
   drag: null,
+  advPreview: false,
   showHelp: false,
   showSettings: false,
   confirmResign: false,

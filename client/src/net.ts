@@ -154,7 +154,11 @@ function onState(g: GameState, turnLeft: number | null) {
           break;
         case 'reward': useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'reward', coins: 0 }; break;
         case 'bonus7': pushToast(tr('toast.bonus7', { name: nameOf(g, e.seat) }), 'good'); sfx.bonus(); break;
-        case 'turn': if (e.seat === st.mySeat) sfx.turn(); break;
+        case 'turn':
+          // the hand-over is the rule players miss most, so it is always announced in words
+          if (e.seat === st.mySeat) { sfx.turn(); pushToast(tr('toast.yourTurn'), 'info'); }
+          else pushToast(tr('toast.passed', { name: g.players[e.seat].name }), 'info');
+          break;
       }
     }
   }

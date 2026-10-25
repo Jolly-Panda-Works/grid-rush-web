@@ -312,3 +312,79 @@ body[data-screen='game'] .modal { outline: none; }
 @keyframes vsfromtop { from { opacity: 0; transform: translateY(-28px); } to { opacity: 1; transform: none; } }
 @keyframes vsfrombottom { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
 @keyframes vspop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+
+/* ===== v0.7: make the rules visible (track preview, turn label, readable score, track bar) ===== */
+.game { grid-template-rows: auto auto minmax(0, 1fr) auto auto; }
+@media (max-height: 560px) and (orientation: landscape) {
+  .game { grid-template-rows: auto auto minmax(0, 1fr); grid-template-areas: 'hud hud' 'bar bar' 'stage panel'; }
+  .trackbar { grid-area: bar; }
+}
+
+/* track bar: the whole time track at a glance + what is coming next */
+.trackbar { position: relative; z-index: 5; display: flex; align-items: center; gap: 10px; padding: 6px 14px; background: rgba(0, 30, 103, .92); border-bottom: 2px solid var(--gold); color: #fff; }
+.mmap { position: relative; flex: 1; height: 18px; margin: 0 8px; }
+.mline { position: absolute; left: 0; right: 0; top: 7px; height: 4px; border-radius: 2px; background: linear-gradient(90deg, #F6EBCB, #F2B49A); }
+.mmap i { position: absolute; top: 9px; transform: translate(-50%, -50%); display: block; }
+.mmap .mt { width: 7px; height: 7px; border-radius: 2px; background: var(--saffron); box-shadow: 0 0 0 1px #7a5200; } .mmap .mt.past { opacity: .35; }
+.mmap .mr { width: 7px; height: 7px; border-radius: 2px; background: var(--emerald); box-shadow: 0 0 0 1px #0d6b41; }
+.mmap .mf { width: 10px; height: 14px; background: repeating-conic-gradient(#1b1f3a 0 25%, #fff 0 50%) 0 0 / 5px 5px; border: 1px solid #fff; }
+.mmap .mp { width: 13px; height: 13px; border: 2px solid #fff; transition: left .5s ease-out; }
+.mmap .mp.p0 { border-radius: 50%; background: var(--p0); } .mmap .mp.p1 { background: var(--p1); transform: translate(-50%, -50%) rotate(45deg); width: 11px; height: 11px; }
+.mmap .mp.cur { box-shadow: 0 0 0 3px rgba(255, 180, 0, .75); }
+.mmap .mp.ghost { opacity: .5; border-style: dashed; }
+.bchip { flex: none; display: inline-flex; align-items: center; font-size: 12.5px; font-weight: 700; background: rgba(255, 255, 255, .12); border-radius: 10px; padding: 3px 9px; white-space: nowrap; }
+.bchip span { display: inline-flex; align-items: center; gap: 4px; } .bchip img { width: 16px; height: 16px; }
+.trackbar.ending { background: #7a1f14; animation: pulse 1.6s infinite; } .bend { color: #FFD76A; }
+html[dir='rtl'] .bchip { direction: rtl; }
+
+/* turn pill: the words + an arrow to the active player + a timer ring */
+.turnpill { flex-direction: column; gap: 0; height: 50px; padding: 2px 4px; font-size: 14px; }
+.tlabel { font: 800 11.5px var(--font); white-space: nowrap; line-height: 1.2; }
+.trow { display: flex; align-items: center; gap: 2px; }
+.turnpill .arrow { font-size: 11px; width: 10px; }
+.ring { position: relative; width: 28px; height: 28px; display: inline-grid; place-items: center; }
+.ring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ring .rbg { fill: none; stroke: rgba(255, 255, 255, .25); stroke-width: 3; }
+.ring .rfg { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset .5s linear; }
+.turnpill .secs { font: 800 12px var(--head); min-width: 0; text-align: center; }
+.turnpill.me .rbg { stroke: rgba(58, 38, 0, .2); }
+
+/* player card: coins, empty cells and who is ahead (no scary negative score) */
+.stat.empty b { color: #9a3b2c; }
+.lead { font-size: 11.5px; font-weight: 800; color: #0d6b41; background: rgba(39, 182, 122, .16); border-radius: 8px; padding: 1px 6px; white-space: nowrap; }
+.lead b { font-size: 13px; } .lead.tie { color: var(--ink-muted); background: rgba(19, 34, 79, .08); }
+.pdetail .dhead { font-weight: 700; color: var(--ink-muted); font-size: 11.5px; }
+.pdetail .dtotal { border-top: 1.5px solid var(--line); padding-top: 4px; font-weight: 800; }
+
+/* tile cards: labelled cost chips, engraved-coin badge, the reason a card cannot be bought */
+.cchip { border-radius: 8px; padding: 1px 6px; } .cchip.coin { background: #FFF1C7; } .cchip.time { background: #D7F6F2; }
+.cchip.bad { background: #FFD9D2; }
+.engbadge { position: absolute; top: 3px; inset-inline-end: 3px; display: inline-flex; align-items: center; gap: 1px; font-size: 11px; font-weight: 800; color: #7a5200; background: #FFF1C7; border-radius: 7px; padding: 0 4px 0 1px; z-index: 1; }
+.engbadge img { width: 14px; height: 14px; }
+.card.dis { opacity: 1; } .card.dis .shape, .card.dis .costs, .card.dis .engbadge { opacity: .45; }
+.card .why { bottom: 4px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-weight: 700; font-size: 11px; z-index: 2; }
+.card .costs { margin-bottom: 4px; }
+
+/* Advance: the coins it pays are the headline */
+.adv { gap: 0; padding-top: 4px; padding-bottom: 4px; }
+.advtop { font-size: 13px; } .advgain { display: inline-flex; align-items: center; gap: 4px; font: 800 18px var(--head); line-height: 1.1; }
+
+/* outcome of the previewed action */
+.hint.out { color: var(--ink); }
+.outcome { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 6px; animation: fadein .25s ease-out both; }
+.ochip { display: inline-flex; align-items: center; gap: 3px; border-radius: 9px; padding: 2px 8px; font-size: 12.5px; font-weight: 800; white-space: nowrap; }
+.ochip img { width: 15px; height: 15px; }
+.ochip.keep { background: rgba(39, 182, 122, .18); color: #0d6b41; }
+.ochip.pass { background: rgba(23, 168, 240, .18); color: #0b4f86; }
+.ochip.gain { background: #FFF1C7; color: #7a5200; } .ochip.reward { background: #CFF3DF; color: #0d6b41; }
+.ochip.end { background: var(--terra); color: #fff; }
+html[dir='rtl'] .hint.out { direction: rtl; }
+
+@media (max-width: 700px) {
+  .trackbar { padding: 5px 8px; gap: 6px; } .mmap { margin: 0 6px; } .bchip { font-size: 11.5px; padding: 2px 7px; }
+  .turnpill { height: 46px; } .tlabel { font-size: 10.5px; } .ring { width: 26px; height: 26px; }
+  .prow.stats { gap: 6px; } .lead { font-size: 10.5px; padding: 1px 4px; } .lead b { font-size: 12px; }
+  .ochip { font-size: 11.5px; padding: 1px 6px; }
+  .adv { width: 132px; } .advgain { font-size: 17px; }
+}
+.ring.off svg { display: none; } .ring.off { width: 6px; }
