@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../account';
+import { Icon } from '../art';
 import { Medal } from '../components/Medal';
 import { PlayerCard, PublicPlayer } from '../components/PlayerCard';
 import { Popup } from '../components/Popup';
@@ -38,7 +39,7 @@ export default function FriendsScreen() {
     <div key={p.id} className="frrow">
       <button className="frwho" onClick={() => setOpen(p.id)}>
         <span className="frav"><Medal size={42} avatar={p.avatar} /><i className={'dot ' + (p.online ? 'on' : 'off')} /></span>
-        <span className="lbname"><b>{p.name}</b><small className="num">{t('menu.lv', { n: p.level })} · 🏆 {p.rating}</small></span>
+        <span className="lbname"><b>{p.name}</b><small className="num">{t('menu.lv', { n: p.level })} · <Icon id="trophy" size={14} />{p.rating}</small></span>
       </button>
       <span className="fract">{actions}</span>
     </div>

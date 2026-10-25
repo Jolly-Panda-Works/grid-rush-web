@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { ART_TILE_COUNT, tileImages, tileUrl } from './art';
 
 /**
  * Painted Persian tiles (kashi): every board cell is one complete square glazed tile with its own centred design,
@@ -9,17 +10,10 @@ import * as THREE from 'three';
 export const PATTERNS = ['haftrang', 'rosette', 'mandala', 'arabesque', 'star', 'tulips'] as const;
 export type Pattern = (typeof PATTERNS)[number] | 'plain';
 
-/** Ground glazes each design is fired on (first = the classic one). */
-const GROUNDS: Record<(typeof PATTERNS)[number], string[]> = {
-  haftrang: ['#2F6DB5', '#1F3C88', '#1D8FA6'],
-  rosette: ['#E3A030', '#2F6DB5', '#C9503A'],
-  mandala: ['#F6F0E2', '#FBE7B5', '#DDF1F0'],
-  arabesque: ['#0F4D3A', '#1F3C88', '#6B2B3A'],
-  star: ['#1F3C88', '#0F4D3A', '#2B2B3A'],
-  tulips: ['#F6F0E2', '#1D8FA6', '#E3A030'],
-};
-
-export interface TileLook { color: string; pattern: Pattern }
+/** art = index of the painted tile (public/art/tiles); pattern/color = the procedural fallback and the tile body glaze. */
+export interface TileLook { color: string; pattern: Pattern; art?: number }
+/** Body glaze under the painted tiles: lapis for the blue-ground tiles, cream for the others. */
+const ART_BODY = ['#16307E', '#E6D3A6'];
 
 const hash = (n: number) => { let h = (n * 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; return (h ^ (h >>> 13)) >>> 0; }; // unsigned: a negative value would index past the lists
 
@@ -27,8 +21,8 @@ export function tileLook(uid: number, shape: string): TileLook {
   if (shape === 'mono') return { color: '#27B67A', pattern: 'plain' };
   const h = hash(uid);
   const pattern = PATTERNS[h % PATTERNS.length];
-  const grounds = GROUNDS[pattern];
-  return { color: grounds[(h >>> 8) % grounds.length], pattern };
+  const art = (h >>> 4) % ART_TILE_COUNT;
+  return { color: ART_BODY[art & 1], pattern, art };
 }
 
 const INK = '#1b1b2a'; // dark outline of every painted shape
@@ -197,12 +191,14 @@ function draw(ctx: CanvasRenderingContext2D, s: number, look: TileLook) {
 
 const canvases = new Map<string, HTMLCanvasElement>();
 function canvasFor(look: TileLook): HTMLCanvasElement {
-  const key = `${look.pattern}:${look.color}`;
+  const img = look.art !== undefined ? tileImages[look.art] : undefined;
+  const key = img ? `art:${look.art}` : `${look.pattern}:${look.color}`;
   let cv = canvases.get(key);
   if (!cv) {
     cv = document.createElement('canvas');
     cv.width = cv.height = 256;
-    draw(cv.getContext('2d')!, 256, look);
+    if (img) cv.getContext('2d')!.drawImage(img, 0, 0, 256, 256);
+    else draw(cv.getContext('2d')!, 256, look);
     canvases.set(key, cv);
   }
   return cv;
@@ -220,6 +216,7 @@ export function patternTexture(look: TileLook): THREE.CanvasTexture {
 const urls = new Map<HTMLCanvasElement, string>();
 /** Image URL of one cell of the motif (for SVG / DOM). */
 export function patternUrl(look: TileLook): string {
+  if (look.art !== undefined && tileImages[look.art]) return tileUrl(look.art);
   const cv = canvasFor(look);
   let u = urls.get(cv);
   if (!u) { u = cv.toDataURL(); urls.set(cv, u); }

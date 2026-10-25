@@ -4,6 +4,7 @@ import { Spinner } from '../components/Medal';
 import { useT } from '../i18n';
 import { pingServer } from '../net';
 import { bootstrapAccount } from '../account';
+import { preloadArt } from '../art';
 import { useStore } from '../store';
 
 export default function LoadingScreen() {
@@ -15,7 +16,7 @@ export default function LoadingScreen() {
     let alive = true;
     (async () => {
       const t0 = performance.now();
-      try { await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 2000))]); } catch { /* ignore */ }
+      try { await Promise.race([Promise.all([document.fonts.ready, preloadArt()]), new Promise((r) => setTimeout(r, 3000))]); } catch { /* ignore */ }
       if (!alive) return;
       setP(0.45); setLabel('loading.server');
       const ok = await pingServer();

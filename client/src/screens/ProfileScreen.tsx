@@ -7,6 +7,7 @@ import { useT } from '../i18n';
 import { profileLevel, saveProfile } from '../profile';
 import { useStore } from '../store';
 import { syncProgress } from '../account';
+import { Icon } from '../art';
 
 /** Profile: avatar (tap to change), name (tap to edit), level with XP, rating, then stats and achievements. */
 export default function ProfileScreen() {
@@ -22,17 +23,17 @@ export default function ProfileScreen() {
   const games = s.games;
   const pct = (n: number) => (games ? Math.round((n / games) * 100) : 0);
   const fmtDate = (ms: number) => new Date(ms).toLocaleDateString(lang === 'fa' ? 'fa-IR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-  const stats: [string, string, string][] = [
+  const stats: [React.ReactNode, string, string][] = [
     ['🎲', t('prof.games'), String(games)],
-    ['🏆', t('prof.wins'), `${profile.wins} · ${pct(profile.wins)}%`],
+    [<Icon id="trophy" size={26} />, t('prof.wins'), `${profile.wins} · ${pct(profile.wins)}%`],
     ['🔥', t('prof.bestStreak'), String(s.bestStreak)],
     ['⭐', t('prof.bestScore'), s.bestScore === null ? '—' : String(s.bestScore)],
     ['⚖', t('prof.avgScore'), s.scoredGames ? (s.totalScore / s.scoredGames).toFixed(1) : '—'],
     ['▦', t('prof.bonus7'), String(s.bonus7)],
     ['🧩', t('prof.fullBoards'), String(s.fullBoards)],
-    ['🏛', t('prof.tiles'), String(s.tiles)],
-    ['🧰', t('prof.treasures'), `${s.treasures} · +${s.treasureCoins}`],
-    ['🟩', t('prof.rewards'), String(s.rewards)],
+    [<Icon id="museum" size={26} />, t('prof.tiles'), String(s.tiles)],
+    [<Icon id="treasure" size={26} />, t('prof.treasures'), `${s.treasures} · +${s.treasureCoins}`],
+    [<Icon id="gift" size={26} />, t('prof.rewards'), String(s.rewards)],
   ];
   const unlocked = ACHIEVEMENTS.filter((a) => profile.ach[a.id]).length;
   return (
@@ -40,7 +41,7 @@ export default function ProfileScreen() {
       <header className="mhead">
         <button className="btn small" onClick={() => useStore.setState({ screen: 'menu' })}>{t('mm.back')}</button>
         <h2>{t('prof.title')}</h2>
-        <span className="mpoints num">🏆 {profile.rating}</span>
+        <span className="mpoints num"><Icon id="trophy" size={18} />{profile.rating}</span>
       </header>
 
       <section className="profhero">
@@ -73,7 +74,7 @@ export default function ProfileScreen() {
             const pr = progressOf(profile, a);
             return (
               <div key={a.id} className={'achcard' + (pr.done ? ' done' : '')}>
-                <span className="ach-ico" aria-hidden="true">{a.icon}</span>
+                <span className="ach-ico" aria-hidden="true">{pr.done ? a.icon : <Icon id="lock" size={30} />}</span>
                 <div className="ach-body">
                   <b>{t('ach.' + a.id)}</b>
                   <span className="small">{t('ach.' + a.id + '.d')}</span>

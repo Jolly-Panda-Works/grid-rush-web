@@ -1,3 +1,4 @@
+import { Icon } from '../art';
 import { Logo } from '../components/Logo';
 import { Medal } from '../components/Medal';
 import { levelProgress } from '../../../shared/src';
@@ -20,7 +21,7 @@ export default function MenuScreen() {
         <div className="profinfo">
           <span className="namebtn"><span>{profile.name}</span><span className="pen" aria-hidden="true">›</span></span>
           <div className="xpbar" title={`${lp.into}/${lp.needed} XP`}><div style={{ width: `${Math.min(100, lp.ratio * 100)}%` }} /><span className="num">{lp.into}/{lp.needed}</span></div>
-          <div className="profstats num"><span className="gem">🏆 {profile.rating}</span><span className="gem">{t('menu.wl', { w: profile.wins, l: profile.losses })}</span></div>
+          <div className="profstats num"><span className="gem"><Icon id="trophy" size={18} />{profile.rating}</span><span className="gem">{t('menu.wl', { w: profile.wins, l: profile.losses })}</span></div>
         </div>
       </button>
 
@@ -41,11 +42,11 @@ export default function MenuScreen() {
       </div>
 
       <nav className="navtiles">
-        <button className="navtile" onClick={() => useStore.setState({ screen: 'leaderboard' })}><span className="nt-ico">🏆</span><span>{t('lb.short')}</span></button>
+        <button className="navtile" onClick={() => useStore.setState({ screen: 'leaderboard' })}><span className="nt-ico"><Icon id="trophy" size={34} /></span><span>{t('lb.short')}</span></button>
         <button className="navtile" onClick={() => useStore.setState({ screen: 'friends' })}><span className="nt-ico">👥</span><span>{t('fr.title')}</span></button>
-        <button className="navtile" onClick={() => useStore.setState({ screen: 'museum' })}><span className="nt-ico">🏛</span><span>{t('museum.title')}</span></button>
-        <button className="navtile" onClick={() => useStore.setState({ showHelp: true })}><span className="nt-ico">📜</span><span>{t('menu.how')}</span></button>
-        <button className="navtile" onClick={() => useStore.setState({ showSettings: true })}><span className="nt-ico">⚙</span><span>{t('menu.settings')}</span></button>
+        <button className="navtile" onClick={() => useStore.setState({ screen: 'museum' })}><span className="nt-ico"><Icon id="museum" size={34} /></span><span>{t('museum.title')}</span></button>
+        <button className="navtile" onClick={() => useStore.setState({ showHelp: true })}><span className="nt-ico"><Icon id="quests" size={34} /></span><span>{t('menu.how')}</span></button>
+        <button className="navtile" onClick={() => useStore.setState({ showSettings: true })}><span className="nt-ico"><Icon id="settings" size={34} /></span><span>{t('menu.settings')}</span></button>
       </nav>
       <div className="version num" dir="ltr">v{__APP_VERSION__}</div>
     </main>

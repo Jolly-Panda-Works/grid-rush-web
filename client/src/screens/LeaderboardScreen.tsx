@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../account';
+import { Icon } from '../art';
 import { Medal } from '../components/Medal';
 import { PlayerCard, PublicPlayer } from '../components/PlayerCard';
 import { Popup } from '../components/Popup';
@@ -34,7 +35,7 @@ export default function LeaderboardScreen() {
     <main className="screen social">
       <header className="mhead">
         <button className="btn small" onClick={() => useStore.setState({ screen: 'menu' })}>{t('mm.back')}</button>
-        <h2>🏆 {t('lb.title')}</h2>
+        <h2><Icon id="trophy" size={30} /> {t('lb.title')}</h2>
         <span />
       </header>
       <div className="mtabs" role="tablist">

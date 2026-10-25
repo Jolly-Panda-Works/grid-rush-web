@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ACHIEVEMENTS } from '../achievements';
 import { api } from '../account';
+import { Icon } from '../art';
 import { useT } from '../i18n';
 import { Medal } from './Medal';
 
@@ -24,7 +25,7 @@ export function PlayerCard({ id, onClose, children }: { id: string; onClose: () 
             <div className="pc-top">
               <Medal size={72} avatar={p.avatar} level={p.level} />
               <div className="pc-facts num">
-                <span className="gem">🏆 {p.rating}</span>
+                <span className="gem"><Icon id="trophy" size={18} />{p.rating}</span>
                 <span className="gem">{t('menu.wl', { w: p.wins, l: p.losses })}</span>
                 <span className={'onl' + (p.online ? ' on' : '')}><i className={'dot ' + (p.online ? 'on' : 'off')} />{p.online ? t('fr.online') : t('fr.offline')}</span>
               </div>

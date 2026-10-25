@@ -1,18 +1,11 @@
 import type { Seat } from '../../../shared/src';
-import { PATTERNS, patternUrl, starPath, tileLook } from '../patterns';
+import { AVATAR_COUNT, avatarArtUrl } from '../art';
+import { starPath } from '../patterns';
 import { PlayerGlyph } from './TileShape';
 
-/** Avatars: painted-tile medallions, one of each design × two grounds (picked once from the tile looks). */
-export const AVATARS: number[] = (() => {
-  const seen = new Set<string>(), out: number[] = [];
-  for (let uid = 1; out.length < PATTERNS.length * 2 && uid < 5000; uid++) {
-    const l = tileLook(uid, 'x'), key = `${l.pattern}:${l.color}`;
-    const perPattern = out.filter((u) => tileLook(u, 'x').pattern === l.pattern).length;
-    if (!seen.has(key) && perPattern < 2) { seen.add(key); out.push(uid); }
-  }
-  return out;
-})();
-export const avatarUrl = (i: number) => patternUrl(tileLook(AVATARS[((i % AVATARS.length) + AVATARS.length) % AVATARS.length], 'x'));
+/** Avatars: painted enamel medallions in a gold rim (public/art/avatars). */
+export const AVATARS: number[] = Array.from({ length: AVATAR_COUNT }, (_, i) => i);
+export const avatarUrl = (i: number) => avatarArtUrl(((i % AVATAR_COUNT) + AVATAR_COUNT) % AVATAR_COUNT);
 /** A stable avatar for players who did not pick one (bots, opponents): from their name. */
 export const avatarFor = (name: string) => [...name].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % AVATARS.length;
 

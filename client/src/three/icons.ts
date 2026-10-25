@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { iconUrl as paintedIcon } from '../art';
 
 /** Single source of truth for the track symbols: used by the 3D track cells AND the DOM legend. */
 export type IconKind = 'chest' | 'reward' | 'flag' | 'coin';
@@ -14,7 +15,9 @@ export const ICON_SVG: Record<IconKind, string> = {
   flag: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="12" y="6" width="4.5" height="52" rx="2" fill="#3b3f63"/>${checker}<rect x="18" y="10" width="32" height="24" fill="none" stroke="#1b1f3a" stroke-width="2"/></svg>`,
   coin: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="6" y="6" width="52" height="52" rx="9" fill="#17A8F0" stroke="#0b6fa8" stroke-width="3"/><circle cx="32" cy="32" r="15" fill="#FFC93C" stroke="#C98A00" stroke-width="3.5"/><circle cx="32" cy="32" r="8" fill="none" stroke="#C98A00" stroke-width="2.5"/></svg>`,
 };
-export const iconUrl = (k: IconKind) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(ICON_SVG[k])}`;
+/** Treasure and the free 1x1 tile use the painted art; the finish flag and coin stay drawn. */
+const PAINTED: Partial<Record<IconKind, string>> = { chest: paintedIcon('treasure'), reward: paintedIcon('gift') };
+export const iconUrl = (k: IconKind) => PAINTED[k] ?? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(ICON_SVG[k])}`;
 
 const imgs = new Map<IconKind, Promise<HTMLImageElement>>();
 function loadIcon(k: IconKind) {

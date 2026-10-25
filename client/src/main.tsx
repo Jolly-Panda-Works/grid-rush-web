@@ -11,5 +11,9 @@ import '@fontsource/vazirmatn/500.css';
 import '@fontsource/vazirmatn/700.css';
 import './styles.css';
 import App from './App';
+import { installArtVars, preloadArt } from './art';
+
+installArtVars();
+void preloadArt(); // the painted tiles load while the splash plays
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);

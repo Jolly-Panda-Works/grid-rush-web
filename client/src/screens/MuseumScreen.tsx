@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BoardArt } from '../components/BoardArt';
 import { Popup } from '../components/Popup';
+import { Icon } from '../art';
 import { useT } from '../i18n';
 import {
   CollectionItem, Exhibit, XP_PER_VOTE, claimVotes, fetchExplore, fetchMine, loadCollection, publishBoard, removeExhibit, voteExhibit,
@@ -51,7 +52,7 @@ export default function MuseumScreen() {
       <header className="mhead">
         <button className="btn small" onClick={() => useStore.setState({ screen: 'menu' })}>{t('mm.back')}</button>
         <h2>🏛 {t('museum.title')}</h2>
-        <span className="mpoints num" title={t('museum.pointsHint', { xp: XP_PER_VOTE })}>❤ {mine?.points ?? 0}</span>
+        <span className="mpoints num" title={t('museum.pointsHint', { xp: XP_PER_VOTE })}><Icon id="heart" size={18} />{mine?.points ?? 0}</span>
       </header>
       <div className="mtabs" role="tablist">
         <button role="tab" aria-selected={tab === 'mine'} className={tab === 'mine' ? 'on' : ''} onClick={() => setTab('mine')}>{t('museum.mine')}</button>
@@ -71,7 +72,7 @@ export default function MuseumScreen() {
                   {mine.exhibits.map((e) => (
                     <figure key={e.id} className="mcard">
                       <BoardArt tiles={e.tiles} size={140} showEmpty />
-                      <figcaption><span className="mvotes num">❤ {e.votes}</span><span className="muted small num">{t('museum.score', { n: e.score })}</span></figcaption>
+                      <figcaption><span className="mvotes num"><Icon id="heart" size={16} />{e.votes}</span><span className="muted small num">{t('museum.score', { n: e.score })}</span></figcaption>
                       <button className="btn ghost small" disabled={busy === e.id} onClick={() => remove(e)}>{t('museum.remove')}</button>
                     </figure>
                   ))}
