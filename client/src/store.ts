@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import type { Action, GameState, Seat } from '../../shared/src';
 import type { UpdateInfo } from './update';
 import { Profile, Settings, loadProfile, loadSettings } from './profile';
-import { hoverKeeping, nearestValid, placedCells } from './three/placement';
+import { bestFit, hoverKeeping, placedCells } from './three/placement';
+import { tr } from './i18n';
 
 export type Screen = 'splash' | 'loading' | 'menu' | 'matchmaking' | 'game' | 'results' | 'museum';
 export interface Popup { id: number; text: string; tone: 'info' | 'good' | 'warn' | 'bad' }
@@ -159,5 +160,19 @@ export const selectOffer = (i: number) => {
   const tile = st.game.offer[i];
   const o = (tile && st.orient[tile.uid]) || { rot: 0, flip: false };
   const sel = { ...st.sel, offer: i, rot: o.rot, flip: o.flip };
-  setSel({ offer: i, rot: o.rot, flip: o.flip, hover: nearestValid(st.game, st.mySeat, sel, st.sel.hover ?? undefined) });
+  const fit = bestFit(st.game, st.mySeat, sel, st.sel.hover ?? undefined);
+  if (!fit) { setSel({ offer: i, rot: o.rot, flip: o.flip, hover: null }); return; }
+  applyFit(i, fit);
 };
+
+/** Show the ghost where bestFit put it; if it had to turn the tile to make it fit, say so and remember that orientation. */
+export function applyFit(i: number, fit: { rot: number; flip: boolean; hover: [number, number]; turned: boolean }) {
+  const st = useStore.getState();
+  const tile = st.game?.offer[i];
+  useStore.setState({
+    sel: { ...st.sel, offer: i, rot: fit.rot, flip: fit.flip, hover: fit.hover },
+    orient: tile ? { ...st.orient, [tile.uid]: { rot: fit.rot, flip: fit.flip } } : st.orient,
+    rotAnim: fit.turned ? { id: animId++, kind: 'set', pivot: fit.hover, t0: performance.now() } : st.rotAnim,
+  });
+  if (fit.turned) pushToast(tr('toast.turnedToFit'), 'info');
+}

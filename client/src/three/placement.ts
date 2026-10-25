@@ -74,3 +74,29 @@ export function fitsSomewhere(board: number[], oriented: Cell[]): boolean {
     if (oriented.every(([r, c]) => board[(r0 + r) * BOARD_SIZE + c0 + c] === 0)) return true;
   return false;
 }
+
+/**
+ * Where (and which way round) to show a selected tile: its current orientation at the valid spot nearest to `from`;
+ * if the tile fits nowhere that way round, the first orientation that does fit (so a card that can be played always
+ * gets a ghost on the board). With `at`, an orientation that fits exactly there wins (a drop on the board).
+ */
+export function bestFit(g: GameState, seat: 0 | 1, sel: Selection, from?: [number, number], at?: [number, number]):
+  { rot: number; flip: boolean; hover: [number, number]; turned: boolean } | null {
+  const tile = sel.offer !== null ? g.offer[sel.offer] : null;
+  if (!tile) return null;
+  const orients = distinctOrientations(tile.cells);
+  const cur = cellsKey(transformCells(tile.cells, sel.rot, sel.flip));
+  const same = (o: { key: string }) => o.key === cur;
+  if (at) {
+    if (previewFor(g, seat, { ...sel, hover: at })?.valid) return { rot: sel.rot, flip: sel.flip, hover: at, turned: false };
+    for (const o of orients) if (!same(o) && previewFor(g, seat, { ...sel, rot: o.rot, flip: o.flip, hover: at })?.valid) return { rot: o.rot, flip: o.flip, hover: at, turned: true };
+  }
+  const here = nearestValid(g, seat, sel, from);
+  if (here) return { rot: sel.rot, flip: sel.flip, hover: here, turned: false };
+  for (const o of orients) {
+    if (same(o)) continue;
+    const h = nearestValid(g, seat, { ...sel, rot: o.rot, flip: o.flip }, from);
+    if (h) return { rot: o.rot, flip: o.flip, hover: h, turned: true };
+  }
+  return null;
+}

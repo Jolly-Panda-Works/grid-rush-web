@@ -4,9 +4,9 @@ import { Forecast, advanceSteps, useForecast } from '../forecast';
 import { iconUrl } from '../three/icons';
 import { useT, tr } from '../i18n';
 import { send } from '../net';
-import { pickOffer, pushToast, resetSel, rotate, selectOffer, setSel, useStore } from '../store';
+import { applyFit, pickOffer, pushToast, resetSel, rotate, selectOffer, setSel, useStore } from '../store';
 import { dragApi } from '../three/dragApi';
-import { nearestValid, previewFor } from '../three/placement';
+import { bestFit, previewFor } from '../three/placement';
 import { CoinIcon, TileShape, TimeIcon } from './TileShape';
 import { SeatPortrait, SeatStats } from './Seats';
 import { RewardCardFace } from './RewardCard';
@@ -56,9 +56,11 @@ export function OfferPanel() {
       const cell = ev.type === 'pointercancel' ? null : dragApi.pick?.(ev.clientX, ev.clientY + off) ?? null;
       const pv = cell ? previewFor(st.game, st.mySeat, { ...st.sel, hover: cell }) : null;
       if (pv && pv.valid) { send.buy(st.sel.offer, pv.abs); sfx.place(); resetSel(); return; }
-      // dropped off the board or where it does not fit: the tile stays in hand, its ghost goes back to a valid spot
-      if (cell) { sfx.bad(); pushToast(tr('toast.noFit'), 'bad'); }
-      setSel({ hover: nearestValid(st.game, st.mySeat, st.sel, cell ?? undefined) });
+      // dropped where it does not fit this way round: turn it if another orientation fits right there (shown, not placed:
+      // the player confirms with ✓); otherwise the ghost goes to the nearest spot where it fits
+      const fit = bestFit(st.game, st.mySeat, st.sel, cell ?? undefined, cell ?? undefined);
+      if (fit) { applyFit(st.sel.offer, fit); if (!fit.turned && cell) { sfx.bad(); pushToast(tr('toast.noFit'), 'bad'); } }
+      else if (cell) { sfx.bad(); pushToast(tr('toast.noFit'), 'bad'); }
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
