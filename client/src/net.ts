@@ -234,8 +234,7 @@ function finalize(g: GameState) {
     levelBefore: levelFromXp(p.xp), levelAfter: levelFromXp(next.xp), newAch: fresh, practice,
   };
   useStore.setState({ profile: next, result: info });
-  void syncProgress();
-  (won ? sfx.win : sfx.lose)();
+  void syncProgress(); // the win / lose fanfare plays on the results screen, once the score is counted
   setTimeout(() => { if (useStore.getState().game === g || useStore.getState().game?.phase === 'finished') useStore.setState({ screen: 'results' }); }, 1800);
 }
 
