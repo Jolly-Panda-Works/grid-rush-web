@@ -9,6 +9,7 @@ import { TrackView } from './TrackView';
 import { VfxLayer } from './vfx';
 import { SteerLayer } from './steer';
 import { computeLayout } from './layout';
+import { dragApi } from './dragApi';
 
 function Scene() {
   const { size, camera } = useThree();
@@ -25,7 +26,17 @@ function Scene() {
     cam.lookAt(layout.cx, layout.cy, 0);
     cam.updateProjectionMatrix();
     base.current = { x: layout.cx, y: layout.cy, z: cam.position.z };
-  }, [layout, aspect, camera]);
+    // the player panels (DOM) are laid over the part of the table the layout keeps free for them
+    const a = new THREE.Vector3(), b = new THREE.Vector3();
+    dragApi.infoRect = () => {
+      a.set(layout.info.x0, layout.info.y1, 0).project(cam); b.set(layout.info.x1, layout.info.y0, 0).project(cam);
+      const left = ((a.x + 1) / 2) * size.width, top = ((1 - a.y) / 2) * size.height;
+      // phones: one panel under the other (tall space); desktop: side by side (wide space under the opponent board)
+      return { left, top, width: ((b.x + 1) / 2) * size.width - left, height: ((1 - b.y) / 2) * size.height - top, stacked: !layout.landscape };
+    };
+    useStore.setState((s) => ({ layoutTick: s.layoutTick + 1 }));
+    return () => { dragApi.infoRect = null; };
+  }, [layout, aspect, camera, size.width, size.height]);
 
   // decaying-trauma shake of the camera only (smooth sines, not random jitter); always returns to rest
   const base = useRef({ x: 0, y: 0, z: 40 });

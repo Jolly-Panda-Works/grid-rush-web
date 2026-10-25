@@ -8,7 +8,6 @@ import { applyFit, pickOffer, pushToast, resetSel, rotate, selectOffer, setSel, 
 import { dragApi } from '../three/dragApi';
 import { bestFit, previewFor } from '../three/placement';
 import { CoinIcon, TileShape, TimeIcon } from './TileShape';
-import { SeatPortrait, SeatStats } from './Seats';
 import { RewardCardFace } from './RewardCard';
 import { sfx } from '../audio';
 
@@ -77,11 +76,6 @@ export function OfferPanel() {
 
   return (
     <footer className={'dock' + (locked ? ' locked' : '')} aria-disabled={locked}>
-      <div className="myseat">
-        <SeatPortrait seat={mySeat} size={54} />
-        <SeatStats seat={mySeat} />
-      </div>
-
       <div className={'hand' + (placing ? ' holding' : '')}>
         {placing && <div className="gcard rewardcard inhand sel" aria-label={t('reward.title')}><RewardCardFace count={g.pendingRewards} /></div>}
         {g.offer.map((tile, i) => {

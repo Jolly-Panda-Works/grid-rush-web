@@ -37,6 +37,7 @@ interface Store {
   sel: Selection;
   orient: Record<number, Orient>; // each offered tile (by uid) keeps its own orientation
   rotAnim: RotAnim | null;
+  layoutTick: number; // bumps when the 3D layout changes (DOM overlays re-measure)
   popups: Popup[];
   flashes: Record<number, number>;
   fx: Fx[];
@@ -68,6 +69,7 @@ export const useStore = create<Store>(() => ({
   sel: { offer: null, rot: 0, flip: false, hover: null },
   orient: {},
   rotAnim: null,
+  layoutTick: 0,
   popups: [],
   flashes: {},
   fx: [],

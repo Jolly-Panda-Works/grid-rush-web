@@ -5,6 +5,8 @@ import { patternUrl, tileLook } from '../patterns';
 import { useStore } from '../store';
 import { CoinIcon, EmptyIcon, PlayerGlyph } from './TileShape';
 import { NextGem, TrackLine } from './TrackBar';
+import { GameMenu } from './GameMenu';
+import { dragApi } from '../three/dragApi';
 
 /** Seconds left in the current turn (null = no timer, e.g. offline bot games). */
 function useTurnLeft(): number | null {
@@ -63,7 +65,7 @@ export function SeatStats({ seat, compact = false }: { seat: Seat; compact?: boo
     <div className={'sstats' + (compact ? ' compact' : '')} data-seat={seat} role="button" tabIndex={0} onClick={() => setOpen((o) => !o)}>
       <span className="gem coin" title={t('hud.coins')}><CoinIcon size={16} /><b key={p.coins} className="num bump">{p.coins}</b><CoinDelta value={p.coins} /></span>
       <span className="gem empty" title={t('hud.empty', { p: EMPTY_CELL_PENALTY })}><EmptyIcon size={14} /><b key={sc.emptyCells} className="num bump">{sc.emptyCells}</b></span>
-      {!compact && seat === mySeat && <NextGem />}
+      {seat === mySeat && <NextGem />}
       {open && (
         <div className="pdetail" onClick={(e) => { e.stopPropagation(); setOpen(false); }}>
           <div className="dhead">{t('hud.scoreNow')}</div>
@@ -93,22 +95,49 @@ export function SeatPortrait({ seat, size }: { seat: Seat; size: number }) {
   );
 }
 
-/** Top of the table, kept quiet: the opponent's portrait (lead / 7x7 badges sit on it), name and two gems,
- *  with the whole time track as a slim line along the bottom edge. */
-export function OppBar() {
+/** One player's panel: portrait, name and gems. It gets a frame in the player's colour while it is their turn. */
+function PlayerPanel({ seat }: { seat: Seat }) {
   const t = useT();
   const g = useStore((s) => s.game)!;
   const mySeat = useStore((s) => s.mySeat);
-  const opp = (1 - mySeat) as Seat;
-  const p = g.players[opp];
+  const p = g.players[seat];
+  const active = g.current === seat && g.phase !== 'finished';
   return (
-    <header className="oppbar">
-      <div className="oppseat">
-        <SeatPortrait seat={opp} size={42} />
-        <span className="oppname"><span className="n">{p.name}</span>{p.isBot && <span className="botdot" title={t('bot')}>🤖</span>}{!p.connected && <span className="tag warn">{t('offline')}</span>}</span>
-        <SeatStats seat={opp} compact />
+    <section className={'ppanel p' + seat + (active ? ' active' : '')} aria-current={active ? 'true' : undefined}>
+      <SeatPortrait seat={seat} size={40} />
+      <div className="ppbody">
+        <span className="ppname">
+          <span className="n">{seat === mySeat ? t('you') : p.name}</span>
+          {seat !== mySeat && p.isBot && <span className="botdot" title={t('bot')}>🤖</span>}
+          {!p.connected && <span className="tag warn">{t('offline')}</span>}
+        </span>
+        <SeatStats seat={seat} compact />
       </div>
+    </section>
+  );
+}
+
+/** Both players' panels, one under the other, in the space the table layout keeps free next to the opponent board
+ *  (opponent on top, me below). Fixed in place: nothing in them can move the boards. */
+export function PlayerPanels() {
+  useStore((s) => s.layoutTick); // re-measure when the 3D layout changes
+  const mySeat = useStore((s) => s.mySeat);
+  const r = dragApi.infoRect?.();
+  if (!r || r.width < 60) return null;
+  return (
+    <div className={'ppanels' + (r.stacked ? '' : ' row')} style={{ left: Math.max(6, r.left), top: r.top, width: r.width, height: r.height }}>
+      <PlayerPanel seat={(1 - mySeat) as Seat} />
+      <PlayerPanel seat={mySeat} />
+    </div>
+  );
+}
+
+/** Top of the table: the whole time track as one slim line, and the menu button. */
+export function OppBar() {
+  return (
+    <header className="oppbar slim">
       <TrackLine />
+      <GameMenu />
     </header>
   );
 }

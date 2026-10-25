@@ -6,4 +6,6 @@ export const dragApi: {
   cellPx: (() => number) | null;
   /** on-screen position (px, relative to the 3D canvas) of a (fractional) cell of MY board */
   cellToScreen: ((r: number, c: number) => { x: number; y: number }) | null;
-} = { pick: null, cellPx: null, cellToScreen: null };
+  /** on-screen rectangle (px, relative to the 3D canvas) reserved for the player panels */
+  infoRect: (() => { left: number; top: number; width: number; height: number; stacked: boolean }) | null;
+} = { pick: null, cellPx: null, cellToScreen: null, infoRect: null };

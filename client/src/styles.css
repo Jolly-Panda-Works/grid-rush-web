@@ -1011,3 +1011,39 @@ body[data-screen='splash'] { background: #fff; }
 .splash.out { animation: a-fadeout .7s ease-in both; }
 @keyframes splashin { from { opacity: 0; scale: .94; } to { opacity: 1; scale: 1; } }
 @keyframes splashout { from { opacity: 1; scale: 1; } to { opacity: 0; scale: 1.03; } }
+
+/* ===== player panels next to the opponent board; slim top bar with the menu; dock = hand + pile + medallion ===== */
+.oppbar.slim { height: calc(42px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 0 0; }
+.oppbar.slim .trackline { left: 16px; right: 64px; bottom: 15px; }
+.oppbar.slim .gmenu-btn { position: absolute; top: calc(env(safe-area-inset-top) + 4px); right: 10px; width: 34px; height: 34px; z-index: 8; }
+.oppbar.slim .gmenu { top: calc(env(safe-area-inset-top) + 46px); right: 8px; }
+.gmenu-scrim { position: fixed; }
+
+.ppanels { position: absolute; z-index: 5; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; pointer-events: none; }
+.ppanel { position: relative; flex: 1 1 0; min-height: 0; display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 12px; color: #fff; pointer-events: auto;
+  background: linear-gradient(180deg, rgba(4,12,44,.86), rgba(8,22,70,.78)); border: 2px solid rgba(232,183,48,.5); box-shadow: 0 6px 14px rgba(0,0,20,.45);
+  transition: border-color .25s, box-shadow .25s; animation: a-rise .4s cubic-bezier(.2,1.2,.4,1) both; }
+.ppanels > .ppanel:nth-child(2) { animation-delay: .1s; }
+/* whose turn it is: a frame in that player's colour */
+.ppanel.active.p0 { border-color: var(--p0); box-shadow: 0 0 0 2px var(--p0), 0 0 18px rgba(23,168,240,.75), 0 6px 14px rgba(0,0,20,.45); }
+.ppanel.active.p1 { border-color: var(--p1); box-shadow: 0 0 0 2px var(--p1), 0 0 18px rgba(240,82,79,.75), 0 6px 14px rgba(0,0,20,.45); }
+.ppanel::after { content: ''; position: absolute; inset: -4px; border-radius: 15px; pointer-events: none; opacity: 0; border: 2px solid currentColor; }
+.ppanel.active.p0::after { color: var(--p0); animation: glowfade 1.6s ease-in-out infinite; }
+.ppanel.active.p1::after { color: var(--p1); animation: glowfade 1.6s ease-in-out infinite; }
+.ppbody { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.ppname { display: flex; align-items: center; gap: 4px; min-width: 0; font: 800 13.5px var(--head); white-space: nowrap; }
+.ppname .n { overflow: hidden; text-overflow: ellipsis; }
+.ppanel .sstats.compact { flex-wrap: wrap; gap: 3px 4px; }
+.ppanel .gem { font-size: 12px; padding: 1px 5px 1px 3px; gap: 3px; }
+.ppanel .gem svg, .ppanel .gem img { width: 13px; height: 13px; }
+.ppanel .pbadge { font-size: 9.5px; }
+.ppanel .sstats .pdetail { top: calc(100% + 6px); bottom: auto; left: 0; }
+html[dir='rtl'] .ppbody { direction: rtl; }
+
+.dock { grid-template-columns: minmax(0, 1fr) auto; }
+@media (max-width: 700px) {
+  .dock { height: calc(158px + env(safe-area-inset-bottom)); }
+  .gcard { width: 86px; height: 116px; margin: 0 -4px; }
+  .cart { inset: 24px 9px 22px; }
+}
+.ppanels.row { flex-direction: row; }

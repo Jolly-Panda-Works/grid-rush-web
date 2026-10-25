@@ -1,12 +1,11 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { TRACK_LENGTH } from '../../../shared/src';
 import { OfferPanel, TurnScroll } from '../components/OfferPanel';
-import { OppBar } from '../components/Seats';
+import { OppBar, PlayerPanels } from '../components/Seats';
 import { Ribbon } from '../components/Ribbon';
 import { RewardCardFx } from '../components/RewardCard';
 import { useT } from '../i18n';
 import { Popup } from '../components/Popup';
-import { GameMenu } from '../components/GameMenu';
 import { DragGhost } from '../components/DragGhost';
 import { resign, send } from '../net';
 import { flipHorizontal, flipVertical, resetSel, rotate, selectOffer, useStore } from '../store';
@@ -58,7 +57,7 @@ export default function GameScreen() {
         <Ribbon />
         <RewardCardFx />
         <Popup />
-        <GameMenu />
+        <PlayerPanels />
         {conn === 'reconnecting' && <div className="overlay soft"><div className="modal small">{t('game.reconnecting')}</div></div>}
         {game.phase === 'finished' && <div className="overlay soft"><div className="modal small">{t('game.over')}</div></div>}
       </section>

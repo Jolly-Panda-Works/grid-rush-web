@@ -14,6 +14,8 @@ export interface Layout {
   w: number; h: number; cx: number; cy: number; landscape: boolean;
   my: { x: number; y: number; scale: number };
   opp: { x: number; y: number; scale: number };
+  /** where the player panels go (world units): phones = left of the opponent board, desktop = under it */
+  info: { x0: number; y0: number; x1: number; y1: number };
   track: TrackLayout;
 }
 
@@ -28,6 +30,7 @@ export function computeLayout(aspect: number): Layout {
     return {
       landscape: true, w: 18.8, h: 13.9, cx: 0, cy: -1.75,
       my: { x: -3.75, y: 0, scale: 1 }, opp: { x: 5.7, y: 0.4, scale: 0.6 },
+      info: { x0: 5.7 - 3.12, x1: 5.7 + 3.12, y0: -5.55, y1: 0.4 - 3.12 - 0.25 },
       track: {
         x: 0, y, cell, vertical: false, window: 0, lineLen, lines, step: cell, across,
         plate: { x: 0, y: y - ((lines - 1) * across) / 2, w: lineLen * cell + 0.75, h: (lines - 1) * across + cell + 0.65 },
@@ -35,14 +38,16 @@ export function computeLayout(aspect: number): Layout {
     };
   }
   // Phone: my board (frame 10.4) at y=0, the track strip above it, the small opponent board on top.
-  const win = 11, cell = 0.92, step = 0.96, oppScale = 0.42;
+  const win = 11, cell = 0.92, step = 0.96, oppScale = 0.45;
   const plateW = win * step + 0.4, plateH = cell + 0.42;
   const ty = 5.2 + 0.4 + plateH / 2;
   const oy = ty + plateH / 2 + 0.4 + 5.2 * oppScale;
   const top = oy + 5.2 * oppScale, bottom = -5.2;
   return {
     landscape: false, w: 11.2, h: top - bottom + 0.5, cx: 0, cy: (top + bottom) / 2,
-    my: { x: 0, y: 0, scale: 1 }, opp: { x: 0, y: oy, scale: oppScale },
+    // the opponent board sits on the right, the player panels fill the space on its left
+    my: { x: 0, y: 0, scale: 1 }, opp: { x: 5.6 - 5.2 * oppScale - 0.15, y: oy, scale: oppScale },
+    info: { x0: -5.5, x1: 5.6 - 2 * 5.2 * oppScale - 0.45, y0: oy - 5.2 * oppScale, y1: oy + 5.2 * oppScale },
     track: {
       x: 0, y: ty, cell, vertical: false, window: win, lineLen: n, lines: 1, step, across: 0,
       plate: { x: 0, y: ty, w: plateW, h: plateH },
