@@ -5,7 +5,7 @@ import { levelProgress } from '../../../shared/src';
 import { useT } from '../i18n';
 import { startSearch } from '../net';
 import { profileLevel } from '../profile';
-import { useStore } from '../store';
+import { needServer, useStore } from '../store';
 
 /** Main menu as a game lobby: profile plate on top (opens the profile), the logo, two big play tiles, and a row of icon tiles.
  *  Fixed layout (never scrolls). Bot games work offline, so no play tile depends on the server. */
@@ -42,8 +42,8 @@ export default function MenuScreen() {
       </div>
 
       <nav className="navtiles">
-        <button className="navtile" onClick={() => useStore.setState({ screen: 'leaderboard' })}><span className="nt-ico"><Icon id="trophy" size={34} /></span><span>{t('lb.short')}</span></button>
-        <button className="navtile" onClick={() => useStore.setState({ screen: 'friends' })}><span className="nt-ico"><Icon id="friends" size={34} /></span><span>{t('fr.title')}</span></button>
+        <button className={'navtile' + (online ? '' : ' needsrv')} onClick={() => needServer('off.what.lb', () => useStore.setState({ screen: 'leaderboard' }))}><span className="nt-ico"><Icon id="trophy" size={34} /></span><span>{t('lb.short')}</span></button>
+        <button className={'navtile' + (online ? '' : ' needsrv')} onClick={() => needServer('off.what.fr', () => useStore.setState({ screen: 'friends' }))}><span className="nt-ico"><Icon id="friends" size={34} /></span><span>{t('fr.title')}</span></button>
         <button className="navtile" onClick={() => useStore.setState({ screen: 'museum' })}><span className="nt-ico"><Icon id="museum" size={34} /></span><span>{t('museum.title')}</span></button>
         <button className="navtile" onClick={() => useStore.setState({ showHelp: true })}><span className="nt-ico"><Icon id="quests" size={34} /></span><span>{t('menu.how')}</span></button>
         <button className="navtile" onClick={() => useStore.setState({ showSettings: true })}><span className="nt-ico"><Icon id="settings" size={34} /></span><span>{t('menu.settings')}</span></button>

@@ -15,6 +15,7 @@ import HowToPlay from './components/HowToPlay';
 import { RotateOverlay } from './components/RotateOverlay';
 import { SettingsModal } from './components/SettingsModal';
 import { UpdatePrompt } from './components/UpdatePrompt';
+import { ServerNotice } from './components/ServerNotice';
 import { checkForUpdate } from './update';
 
 export default function App() {
@@ -45,6 +46,7 @@ export default function App() {
       {help && <HowToPlay />}
       {settingsOpen && <SettingsModal />}
       <UpdatePrompt />
+      <ServerNotice />
       <RotateOverlay />
     </>
   );

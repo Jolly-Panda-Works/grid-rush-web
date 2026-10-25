@@ -35,6 +35,8 @@ export function installArtVars() {
   for (const id of ids) document.documentElement.style.setProperty(`--art-${id}`, `url("${frameUrl(id)}")`);
   document.documentElement.style.setProperty('--art-bg-tile', `url("${tileUrl(BG_TILE)}")`);
   document.documentElement.style.setProperty('--art-icon-close', `url("${iconUrl('close')}")`);
+  document.documentElement.style.setProperty('--art-icon-level', `url("${iconUrl('achievement')}")`);
+  document.documentElement.style.setProperty('--art-icon-lock', `url("${iconUrl('lock')}")`);
 }
 
 /** Decoded tile images: the 3D board paints them into textures, which needs them loaded up front. */

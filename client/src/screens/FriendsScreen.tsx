@@ -16,7 +16,11 @@ export default function FriendsScreen() {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
-  const load = useCallback(async () => { const r = await api<Lists>('/friends'); setLists(r?.ok ? r.data : null); }, []);
+  const load = useCallback(async () => {
+    const r = await api<Lists>('/friends');
+    setLists(r?.ok ? r.data : null);
+    if (!r) useStore.setState({ serverOnline: false, serverNotice: { what: 'off.what.fr', back: true } }); // the server went away
+  }, []);
   useEffect(() => { void load(); }, [load]);
 
   const add = async () => {
@@ -25,7 +29,7 @@ export default function FriendsScreen() {
     setBusy(true);
     const r = await api<{ accepted: boolean; player: PublicPlayer; error?: string }>('/friends/add', { method: 'POST', body: { code: c } });
     setBusy(false);
-    if (!r) { pushToast(t('acct.needServer'), 'warn'); return; }
+    if (!r) { useStore.setState({ serverOnline: false, serverNotice: { what: 'off.what.fr' } }); return; }
     if (r.status === 404) { pushToast(t('fr.noSuchCode'), 'bad'); return; }
     if (r.status === 400) { pushToast(t('fr.ownCode'), 'warn'); return; }
     pushToast(r.data.accepted ? t('fr.nowFriends', { name: r.data.player.name }) : t('fr.sent', { name: r.data.player.name }), 'good');

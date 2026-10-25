@@ -19,7 +19,10 @@ export default function LeaderboardScreen() {
   const [open, setOpen] = useState<string | null>(null);
   useEffect(() => {
     setBoard(undefined);
-    api<Board>(`/leaderboard?by=${by}&scope=${scope}`).then((r) => setBoard(r?.ok ? r.data : null));
+    api<Board>(`/leaderboard?by=${by}&scope=${scope}`).then((r) => {
+      setBoard(r?.ok ? r.data : null);
+      if (!r) useStore.setState({ serverOnline: false, serverNotice: { what: 'off.what.lb', back: true } }); // the server went away
+    });
   }, [by, scope]);
   const value = (r: Row) => (by === 'rating' ? r.rating : t('menu.lv', { n: r.level }));
   const meInTop = !!board?.rows.some((r) => r.me);

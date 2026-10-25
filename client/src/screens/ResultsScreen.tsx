@@ -10,7 +10,7 @@ import { useT } from '../i18n';
 import { publishBoard } from '../museum';
 import { ACHIEVEMENTS } from '../achievements';
 import { backToMenu, startSearch } from '../net';
-import { pushToast, useStore } from '../store';
+import { needServer, pushToast, useStore } from '../store';
 
 /** The score table fills row by row: coins, 7x7 bonus, empty cells (marked on the boards one by one), then the total. */
 const ROWS = ['coins', 'bonus', 'empty', 'total'] as const;
@@ -65,6 +65,7 @@ export default function ResultsScreen() {
   const order: Seat[] = [mySeat, (1 - mySeat) as Seat];
   const lp = levelProgress(res.xpAfter);
   const exhibit = async () => {
+    if (!needServer('off.what.exhibit')) return;
     setSaved('busy');
     const ok = await publishBoard(g.players[mySeat].tiles, r.scores[mySeat].total);
     setSaved(ok ? 'done' : 'idle');

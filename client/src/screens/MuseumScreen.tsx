@@ -6,7 +6,7 @@ import { useT } from '../i18n';
 import {
   CollectionItem, Exhibit, XP_PER_VOTE, claimVotes, fetchExplore, fetchMine, loadCollection, publishBoard, removeExhibit, voteExhibit,
 } from '../museum';
-import { pushToast, useStore } from '../store';
+import { needServer, pushToast, useStore } from '../store';
 
 type Tab = 'mine' | 'explore';
 
@@ -25,14 +25,19 @@ export default function MuseumScreen() {
     setMine(m);
     if (m) claimVotes(m.points);
   }, []);
-  const loadExplore = useCallback(async () => { setExplore(undefined); setExplore(await fetchExplore(sort)); }, [sort]);
+  const loadExplore = useCallback(async () => {
+    setExplore(undefined);
+    const x = await fetchExplore(sort);
+    setExplore(x);
+    if (x === null) { useStore.setState({ serverOnline: false, serverNotice: { what: 'off.what.museum' } }); setTab('mine'); }
+  }, [sort]);
   useEffect(() => { loadMine(); }, [loadMine]);
   useEffect(() => { if (tab === 'explore') loadExplore(); }, [tab, loadExplore]);
 
-  const offline = (tab === 'mine' ? mine : explore) === null;
   const full = !!mine && mine.exhibits.length >= mine.max;
 
   const exhibit = async (c: CollectionItem) => {
+    if (!needServer('off.what.exhibit')) return;
     setBusy(c.id);
     const ok = await publishBoard(c.tiles, c.score);
     setBusy(null);
@@ -57,10 +62,9 @@ export default function MuseumScreen() {
       <Icon id="museum" size={150} className="museum-hero" />
       <div className="mtabs" role="tablist">
         <button role="tab" aria-selected={tab === 'mine'} className={tab === 'mine' ? 'on' : ''} onClick={() => setTab('mine')}>{t('museum.mine')}</button>
-        <button role="tab" aria-selected={tab === 'explore'} className={tab === 'explore' ? 'on' : ''} onClick={() => setTab('explore')}>{t('museum.explore')}</button>
+        <button role="tab" aria-selected={tab === 'explore'} className={tab === 'explore' ? 'on' : ''} onClick={() => needServer('off.what.museum', () => setTab('explore'))}>{t('museum.explore')}</button>
       </div>
       <p className="mintro muted small">{tab === 'mine' ? t('museum.introMine', { n: mine?.max ?? 6, xp: XP_PER_VOTE }) : t('museum.introExplore')}</p>
-      {offline && <div className="offnote small">{t('museum.offline')}</div>}
 
       <section className="mbody">
         {tab === 'mine' && (
@@ -90,7 +94,7 @@ export default function MuseumScreen() {
                     <span className={'tag ' + (c.won ? 'good' : '')}>{c.won ? t('res.win') : t('res.lose')}</span>
                     <span className="muted small num">{t('museum.score', { n: c.score })}</span>
                   </figcaption>
-                  <button className="btn small" disabled={!mine || full || busy === c.id} onClick={() => exhibit(c)}><Icon id="museum" size={20} />{t('museum.exhibit')}</button>
+                  <button className="btn small" disabled={full || busy === c.id} onClick={() => exhibit(c)}><Icon id="museum" size={20} />{t('museum.exhibit')}</button>
                 </figure>
               ))}
             </div>

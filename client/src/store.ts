@@ -53,6 +53,8 @@ interface Store {
   account: Account | null; // my server account (null while offline / not signed in yet)
   showHelp: boolean;
   showSettings: boolean;
+  /** "this needs the server" warning: what was asked for (an i18n key), and whether to go back to the menu after */
+  serverNotice: { what: string; back?: boolean } | null;
   confirmResign: boolean;
   result: ResultInfo | null;
 }
@@ -86,6 +88,7 @@ export const useStore = create<Store>(() => ({
   account: null,
   showHelp: false,
   showSettings: false,
+  serverNotice: null,
   confirmResign: false,
   result: null,
 }));
@@ -95,6 +98,12 @@ let popupId = 1;
 export function pushToast(text: string, tone: Popup['tone'] = 'info') {
   const id = popupId++;
   useStore.setState((s) => ({ popups: [...s.popups.slice(-5), { id, text, tone }] }));
+}
+/** Run `go` only when the game server is reachable; otherwise warn instead of opening something that cannot work. */
+export function needServer(what: string, go?: () => void): boolean {
+  if (useStore.getState().serverOnline) { go?.(); return true; }
+  useStore.setState({ serverNotice: { what } });
+  return false;
 }
 let ribbonId = 1;
 export function pushRibbon(title: string, tone: RibbonMsg['tone'], sub?: string) {
