@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { shake } from './shake';
+import { isMobile } from '../device';
 import * as THREE from 'three';
 import { useStore } from '../store';
 import { BoardView } from './BoardView';
@@ -52,9 +53,15 @@ function Scene() {
   );
 }
 
+/** Phones: render at most 1.5x the CSS pixels (a 3x screen would otherwise fill 4x as many pixels), and skip MSAA on dense screens. */
+const GL = (() => {
+  const mobile = isMobile(), ratio = typeof devicePixelRatio === 'number' ? devicePixelRatio : 1;
+  return { dpr: (mobile ? [1, 1.5] : [1, 2]) as [number, number], antialias: !(mobile && ratio >= 2) };
+})();
+
 export default function GameCanvas() {
   return (
-    <Canvas dpr={[1, 2]} camera={{ fov: 30, position: [0, 0, 40], near: 0.1, far: 300 }} gl={{ antialias: true, alpha: true }}>
+    <Canvas dpr={GL.dpr} camera={{ fov: 30, position: [0, 0, 40], near: 0.1, far: 300 }} gl={{ antialias: GL.antialias, alpha: true, powerPreference: 'high-performance' }}>
       <Scene />
     </Canvas>
   );

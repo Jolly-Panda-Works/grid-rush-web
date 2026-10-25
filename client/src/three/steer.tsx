@@ -7,6 +7,7 @@ import { sfx } from '../audio';
 import { useStore } from '../store';
 import { Layout } from './layout';
 import { vfx } from './vfx';
+import { isMobile } from '../device';
 
 /**
  * Organic motion with Yuka steering behaviours:
@@ -76,7 +77,7 @@ export function SteerLayer({ layout }: { layout: Layout }) {
   const flies = useMemo(() => {
     if (reduce) return [];
     const centre = new YVector3(layout.cx, 0, layout.cy);
-    return Array.from({ length: 7 }, () => {
+    return Array.from({ length: isMobile() ? 4 : 7 }, () => {
       const v = new Vehicle();
       v.position.set(layout.cx + (Math.random() - 0.5) * layout.w * 0.8, 0, layout.cy + (Math.random() - 0.5) * layout.h * 0.8);
       v.maxSpeed = 0.9 + Math.random() * 0.6; v.maxForce = 2;

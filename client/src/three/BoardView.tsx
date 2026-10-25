@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 import { ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { BOARD_SIZE, Cell, EMPTY_CELL_PENALTY, PlacedTile, SPECIAL_7X7_BONUS, SPECIAL_AREA, Seat, TRACK_LENGTH } from '../../../shared/src';
 import { useStore, setSel } from '../store';
 import { confirmPlacement } from '../actions';
@@ -25,20 +26,43 @@ const SHAMSEH = (() => {
 })();
 const SHAMSEH_MAT = new THREE.MeshStandardMaterial({ color: '#F2C744', metalness: 0.55, roughness: 0.3, emissive: '#6a4a00', emissiveIntensity: 0.25 });
 
-function TileMesh({ tile }: { tile: PlacedTile }) {
+/** Shared materials (one per glaze colour) keep the number of GPU state switches low. */
+const bodyMats = new Map<string, THREE.MeshStandardMaterial>();
+const bodyMat = (color: string) => { let m = bodyMats.get(color); if (!m) { m = new THREE.MeshStandardMaterial({ color, roughness: 0.75 }); bodyMats.set(color, m); } return m; };
+const topMats = new Map<THREE.Texture, THREE.MeshStandardMaterial>();
+const topMat = (map: THREE.Texture) => { let m = topMats.get(map); if (!m) { m = new THREE.MeshStandardMaterial({ map, roughness: 0.28, metalness: 0.05 }); topMats.set(map, m); } return m; };
+const MONO_MAT = () => new THREE.MeshBasicMaterial({ map: textTexture('1×1'), transparent: true });
+
+/** One placed piece, merged into a few meshes: the tile bodies (+ the joins between them), the glazed tops, the gold stars. */
+const TileMesh = memo(function TileMesh({ tile }: { tile: PlacedTile }) {
   const ref = useRef<THREE.Group>(null);
   const t0 = useRef(performance.now());
   const look = useMemo(() => tileLook(tile.uid, tile.shape), [tile.uid, tile.shape]);
-  const color = look.color;
-  const fabric = useMemo(() => patternTexture(look), [look]);
   const cx = tile.cells.reduce((s, c) => s + CELL_X(c[1]), 0) / tile.cells.length;
   const cy = tile.cells.reduce((s, c) => s + CELL_Y(c[0]), 0) / tile.cells.length;
-  const keys = useMemo(() => new Set(tile.cells.map((c) => c.join(','))), [tile]);
-  const landed = useRef(false);
+  const geo = useMemo(() => {
+    const keys = new Set(tile.cells.map((c) => c.join(',')));
+    const body: THREE.BufferGeometry[] = [], tops: THREE.BufferGeometry[] = [], stars: THREE.BufferGeometry[] = [];
+    tile.cells.forEach(([r, c], i) => {
+      const x = CELL_X(c) - cx, y = CELL_Y(r) - cy;
+      body.push(new THREE.BoxGeometry(0.9, 0.9, 0.3).translate(x, y, 0.2));
+      if (keys.has(`${r},${c + 1}`)) body.push(new THREE.BoxGeometry(0.14, 0.9, 0.3).translate(x + 0.5, y, 0.2));
+      if (keys.has(`${r + 1},${c}`)) body.push(new THREE.BoxGeometry(0.9, 0.14, 0.3).translate(x, y - 0.5, 0.2));
+      tops.push(new THREE.PlaneGeometry(0.9, 0.9).translate(x, y, 0.36));
+      if (i < tile.engraved) stars.push(SHAMSEH.clone().translate(x, y, 0.37));
+    });
+    const merged = { body: mergeGeometries(body), tops: mergeGeometries(tops), stars: stars.length ? mergeGeometries(stars) : null };
+    [...body, ...tops, ...stars].forEach((g) => g.dispose());
+    return merged;
+  }, [tile.uid]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => { geo.body.dispose(); geo.tops.dispose(); geo.stars?.dispose(); }, [geo]);
+  const top = useMemo(() => topMat(patternTexture(look)), [look]);
+  const mono = useMemo(() => (tile.shape === 'mono' ? MONO_MAT() : null), [tile.shape]);
+  const phase = useRef<'fall' | 'land' | 'rest'>('fall');
   // the tile drops onto the board, squashes on landing (volume-preserving), then settles; dust puffs out on impact
   useFrame(() => {
     const g = ref.current;
-    if (!g) return;
+    if (!g || phase.current === 'rest') return;
     const reduce = useStore.getState().settings.reduceMotion;
     const t = reduce ? 9 : (performance.now() - t0.current) / 1000;
     const FALL = 0.26;
@@ -48,49 +72,53 @@ function TileMesh({ tile }: { tile: PlacedTile }) {
       g.scale.set(1.08, 1.08, 1);
       return;
     }
-    const k = Math.min(1, (t - FALL) / 0.22);
-    const sq = Math.sin(k * Math.PI) * (1 - k) * 0.5; // squash then spring back
-    g.position.z = 0;
-    g.scale.set(1 + sq * 0.25, 1 + sq * 0.25, 1 - sq);
-    if (!landed.current) {
-      landed.current = true;
+    if (phase.current === 'fall') {
+      phase.current = 'land';
       if (t < 1) { // only for a tile that was just placed (not when a whole board appears at once)
         const w = g.getWorldPosition(new THREE.Vector3()), sc = g.parent?.getWorldScale(new THREE.Vector3()).x ?? 1;
         vfx('dust', w.x, w.y, 0.6, sc);
       }
     }
+    const k = Math.min(1, (t - FALL) / 0.22);
+    const sq = Math.sin(k * Math.PI) * (1 - k) * 0.5; // squash then spring back
+    g.position.z = 0;
+    g.scale.set(1 + sq * 0.25, 1 + sq * 0.25, 1 - sq);
+    if (k >= 1) { g.scale.set(1, 1, 1); phase.current = 'rest'; }
   });
   return (
     <group ref={ref} position={[cx, cy, 0]}>
-      {tile.cells.map(([r, c], i) => {
-        const x = CELL_X(c) - cx, y = CELL_Y(r) - cy;
-        return (
-          <group key={i} position={[x, y, 0]}>
-            <mesh position={[0, 0, 0.2]}>
-              <boxGeometry args={[0.9, 0.9, 0.3]} />
-              <meshStandardMaterial color={color} roughness={0.75} />
-            </mesh>
-            <mesh position={[0, 0, 0.36]}>
-              <planeGeometry args={[0.9, 0.9]} />
-              <meshStandardMaterial map={fabric} roughness={0.28} metalness={0.05} />{/* glazed */}
-            </mesh>
-            {keys.has(`${r},${c + 1}`) && (
-              <mesh position={[0.5, 0, 0.2]}><boxGeometry args={[0.14, 0.9, 0.3]} /><meshStandardMaterial color={color} roughness={0.75} /></mesh>
-            )}
-            {keys.has(`${r + 1},${c}`) && (
-              <mesh position={[0, -0.5, 0.2]}><boxGeometry args={[0.9, 0.14, 0.3]} /><meshStandardMaterial color={color} roughness={0.75} /></mesh>
-            )}
-            {i < tile.engraved && (
-              <mesh position={[0, 0, 0.37]} geometry={SHAMSEH} material={SHAMSEH_MAT} />
-            )}
-            {tile.shape === 'mono' && (
-              <mesh position={[0, 0, 0.37]}><planeGeometry args={[0.8, 0.8]} /><meshBasicMaterial map={textTexture('1×1')} transparent /></mesh>
-            )}
-          </group>
-        );
-      })}
+      <mesh geometry={geo.body} material={bodyMat(look.color)} />
+      <mesh geometry={geo.tops} material={top} />
+      {geo.stars && <mesh geometry={geo.stars} material={SHAMSEH_MAT} />}
+      {mono && <mesh position={[0, 0, 0.37]} material={mono}><planeGeometry args={[0.8, 0.8]} /></mesh>}
     </group>
   );
+}, (a, b) => a.tile.uid === b.tile.uid); // a placed piece never changes
+
+/** The empty grid of a board as one textured plane (instead of 81 meshes). */
+let gridTex: THREE.CanvasTexture | null = null;
+function gridTexture(): THREE.CanvasTexture {
+  if (gridTex) return gridTex;
+  const n = BOARD_SIZE, px = 64, cv = document.createElement('canvas');
+  cv.width = cv.height = n * px;
+  const c = cv.getContext('2d')!;
+  c.fillStyle = UI.board; c.fillRect(0, 0, cv.width, cv.height);
+  c.fillStyle = UI.gridLine;
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) c.fillRect(k * px + px * 0.04, r * px + px * 0.04, px * 0.92, px * 0.92);
+  gridTex = new THREE.CanvasTexture(cv);
+  gridTex.colorSpace = THREE.SRGBColorSpace;
+  return gridTex;
+}
+/** Late game: "-2" on every empty cell, drawn into one texture per board state. */
+function penaltyTexture(board: number[]): THREE.CanvasTexture {
+  const n = BOARD_SIZE, px = 64, cv = document.createElement('canvas');
+  cv.width = cv.height = n * px;
+  const c = cv.getContext('2d')!;
+  c.font = '800 26px Arial, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = 'rgba(192,80,63,.6)';
+  board.forEach((v, i) => { if (v === 0) c.fillText(`−${EMPTY_CELL_PENALTY}`, (i % n) * px + px / 2, Math.floor(i / n) * px + px / 2 + 2); });
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }
 
 /** The 7x7 window of a board with the most filled cells (for the bonus progress outline). */
@@ -108,19 +136,20 @@ function best7(board: number[]): { r0: number; c0: number; filled: number } {
 /** Dashed outline of the best 7x7 window + "filled/49 · +7" so the bonus goal is visible while you build. */
 function Bonus7Outline({ board }: { board: number[] }) {
   const b = useMemo(() => best7(board), [board]);
-  if (b.filled <= 0) return null;
   const x0 = CELL_X(b.c0) - 0.5, y0 = CELL_Y(b.r0) + 0.5, len = SPECIAL_AREA;
+  const visible = b.filled > 0;
   const dashes: [number, number, number, number][] = []; // x, y, w, h
   for (let i = 0; i < len * 2; i++) {
     const t = i * 0.5 + 0.12;
     dashes.push([x0 + t + 0.13, y0, 0.26, 0.07], [x0 + t + 0.13, y0 - len, 0.26, 0.07], [x0, y0 - t - 0.13, 0.07, 0.26], [x0 + len, y0 - t - 0.13, 0.07, 0.26]);
   }
   const label = `${b.filled}/${SPECIAL_AREA * SPECIAL_AREA} · +${SPECIAL_7X7_BONUS}`;
+  const key = `${b.r0},${b.c0}`;
+  const geo = useMemo(() => mergeGeometries(dashes.map(([x, y, w, h]) => new THREE.PlaneGeometry(w, h).translate(x, y, 0))), [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => geo.dispose(), [geo]);
   return (
-    <group position={[0, 0, 0.62]}>
-      {dashes.map(([x, y, w, h], i) => (
-        <mesh key={i} position={[x, y, 0]}><planeGeometry args={[w, h]} /><meshBasicMaterial color={C.saffron} transparent opacity={0.95} /></mesh>
-      ))}
+    <group position={[0, 0, 0.62]} visible={visible}>
+      <mesh geometry={geo}><meshBasicMaterial color={C.saffron} transparent opacity={0.95} /></mesh>
       <mesh position={[x0 + 1.15, y0 + 0.02, 0.01]}>
         <planeGeometry args={[2.3, 0.5]} />
         <meshBasicMaterial map={textTexture(label, '#FFB400', 'rgba(0,30,103,.9)')} transparent />
@@ -153,6 +182,9 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
   // late game: empty cells show what they will cost
   const lateGame = mine && game.phase !== 'finished' && TRACK_LENGTH - Math.max(game.players[0].pos, game.players[1].pos) <= 8;
   const show7 = mine && game.bonus7By === null && game.phase !== 'finished';
+  const boardKey = lateGame ? p.board.join(',') : '';
+  const penalty = useMemo(() => (lateGame ? penaltyTexture(p.board) : null), [boardKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => penalty?.dispose(), [penalty]);
   const { camera, gl } = useThree();
 
   // Used by DOM drag & drop: which cell of MY board is under the pointer (null if far from the board)
@@ -220,23 +252,16 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
         <boxGeometry args={[9.4, 9.4, 0.1]} />
         <meshStandardMaterial color={UI.board} roughness={1} />
       </mesh>
-      {Array.from({ length: BOARD_SIZE * BOARD_SIZE }, (_, i) => {
-        const r = Math.floor(i / BOARD_SIZE), c = i % BOARD_SIZE;
-        return p.board[i] === 0 ? (
-          <group key={i}>
-            <mesh position={[CELL_X(c), CELL_Y(r), 0.04]}>
-              <planeGeometry args={[0.92, 0.92]} />
-              <meshBasicMaterial color={UI.gridLine} />
-            </mesh>
-            {lateGame && (
-              <mesh position={[CELL_X(c), CELL_Y(r), 0.05]}>
-                <planeGeometry args={[0.8, 0.8]} />
-                <meshBasicMaterial map={textTexture(`−${EMPTY_CELL_PENALTY}`, '#C0503F')} transparent opacity={0.55} />
-              </mesh>
-            )}
-          </group>
-        ) : null;
-      })}
+      <mesh position={[0, 0, 0.04]}>
+        <planeGeometry args={[BOARD_SIZE, BOARD_SIZE]} />
+        <meshBasicMaterial map={gridTexture()} />
+      </mesh>
+      {penalty && (
+        <mesh position={[0, 0, 0.05]}>
+          <planeGeometry args={[BOARD_SIZE, BOARD_SIZE]} />
+          <meshBasicMaterial map={penalty} transparent depthWrite={false} />
+        </mesh>
+      )}
       {p.tiles.map((t) => <TileMesh key={t.uid} tile={t} />)}
       {show7 && <Bonus7Outline board={p.board} />}
       {preview && preview.abs.filter(inBounds).map(([r, c]: Cell, i) => (

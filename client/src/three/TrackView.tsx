@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { REWARD_POSITIONS, Seat, TRACK_LENGTH, TREASURE_POSITIONS } from '../../../shared/src';
@@ -18,14 +18,17 @@ const view = { scroll: -1 };
 
 type PathMark = 'path' | 'land' | null;
 
-function TrackCell({ i, layout, mark, hit, who }: { i: number; layout: Layout; mark: PathMark; hit: boolean; who: Seat }) {
-  const ref = useRef<THREE.Group>(null);
-  const hl = useRef<THREE.MeshBasicMaterial>(null);
-  const rewardTaken = useStore((s) => s.game!.rewardTaken);
+/** What the shared frame loop needs to animate one cell (filled in by the cell on render). */
+interface Slot { g: THREE.Group | null; hl: THREE.MeshBasicMaterial | null; mark: PathMark; hit: boolean }
+
+const boxes = new Map<number, THREE.BoxGeometry>();
+const cellBox = (cell: number) => { let b = boxes.get(cell); if (!b) { b = new THREE.BoxGeometry(cell * 0.92, cell * 0.92, 0.12); boxes.set(cell, b); } return b; };
+
+/** A track cell. It re-renders only when its own preview mark changes; all animation runs in TrackView's single frame loop. */
+const TrackCell = memo(function TrackCell({ i, layout, mark, hit, who, slot }: { i: number; layout: Layout; mark: PathMark; hit: boolean; who: Seat; slot: Slot }) {
+  const reward = useStore((s) => { const ri = REWARD_POSITIONS.indexOf(i); return ri >= 0 && !s.game!.rewardTaken[ri]; });
   const cell = layout.track.cell;
   const treasure = TREASURE_POSITIONS.includes(i);
-  const ri = REWARD_POSITIONS.indexOf(i);
-  const reward = ri >= 0 && !rewardTaken[ri];
   const finish = i === TRACK_LENGTH;
   const base = useMemo(() => {
     if (finish) return '#E9DDF0';
@@ -37,40 +40,18 @@ function TrackCell({ i, layout, mark, hit, who }: { i: number; layout: Layout; m
   const big = layout.track.vertical || layout.track.window > 0;
   const tex = useMemo(() => cellTexture(finish ? 'flag' : treasure ? 'chest' : reward ? 'reward' : null, i, big ? 'five' : 'all'), [i, finish, treasure, reward, big]);
   const [sx, sy] = trackCoord(layout, i);
-
-  useFrame((st) => {
-    const g = ref.current;
-    if (!g) return;
-    const s = useStore.getState();
-    const t0 = s.flashes[i];
-    let k = 1;
-    if (t0 && !s.settings.reduceMotion) {
-      const dt = (performance.now() - t0) / 1000;
-      if (dt < 0.9) k = 1 + 0.5 * Math.exp(-dt * 3.5) * Math.abs(Math.sin(dt * 9));
-    }
-    if (hit && !s.settings.reduceMotion) k *= 1 + 0.1 * Math.abs(Math.sin(st.clock.elapsedTime * 4));
-    let a = 1;
-    if (layout.track.window) {
-      a = windowAlpha(layout, i, view.scroll);
-      const [x, y] = trackCoord(layout, i, view.scroll);
-      g.position.set(x, y, 0);
-    }
-    g.visible = a > 0.01;
-    g.scale.setScalar(k * (0.4 + 0.6 * a));
-    if (hl.current) hl.current.opacity = (mark === 'land' ? 0.75 : hit ? 0.65 : 0.38) * a;
-  });
+  slot.mark = mark; slot.hit = hit;
 
   return (
-    <group ref={ref} position={[sx, sy, 0]}>
-      <mesh position={[0, 0, 0.05]}>
-        <boxGeometry args={[cell * 0.92, cell * 0.92, 0.12]} />
-        <meshStandardMaterial color={base} roughness={0.8} />
+    <group ref={(g) => { slot.g = g; }} position={[sx, sy, 0]}>
+      <mesh position={[0, 0, 0.05]} geometry={cellBox(cell)}>
+        <meshLambertMaterial color={base} />
       </mesh>
       {(mark || hit) && (
         // preview of the selected action: the cells my marker would cross, the landing cell, and what it collects
         <mesh position={[0, 0, 0.112]}>
           <planeGeometry args={[cell * (mark === 'land' ? 0.98 : 0.92), cell * (mark === 'land' ? 0.98 : 0.92)]} />
-          <meshBasicMaterial ref={hl} color={hit ? C.saffron : PLAYER_COLORS[who]} transparent opacity={0.4} depthWrite={false} />
+          <meshBasicMaterial ref={(m) => { slot.hl = m; }} color={hit ? C.saffron : PLAYER_COLORS[who]} transparent opacity={0.4} depthWrite={false} />
         </mesh>
       )}
       <mesh position={[0, 0, 0.115]}>
@@ -79,7 +60,7 @@ function TrackCell({ i, layout, mark, hit, who }: { i: number; layout: Layout; m
       </mesh>
     </group>
   );
-}
+});
 
 function MarkerMesh({ seat, cell, ghost = false }: { seat: Seat; cell: number; ghost?: boolean }) {
   const color = PLAYER_COLORS[seat];
@@ -190,6 +171,30 @@ export function TrackView({ layout }: { layout: Layout }) {
   const cells = useMemo(() => Array.from({ length: TRACK_LENGTH + 1 }, (_, i) => i), []);
   const { plate } = layout.track;
   const fc = useForecast();
+  const slots = useMemo<Slot[]>(() => cells.map(() => ({ g: null, hl: null, mark: null, hit: false })), [cells]);
+
+  // one frame loop for all cells: window scroll / fade, landing flash, pulsing preview
+  useFrame((st) => {
+    const s = useStore.getState(), reduce = s.settings.reduceMotion, now = performance.now(), el = st.clock.elapsedTime;
+    for (let i = 0; i < slots.length; i++) {
+      const sl = slots[i], g = sl.g;
+      if (!g) continue;
+      let a = 1;
+      if (layout.track.window) {
+        a = windowAlpha(layout, i, view.scroll);
+        g.visible = a > 0.01;
+        if (!g.visible) continue;
+        const [x, y] = trackCoord(layout, i, view.scroll);
+        g.position.set(x, y, 0);
+      }
+      let k = 1;
+      const t0 = s.flashes[i];
+      if (t0 && !reduce) { const dt = (now - t0) / 1000; if (dt < 0.9) k = 1 + 0.5 * Math.exp(-dt * 3.5) * Math.abs(Math.sin(dt * 9)); }
+      if (sl.hit && !reduce) k *= 1 + 0.1 * Math.abs(Math.sin(el * 4));
+      g.scale.setScalar(k * (0.4 + 0.6 * a));
+      if (sl.hl && (sl.mark || sl.hit)) sl.hl.opacity = (sl.mark === 'land' ? 0.75 : sl.hit ? 0.65 : 0.38) * a;
+    }
+  });
 
   // Phone: keep both markers and the preview ghost inside the scrolling window.
   useFrame((_, dt) => {
@@ -216,7 +221,7 @@ export function TrackView({ layout }: { layout: Layout }) {
         <boxGeometry args={[plate.w, plate.h, 0.08]} />
         <meshStandardMaterial color={UI.plate} roughness={1} />
       </mesh>
-      {cells.map((i) => <TrackCell key={i} i={i} layout={layout} mark={markOf(i)} hit={hitOf(i)} who={fc?.seat ?? 0} />)}
+      {cells.map((i) => <TrackCell key={i} i={i} layout={layout} mark={markOf(i)} hit={hitOf(i)} who={fc?.seat ?? 0} slot={slots[i]} />)}
       <Marker seat={0} layout={layout} />
       <Marker seat={1} layout={layout} />
       {fc && <GhostMarker layout={layout} to={fc.to} seat={fc.seat} />}
