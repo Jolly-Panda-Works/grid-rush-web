@@ -16,11 +16,10 @@ const view = { scroll: -1 };
 
 type PathMark = 'path' | 'land' | null;
 
-function TrackCell({ i, layout, mark, hit }: { i: number; layout: Layout; mark: PathMark; hit: boolean }) {
+function TrackCell({ i, layout, mark, hit, who }: { i: number; layout: Layout; mark: PathMark; hit: boolean; who: Seat }) {
   const ref = useRef<THREE.Group>(null);
   const hl = useRef<THREE.MeshBasicMaterial>(null);
   const rewardTaken = useStore((s) => s.game!.rewardTaken);
-  const mySeat = useStore((s) => s.mySeat);
   const cell = layout.track.cell;
   const treasure = TREASURE_POSITIONS.includes(i);
   const ri = REWARD_POSITIONS.indexOf(i);
@@ -69,7 +68,7 @@ function TrackCell({ i, layout, mark, hit }: { i: number; layout: Layout; mark: 
         // preview of the selected action: the cells my marker would cross, the landing cell, and what it collects
         <mesh position={[0, 0, 0.112]}>
           <planeGeometry args={[cell * (mark === 'land' ? 0.98 : 0.92), cell * (mark === 'land' ? 0.98 : 0.92)]} />
-          <meshBasicMaterial ref={hl} color={hit ? C.saffron : PLAYER_COLORS[mySeat]} transparent opacity={0.4} depthWrite={false} />
+          <meshBasicMaterial ref={hl} color={hit ? C.saffron : PLAYER_COLORS[who]} transparent opacity={0.4} depthWrite={false} />
         </mesh>
       )}
       <mesh position={[0, 0, 0.115]}>
@@ -120,7 +119,7 @@ function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
     if (s.settings.reduceMotion) disp.current = target;
     else {
       const diff = target - disp.current;
-      disp.current += Math.sign(diff) * Math.min(Math.abs(diff), dt * (9 + Math.abs(diff) * 2));
+      disp.current += Math.sign(diff) * Math.min(Math.abs(diff), dt * (4 + Math.abs(diff) * 0.8));
     }
     const cur = Math.floor(disp.current + 1e-6);
     if (cur > lastInt.current) { for (let i = lastInt.current + 1; i <= cur; i++) onPass(i); lastInt.current = cur; }
@@ -136,10 +135,9 @@ function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
   return <group ref={ref}><MarkerMesh seat={seat} cell={cell} /></group>;
 }
 
-/** Semi-transparent copy of my marker where the selected action would put it. */
-function GhostMarker({ layout, to }: { layout: Layout; to: number }) {
+/** Semi-transparent copy of a marker where the previewed (or announced) action would put it. */
+function GhostMarker({ layout, to, seat: mySeat }: { layout: Layout; to: number; seat: Seat }) {
   const ref = useRef<THREE.Group>(null);
-  const mySeat = useStore((s) => s.mySeat);
   useFrame((st) => {
     if (!ref.current) return;
     const [x, y] = trackCoord(layout, to, view.scroll);
@@ -244,10 +242,10 @@ export function TrackView({ layout }: { layout: Layout }) {
         <boxGeometry args={[plate.w, plate.h, 0.08]} />
         <meshStandardMaterial color={UI.plate} roughness={1} />
       </mesh>
-      {cells.map((i) => <TrackCell key={i} i={i} layout={layout} mark={markOf(i)} hit={hitOf(i)} />)}
+      {cells.map((i) => <TrackCell key={i} i={i} layout={layout} mark={markOf(i)} hit={hitOf(i)} who={fc?.seat ?? 0} />)}
       <Marker seat={0} layout={layout} />
       <Marker seat={1} layout={layout} />
-      {fc && <GhostMarker layout={layout} to={fc.to} />}
+      {fc && <GhostMarker layout={layout} to={fc.to} seat={fc.seat} />}
       <FxLayer />
     </group>
   );

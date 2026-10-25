@@ -38,7 +38,10 @@ export default function MenuScreen() {
           <button className="btn primary big" onClick={() => startSearch(true)}>{t('menu.bot')}</button>
           <button className="btn big" onClick={() => startSearch(false)}>{t('menu.find')}</button>
           {online === false && <div className="offnote small">{t('menu.offlineNote')}</div>}
-          <button className="btn ghost" onClick={() => useStore.setState({ showHelp: true })}>{t('menu.how')}</button>
+          <div className="row2">
+            <button className="btn" onClick={() => useStore.setState({ screen: 'museum' })}>🏛 {t('museum.title')}</button>
+            <button className="btn ghost" onClick={() => useStore.setState({ showHelp: true })}>{t('menu.how')}</button>
+          </div>
         </div>
         <div className="version num" dir="ltr">v{__APP_VERSION__}</div>
       </div>

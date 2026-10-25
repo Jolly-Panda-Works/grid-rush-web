@@ -6,11 +6,13 @@ import cors from 'cors';
 import { Server } from 'colyseus';
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import { GridRushRoom } from './GridRushRoom';
+import { museumRouter } from './museum';
 
 const port = Number(process.env.PORT || 2567);
 const app = express();
 app.use(cors());
 app.get('/health', (_req, res) => res.json({ ok: true, game: 'Grid Rush' }));
+app.use('/museum', museumRouter());
 
 // Optional: serve the production client build (npm run build && npm start)
 const dist = path.resolve(__dirname, '../../client/dist');

@@ -20,3 +20,6 @@ export const REWARD_ENGRAVED = 0;
 // Operational values (not game rules)
 export const TURN_SECONDS = 60;
 export const MATCH_WAIT_MS = 7000;
+// Bot pacing: think, then show what it is about to do (card, ghost on its board, ghost on the track), then do it.
+export const BOT_THINK_MS: [number, number] = [700, 1300];
+export const BOT_INTENT_MS = 1500;

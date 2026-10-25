@@ -1,6 +1,6 @@
 import { DEFAULT_RATING, levelFromXp } from '../../shared/src';
 
-export interface Profile { name: string; xp: number; rating: number; wins: number; losses: number }
+export interface Profile { name: string; xp: number; rating: number; wins: number; losses: number; museumSeen?: number } // museumSeen = museum votes already turned into XP
 export interface Settings { reduceMotion: boolean; sound: boolean; lang: 'en' | 'fa' }
 
 const PK = 'gridrush.profile.v1';
@@ -9,7 +9,7 @@ const SK = 'gridrush.settings.v1';
 export function loadProfile(): Profile {
   try {
     const p = JSON.parse(localStorage.getItem(PK) || 'null');
-    if (p && typeof p.name === 'string') return { name: p.name, xp: p.xp | 0, rating: p.rating | 0 || DEFAULT_RATING, wins: p.wins | 0, losses: p.losses | 0 };
+    if (p && typeof p.name === 'string') return { name: p.name, xp: p.xp | 0, rating: p.rating | 0 || DEFAULT_RATING, wins: p.wins | 0, losses: p.losses | 0, museumSeen: p.museumSeen | 0 };
   } catch { /* ignore */ }
   return { name: 'Player' + Math.floor(100 + Math.random() * 900), xp: 0, rating: DEFAULT_RATING, wins: 0, losses: 0 };
 }

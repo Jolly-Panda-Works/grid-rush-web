@@ -9,7 +9,9 @@ import { Legend } from '../components/Legend';
 import { DragGhost } from '../components/DragGhost';
 import { TrackBar } from '../components/TrackBar';
 import { resign, send } from '../net';
-import { flipHorizontal, flipVertical, resetSel, setSel, useStore } from '../store';
+import { flipHorizontal, flipVertical, resetSel, rotate, selectOffer, useStore } from '../store';
+import { confirmPlacement } from '../actions';
+import { PlaceBar } from '../components/PlaceBar';
 
 const GameCanvas = lazy(() => import('../three/GameCanvas'));
 void TRACK_LENGTH;
@@ -24,11 +26,13 @@ export default function GameScreen() {
     const onKey = (e: KeyboardEvent) => {
       const st = useStore.getState();
       const g = st.game;
-      if (!g || g.current !== st.mySeat || g.phase !== 'playing') return;
+      if (!g || g.current !== st.mySeat || g.phase === 'finished') return;
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
       // e.code is the physical key, so shortcuts also work on a Persian keyboard layout
       const c = e.code;
-      if (c === 'KeyR') setSel({ rot: (st.sel.rot + 1) % 4 });
+      if (c === 'Enter' || c === 'NumpadEnter') { confirmPlacement(); return; }
+      if (g.phase !== 'playing') return;
+      if (c === 'KeyR') rotate();
       else if (c === 'KeyF') flipHorizontal();
       else if (c === 'KeyV') flipVertical();
       else if (c === 'Escape') resetSel();
@@ -36,7 +40,7 @@ export default function GameScreen() {
       else if (/^(Digit|Numpad)[123]$/.test(c)) {
         const i = Number(c.slice(-1)) - 1;
         const me = g.players[st.mySeat];
-        if (g.offer[i] && me.coins >= g.offer[i].coinCost) setSel({ offer: i, hover: null });
+        if (g.offer[i] && me.coins >= g.offer[i].coinCost) selectOffer(i);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -50,6 +54,7 @@ export default function GameScreen() {
       <TrackBar />
       <section className="stage">
         <Suspense fallback={<div className="center muted">{t('game.loading3d')}</div>}><GameCanvas /></Suspense>
+        <PlaceBar />
         <Popup />
         <GameMenu />
         {conn === 'reconnecting' && <div className="overlay soft"><div className="modal small">{t('game.reconnecting')}</div></div>}

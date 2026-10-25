@@ -18,5 +18,16 @@ export function previewFor(g: GameState, seat: 0 | 1, sel: Selection): Preview |
   const abs = cells.map(([r, c]) => [r0 + r, c0 + c] as Cell);
   return { abs, valid: cellsFree(board, abs) };
 }
+/** The valid ghost position closest to `from` (default: board centre), so a selected tile is shown on the board at once. */
+export function nearestValid(g: GameState, seat: 0 | 1, sel: Selection, from: [number, number] = [4, 4]): [number, number] | null {
+  let best: [number, number] | null = null, bestD = Infinity;
+  for (let r = 0; r < BOARD_SIZE; r++) for (let c = 0; c < BOARD_SIZE; c++) {
+    const d = (r - from[0]) ** 2 + (c - from[1]) ** 2;
+    if (d >= bestD) continue;
+    const pv = previewFor(g, seat, { ...sel, hover: [r, c] });
+    if (pv?.valid) { best = [r, c]; bestD = d; }
+  }
+  return best;
+}
 export const inBounds = ([r, c]: Cell) => r >= 0 && c >= 0 && r < BOARD_SIZE && c < BOARD_SIZE;
 export { cellIdx };

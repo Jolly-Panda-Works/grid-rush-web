@@ -1,5 +1,5 @@
 import {
-  Action, GameState, PlayerInit, Seat, applyAction, botTierFor, chooseAction, createGame, forfeit,
+  Action, BOT_INTENT_MS, BOT_THINK_MS, GameState, PlayerInit, Seat, applyAction, botTierFor, chooseAction, createGame, forfeit,
 } from '../../shared/src';
 
 /**
@@ -15,6 +15,8 @@ export interface LocalOpts {
   lang: 'en' | 'fa';
   deliver: (g: GameState) => void;
   onError: (msg: string) => void;
+  /** the bot announces its next action before playing it, so the player can follow it */
+  onIntent: (seat: Seat, a: Action) => void;
 }
 
 export class LocalSession {
@@ -66,12 +68,17 @@ export class LocalSession {
     if (this.stopped || this.game.phase === 'finished') return;
     const seat = this.game.current;
     if (!this.game.players[seat].isBot) return;
+    const alive = () => !this.stopped && this.game.phase !== 'finished' && this.game.current === seat;
     this.timer = setTimeout(() => {
-      if (this.stopped || this.game.phase === 'finished' || this.game.current !== seat) return;
-      let err = applyAction(this.game, seat, chooseAction(this.game, seat, this.botTier));
-      if (err) err = applyAction(this.game, seat, { t: 'advance' });
-      this.push();
-      this.schedule();
-    }, 900 + Math.random() * 1100);
+      if (!alive()) return;
+      const a = chooseAction(this.game, seat, this.botTier);
+      this.o.onIntent(seat, a);
+      this.timer = setTimeout(() => {
+        if (!alive()) return;
+        if (applyAction(this.game, seat, a)) applyAction(this.game, seat, { t: 'advance' });
+        this.push();
+        this.schedule();
+      }, BOT_INTENT_MS);
+    }, BOT_THINK_MS[0] + Math.random() * (BOT_THINK_MS[1] - BOT_THINK_MS[0]));
   }
 }

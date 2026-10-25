@@ -1,14 +1,21 @@
 import type { Cell } from '../../../shared/src';
-import { shapeColor } from '../three/colors';
+import { patternUrl, tileLook } from '../patterns';
 
-export function TileShape({ cells, shape, engraved = 0, cell = 14 }: { cells: Cell[]; shape: string; engraved?: number; cell?: number }) {
+/** A tile piece drawn with its Patchwork-style fabric (the same look as on the 3D board and in the museum). */
+export function TileShape({ cells, shape, uid, engraved = 0, cell = 14 }: { cells: Cell[]; shape: string; uid: number; engraved?: number; cell?: number }) {
   const h = Math.max(...cells.map((c) => c[0])) + 1, w = Math.max(...cells.map((c) => c[1])) + 1;
-  const color = shapeColor(shape);
+  const look = tileLook(uid, shape);
+  const pid = `fab-${uid}-${cell}`;
   return (
     <svg width={w * cell} height={h * cell} viewBox={`0 0 ${w * cell} ${h * cell}`} aria-label={`${shape} tile`}>
+      <defs>
+        <pattern id={pid} patternUnits="userSpaceOnUse" width={cell} height={cell}>
+          <image href={patternUrl(look)} width={cell} height={cell} preserveAspectRatio="none" />
+        </pattern>
+      </defs>
       {cells.map(([r, c], i) => (
         <g key={i}>
-          <rect x={c * cell + 1} y={r * cell + 1} width={cell - 2} height={cell - 2} rx={3} fill={color} />
+          <rect x={c * cell + 1} y={r * cell + 1} width={cell - 2} height={cell - 2} rx={3} fill={`url(#${pid})`} stroke={look.color} strokeWidth={1} />
           {i < engraved && <circle cx={c * cell + cell / 2} cy={r * cell + cell / 2} r={cell * 0.26} fill="#FFC94D" stroke="#7a5a00" strokeWidth={1} />}
         </g>
       ))}

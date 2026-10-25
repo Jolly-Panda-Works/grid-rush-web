@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BOARD_SIZE, EMPTY_CELL_PENALTY, Seat, TRACK_LENGTH, TURN_SECONDS, scoreOf } from '../../../shared/src';
 import { useT } from '../i18n';
 import { useStore } from '../store';
@@ -25,7 +25,7 @@ function PlayerCard({ seat, align }: { seat: Seat; align: 'left' | 'right' }) {
         {!p.connected && <span className="tag warn">{t('offline')}</span>}
       </div>
       <div className="prow stats">
-        <span className="stat" title={t('hud.coins')}><CoinIcon size={15} /><b className="num">{p.coins}</b></span>
+        <span className="stat coins" title={t('hud.coins')}><CoinIcon size={15} /><b className="num">{p.coins}</b><CoinDelta value={p.coins} /></span>
         <span className="stat empty" title={t('hud.empty', { p: EMPTY_CELL_PENALTY })}><EmptyIcon size={14} /><b className="num">{sc.emptyCells}</b></span>
         {lead > 0 && <span className="lead num" title={t('hud.scoreNow')}><b dir="ltr">+{lead}</b> {t('hud.lead')}</span>}
         {lead === 0 && seat === mySeat && <span className="lead tie" title={t('hud.scoreNow')}>{t('hud.tied')}</span>}
@@ -78,6 +78,21 @@ export function TurnPill() {
       </span>
     </div>
   );
+}
+
+/** "+3" / "−2" floating up from a counter whenever its value changes (shown where the change happens). */
+function CoinDelta({ value }: { value: number }) {
+  const prev = useRef(value);
+  const [items, setItems] = useState<{ id: number; d: number }[]>([]);
+  useEffect(() => {
+    const d = value - prev.current;
+    prev.current = value;
+    if (!d) return;
+    const id = performance.now();
+    setItems((xs) => [...xs.slice(-2), { id, d }]);
+    setTimeout(() => setItems((xs) => xs.filter((x) => x.id !== id)), 1600); // not cleared on the next change, each floater lives its full time
+  }, [value]);
+  return <>{items.map((x) => <span key={x.id} className={'cdelta num ' + (x.d > 0 ? 'up' : 'down')} dir="ltr">{x.d > 0 ? '+' : '−'}{Math.abs(x.d)}</span>)}</>;
 }
 
 function useTick(fn: () => void, on: boolean) {

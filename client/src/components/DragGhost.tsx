@@ -14,7 +14,7 @@ export function DragGhost() {
   const cell = Math.max(18, Math.min(64, Math.round(dragApi.cellPx?.() ?? 30)));
   return (
     <div className={'drag-ghost' + (sel.hover ? ' over' : '')} style={{ left: drag.x, top: drag.y }}>
-      <TileShape cells={transformCells(tile.cells, sel.rot, sel.flip)} shape={tile.shape} engraved={tile.engraved} cell={cell} />
+      <TileShape cells={transformCells(tile.cells, sel.rot, sel.flip)} shape={tile.shape} uid={tile.uid} engraved={tile.engraved} cell={cell} />
     </div>
   );
 }

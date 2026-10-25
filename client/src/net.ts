@@ -1,10 +1,12 @@
 import { Client, Room } from 'colyseus.js';
-import { GameState, Seat, eloDelta, levelFromXp, xpForGame } from '../../shared/src';
+import { Action, GameState, Seat, eloDelta, levelFromXp, xpForGame } from '../../shared/src';
 import { sfx } from './audio';
 import { saveProfile, profileLevel } from './profile';
-import { pushToast, resetSel, useStore } from './store';
+import { pushToast, resetSel, setSel, useStore } from './store';
+import { nearestValid } from './three/placement';
 import { tr, trErr } from './i18n';
 import { LocalSession } from './local';
+import { addToCollection } from './museum';
 import { BOT_TIER_NAMES } from '../../shared/src';
 
 const HOST = location.hostname || 'localhost';
@@ -80,6 +82,7 @@ function startLocal(my: number, fallback: boolean) {
     lang: st.settings.lang,
     deliver: (g) => onState(g, null),
     onError: (m) => { pushToast(trErr(m), 'bad'); sfx.bad(); },
+    onIntent: (seat, action) => useStore.setState({ oppIntent: { seat, action } }),
   });
   local = session;
   onState(session.snapshot(), null);
@@ -111,6 +114,7 @@ function bind(r: Room, my: number) {
     }, 2600);
   });
   r.onMessage('state', (m: { state: GameState; turnLeft: number | null }) => onState(m.state, m.turnLeft));
+  r.onMessage('intent', (m: { seat: Seat; action: Action }) => useStore.setState({ oppIntent: m }));
   r.onMessage('notice', (m: { code: string; name: string }) => pushToast(tr('toast.timeout', { name: m.name }), 'warn'));
   r.onMessage('error', (m: { msg: string }) => { pushToast(trErr(m.msg), 'bad'); sfx.bad(); });
   r.onLeave(async (code: number) => {
@@ -141,15 +145,21 @@ function onState(g: GameState, turnLeft: number | null) {
   gotFirst = true;
   const fresh = g.events.filter((e) => e.id > lastEventId);
   lastEventId = g.events.length ? g.events[g.events.length - 1].id : lastEventId;
+  let oppLog = st.oppLog;
   if (!first) {
     for (const e of fresh) {
+      if (e.k === 'turn' && e.seat !== st.mySeat) oppLog = null;
+      const opp = 'seat' in e && e.seat !== st.mySeat ? g.players[e.seat].name : null;
+      if (opp && e.k === 'buy') oppLog = tr('log.buy', { name: opp, c: e.coinCost, t: e.timeCost });
+      if (opp && e.k === 'advance') oppLog = tr('log.advance', { name: opp, s: e.steps, c: e.coins });
+      if (opp && e.k === 'treasure' && e.coins > 0) oppLog = `${oppLog ?? ''} · ${tr('log.treasure', { c: e.coins })}`;
+      if (opp && e.k === 'reward') oppLog = `${oppLog ?? ''} · ${tr('log.reward')}`;
       // Notifications only for things the player cannot already see on the screen (board, track, turn pill).
       switch (e.k) {
         case 'buy': sfx.place(); break;
         case 'advance': sfx.advance(); break;
         case 'treasure':
           sfx.coin();
-          if (e.seat === st.mySeat && e.coins > 0) pushToast(tr('toast.treasureMine', { c: e.coins }), 'good');
           useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'treasure', coins: e.coins };
           break;
         case 'reward': useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'reward', coins: 0 }; break;
@@ -165,9 +175,12 @@ function onState(g: GameState, turnLeft: number | null) {
   const myTurnNow = g.current === st.mySeat && g.phase !== 'finished';
   const sel = st.sel;
   useStore.setState({
-    game: g, turnLeft, turnRecvAt: performance.now(),
+    game: g, turnLeft, turnRecvAt: performance.now(), oppIntent: null, oppLog,
     sel: myTurnNow ? sel : { offer: null, rot: 0, flip: false, hover: null },
   });
+  if (g.phase === 'placing_reward' && g.current === st.mySeat && !useStore.getState().sel.hover) {
+    setSel({ hover: nearestValid(g, st.mySeat, useStore.getState().sel) });
+  }
   if (g.phase === 'finished' && !finalized) finalize(g);
 }
 
@@ -182,6 +195,7 @@ function finalize(g: GameState) {
   const xpGain = xpForGame(won);
   const next = { ...p, rating: Math.max(100, p.rating + delta), xp: p.xp + xpGain, wins: p.wins + (won ? 1 : 0), losses: p.losses + (won ? 0 : 1) };
   saveProfile(next);
+  addToCollection({ tiles: g.players[me].tiles, score: g.result!.scores[me].total, won, opp: opp.name });
   const info = {
     won, ratingBefore: p.rating, ratingAfter: next.rating, delta, xpGain, xpBefore: p.xp, xpAfter: next.xp,
     levelBefore: levelFromXp(p.xp), levelAfter: levelFromXp(next.xp),

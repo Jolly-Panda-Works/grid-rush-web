@@ -1,6 +1,6 @@
 import { Room, Client } from 'colyseus';
 import {
-  Action, Cell, GameState, MATCH_WAIT_MS, PlayerInit, Seat, TURN_SECONDS,
+  Action, BOT_INTENT_MS, BOT_THINK_MS, Cell, GameState, MATCH_WAIT_MS, PlayerInit, Seat, TURN_SECONDS,
   applyAction, botTierFor, chooseAction, createGame, forfeit, other, BOT_TIER_NAMES,
 } from '../../shared/src';
 
@@ -132,13 +132,19 @@ export class GridRushRoom extends Room {
     const p = g.players[g.current];
     if (p.isBot) {
       const seat = g.current;
-      const delay = 1000 + Math.random() * 1100;
+      const alive = () => !!this.game && this.game.phase !== 'finished' && this.game.current === seat;
+      const think = BOT_THINK_MS[0] + Math.random() * (BOT_THINK_MS[1] - BOT_THINK_MS[0]);
+      // think -> announce the move (clients preview it) -> play it, so humans can follow what the bot does
       this.botTimer = this.clock.setTimeout(() => {
-        if (!this.game || this.game.phase === 'finished' || this.game.current !== seat) return;
-        let err = applyAction(this.game, seat, chooseAction(this.game, seat, p.botTier));
-        if (err) err = applyAction(this.game, seat, { t: 'advance' });
-        this.afterAction();
-      }, delay);
+        if (!alive()) return;
+        const a = chooseAction(this.game!, seat, p.botTier);
+        this.broadcast('intent', { seat, action: a });
+        this.botTimer = this.clock.setTimeout(() => {
+          if (!alive()) return;
+          if (applyAction(this.game!, seat, a)) applyAction(this.game!, seat, { t: 'advance' });
+          this.afterAction();
+        }, BOT_INTENT_MS);
+      }, think);
     } else {
       this.deadline = Date.now() + TURN_SECONDS * 1000;
       this.turnTimer = this.clock.setTimeout(() => this.onTurnTimeout(), TURN_SECONDS * 1000);

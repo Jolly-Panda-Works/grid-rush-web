@@ -6,6 +6,7 @@ import MenuScreen from './screens/MenuScreen';
 import MatchmakingScreen from './screens/MatchmakingScreen';
 import GameScreen from './screens/GameScreen';
 import ResultsScreen from './screens/ResultsScreen';
+import MuseumScreen from './screens/MuseumScreen';
 import HowToPlay from './components/HowToPlay';
 import { RotateOverlay } from './components/RotateOverlay';
 import { SettingsModal } from './components/SettingsModal';
@@ -29,6 +30,7 @@ export default function App() {
       {screen === 'matchmaking' && <MatchmakingScreen />}
       {screen === 'game' && <GameScreen />}
       {screen === 'results' && <ResultsScreen />}
+      {screen === 'museum' && <MuseumScreen />}
       {help && <HowToPlay />}
       {settingsOpen && <SettingsModal />}
       <RotateOverlay />

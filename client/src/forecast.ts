@@ -3,6 +3,7 @@ import { useStore } from './store';
 
 /** What one action would do on the time track. Mirrors the engine rules (display only, nothing is applied). */
 export interface Forecast {
+  seat: Seat;
   kind: 'buy' | 'advance';
   from: number; to: number;
   treasures: number[];   // treasure cells crossed
@@ -26,20 +27,29 @@ export function forecast(g: GameState, seat: Seat, kind: 'buy' | 'advance', step
   const treasures = TREASURE_POSITIONS.filter(crossed);
   const rewards = REWARD_POSITIONS.filter((p, i) => crossed(p) && !g.rewardTaken[i]);
   return {
-    kind, from, to, treasures, rewards,
+    seat, kind, from, to, treasures, rewards,
     treasureCoins: treasures.length * (engravedTotal(me) + extraEngraved), // a bought tile is placed BEFORE the move
     advanceCoins: kind === 'advance' ? to - from : 0,
     passes: to > opp.pos, ends: to >= TRACK_LENGTH,
   };
 }
 
-/** The forecast for what the player is currently looking at: the selected tile, or the Advance button. */
+/** The forecast for what the player is currently looking at (the selected tile, or the Advance button),
+ *  or, on the opponent's turn, for the move the bot has just announced. */
 export function useForecast(): Forecast | null {
   const g = useStore((s) => s.game);
   const mySeat = useStore((s) => s.mySeat);
   const offer = useStore((s) => s.sel.offer);
   const adv = useStore((s) => s.advPreview);
-  if (!g || g.phase !== 'playing' || g.current !== mySeat) return null;
+  const intent = useStore((s) => s.oppIntent);
+  if (!g || g.phase !== 'playing') return null;
+  if (intent && g.current === intent.seat && intent.seat !== mySeat) {
+    const a = intent.action;
+    if (a.t === 'advance') return forecast(g, intent.seat, 'advance', advanceSteps(g, intent.seat));
+    if (a.t === 'buy' && g.offer[a.offer]) return forecast(g, intent.seat, 'buy', g.offer[a.offer].timeCost, g.offer[a.offer].engraved);
+    return null;
+  }
+  if (g.current !== mySeat) return null;
   if (offer !== null && g.offer[offer]) {
     const t = g.offer[offer];
     return forecast(g, mySeat, 'buy', t.timeCost, t.engraved);

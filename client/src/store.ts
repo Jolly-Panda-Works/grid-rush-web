@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import type { GameState, Seat } from '../../shared/src';
+import type { Action, GameState, Seat } from '../../shared/src';
 import { Profile, Settings, loadProfile, loadSettings } from './profile';
+import { nearestValid, previewFor } from './three/placement';
 
-export type Screen = 'loading' | 'menu' | 'matchmaking' | 'game' | 'results';
+export type Screen = 'loading' | 'menu' | 'matchmaking' | 'game' | 'results' | 'museum';
 export interface Popup { id: number; text: string; tone: 'info' | 'good' | 'warn' | 'bad' }
 export interface Fx { id: number; kind: 'coins' | 'tile'; x: number; y: number; tx?: number; ty?: number; count?: number; color?: string }
 export interface PendingFx { kind: 'treasure' | 'reward'; coins: number }
@@ -34,6 +35,8 @@ interface Store {
   pendingFx: Record<string, PendingFx>;
   drag: { x: number; y: number } | null;
   advPreview: boolean; // finger / mouse on the Advance button: preview its move on the track
+  oppIntent: { seat: Seat; action: Action } | null; // what the bot is about to do (shown before it plays)
+  oppLog: string | null; // plain-language summary of the opponent's last action
   showHelp: boolean;
   showSettings: boolean;
   confirmResign: boolean;
@@ -58,6 +61,8 @@ export const useStore = create<Store>(() => ({
   pendingFx: {},
   drag: null,
   advPreview: false,
+  oppIntent: null,
+  oppLog: null,
   showHelp: false,
   showSettings: false,
   confirmResign: false,
@@ -79,6 +84,21 @@ export const removeFx = (id: number) => useStore.setState((s) => ({ fx: s.fx.fil
 export const setSel = (p: Partial<Selection>) => useStore.setState((s) => ({ sel: { ...s.sel, ...p } }));
 export const resetSel = () => useStore.setState({ sel: { offer: null, rot: 0, flip: false, hover: null } });
 
+/** After the orientation changes, slide the ghost to the nearest spot where the tile still fits. */
+function refit() {
+  const st = useStore.getState();
+  if (!st.game || st.sel.offer === null) return;
+  const ok = previewFor(st.game, st.mySeat, st.sel)?.valid;
+  if (!ok) setSel({ hover: nearestValid(st.game, st.mySeat, st.sel, st.sel.hover ?? undefined) ?? st.sel.hover });
+}
+export const rotate = () => { useStore.setState((st) => ({ sel: { ...st.sel, rot: (st.sel.rot + 1) % 4 } })); refit(); };
 /** Screen-space mirrors of the currently shown orientation (shown = rotate(rot) after flip). */
-export const flipHorizontal = () => useStore.setState((st) => ({ sel: { ...st.sel, rot: (4 - st.sel.rot) % 4, flip: !st.sel.flip } }));
-export const flipVertical = () => useStore.setState((st) => ({ sel: { ...st.sel, rot: (6 - st.sel.rot) % 4, flip: !st.sel.flip } }));
+export const flipHorizontal = () => { useStore.setState((st) => ({ sel: { ...st.sel, rot: (4 - st.sel.rot) % 4, flip: !st.sel.flip } })); refit(); };
+export const flipVertical = () => { useStore.setState((st) => ({ sel: { ...st.sel, rot: (6 - st.sel.rot) % 4, flip: !st.sel.flip } })); refit(); };
+/** Select an offer card: the tile appears on the board at the nearest place where it fits. */
+export const selectOffer = (i: number) => {
+  const st = useStore.getState();
+  if (!st.game) return;
+  const sel = { ...st.sel, offer: i };
+  setSel({ offer: i, hover: nearestValid(st.game, st.mySeat, sel, st.sel.hover ?? undefined) });
+};

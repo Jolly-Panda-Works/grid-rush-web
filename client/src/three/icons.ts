@@ -49,15 +49,17 @@ export function cellTexture(kind: IconKind | null, num: number, numMode: 'all' |
   return tex;
 }
 /** Small text label texture (used for the "1x1" mark on reward tiles). */
-export function textTexture(text: string, color = '#ffffff'): THREE.CanvasTexture {
-  const key = `t:${text}:${color}`;
+export function textTexture(text: string, color = '#ffffff', bg?: string): THREE.CanvasTexture {
+  const key = `t:${text}:${color}:${bg ?? ''}`;
   const hit = texCache.get(key);
   if (hit) return hit;
   const cv = document.createElement('canvas');
-  cv.width = cv.height = 128;
+  const wide = !!bg; // labels with a background are 4.6:1 (e.g. the 7x7 progress)
+  cv.width = wide ? 460 : 128; cv.height = wide ? 100 : 128;
   const ctx = cv.getContext('2d')!;
-  ctx.font = '800 54px Arial, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = color;
-  ctx.fillText(text, 64, 68);
+  if (bg) { ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(4, 8, 452, 84, 40); ctx.fill(); }
+  ctx.font = `800 ${wide ? 56 : 54}px Arial, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = color;
+  ctx.fillText(text, cv.width / 2, wide ? 54 : 68);
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;
   texCache.set(key, tex);

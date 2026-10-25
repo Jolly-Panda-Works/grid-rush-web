@@ -388,3 +388,73 @@ html[dir='rtl'] .hint.out { direction: rtl; }
   .adv { width: 132px; } .advgain { font-size: 17px; }
 }
 .ring.off svg { display: none; } .ring.off { width: 6px; }
+
+/* ===== v0.8: calmer, readable turns (bot intent, floating place bar, in-place feedback, museum) ===== */
+/* bottom panel: just the cards, then [what happens | Advance] — no tool row any more */
+.actions { flex-wrap: nowrap; }
+@media (max-width: 700px) {
+  .actions { grid-template-areas: 'hint adv'; align-items: center; }
+  .hint { height: 3.9em; font-size: 12px; }
+  .card .shape { height: 60px; }
+}
+.hint-t { -webkit-line-clamp: 3; }
+
+/* the bot shows what it is about to do */
+.card.intent { border-color: var(--p1); box-shadow: 0 0 0 4px rgba(240, 82, 79, .35); opacity: 1; filter: none; animation: intentpulse 1s ease-in-out infinite; }
+.adv.intent { opacity: 1 !important; box-shadow: 0 0 0 4px rgba(240, 82, 79, .4); animation: intentpulse 1s ease-in-out infinite; }
+@keyframes intentpulse { 50% { transform: translateY(-3px); } }
+.olead { flex-basis: 100%; font-weight: 800; font-size: 13px; color: var(--ink); }
+.hint.opp { color: var(--ink); font-weight: 700; }
+
+/* floating controls next to the tile ghost on the board */
+.placebar { position: absolute; z-index: 6; transform: translate(-50%, calc(-100% - 6px)); display: flex; gap: 4px; padding: 4px; border-radius: 14px;
+  background: rgba(255, 246, 222, .97); border: 2px solid var(--gold); box-shadow: var(--shadow); animation: pbin .2s ease-out both; }
+@keyframes pbin { from { opacity: 0; } to { opacity: 1; } } /* opacity only: the transform positions the bar */
+.placebar.down { transform: translate(-50%, 6px); }
+.pb { min-width: 40px; height: 40px; border-radius: 10px; border: 0; background: var(--cream2); color: var(--ink); font: 800 18px var(--head); display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 8px; }
+.pb.ok { background: linear-gradient(#3fd08f, var(--emerald)); color: #fff; padding: 0 12px; }
+.pb.ok span { font-size: 14px; }
+.pb:disabled { opacity: .45; }
+
+/* "+3" / "−2" floating up from the coin counter */
+.stat.coins { position: relative; }
+.cdelta { position: absolute; left: 50%; top: -4px; transform: translateX(-50%); font: 800 15px var(--head); pointer-events: none; animation: cfloat 1.6s ease-out forwards; text-shadow: 0 1px 0 #fff; }
+.cdelta.up { color: #0d8a52; } .cdelta.down { color: var(--terra); }
+@keyframes cfloat { 0% { opacity: 0; transform: translate(-50%, 6px) scale(.8); } 15% { opacity: 1; transform: translate(-50%, -6px) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -26px) scale(1); } }
+
+/* results: boards + counting */
+.scorecard .boardart { display: block; margin: 8px auto; }
+.results h1.counting { font-size: 30px; color: #fff; }
+.scorecard tr.live td { color: var(--terra); font-weight: 800; }
+.results { overflow-y: auto; justify-content: flex-start; padding-top: max(16px, env(safe-area-inset-top)); }
+@media (max-width: 700px) {
+  .scoregrid { gap: 8px; flex-wrap: nowrap; } .scorecard { min-width: 0; flex: 1; padding: 10px; } .scorecard .boardart { width: 100%; height: auto; }
+  .scorecard table { font-size: 12.5px; } .results h1 { font-size: 38px; }
+}
+
+/* main menu: museum + help side by side */
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+
+/* museum */
+.museum { display: flex; flex-direction: column; gap: 8px; padding: max(10px, env(safe-area-inset-top)) 12px 12px; overflow: hidden; height: 100%; }
+.mhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mhead h2 { margin: 0; font-size: 22px; }
+.mpoints { background: var(--cream); color: var(--terra); font-weight: 800; border-radius: 12px; padding: 6px 12px; border: 2px solid var(--gold); }
+.mtabs, .msort { display: flex; background: var(--cream); border: 2px solid var(--gold); border-radius: 12px; overflow: hidden; }
+.mtabs button, .msort button { flex: 1; border: 0; background: transparent; padding: 9px; font-weight: 700; color: var(--ink-muted); }
+.mtabs button.on, .msort button.on { background: var(--lapis); color: #fff; }
+.msort { align-self: center; width: min(280px, 100%); }
+.mintro { margin: 0; text-align: center; }
+.mbody { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: env(safe-area-inset-bottom); }
+.msec { margin: 6px 0 0; font-size: 15px; }
+.mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.mcard { margin: 0; background: var(--cream); color: var(--ink); --muted: var(--ink-muted); border: 2px solid var(--gold); border-radius: 14px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.mcard .boardart { width: 100%; height: auto; }
+.mcard figcaption { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 6px; }
+.mvotes { color: var(--terra); font-weight: 800; } .mowner { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px; }
+.mcard .btn { width: 100%; padding: 7px 8px; font-size: 13px; }
+.btn.vote.on { background: #FFE1DC; border-color: var(--terra); color: var(--terra); }
+html[dir='rtl'] .museum { direction: rtl; }
+.results .popup-wrap, .museum .popup-wrap { position: fixed; }
+.museum { align-items: stretch; width: 100%; max-width: 720px; margin: 0 auto; } .mbody, .mgrid { width: 100%; } .mgrid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.museum { justify-content: flex-start; text-align: start; } .mclear { align-self: center; }
