@@ -59,14 +59,11 @@ export function SeatStats({ seat, compact = false }: { seat: Seat; compact?: boo
   const mySeat = useStore((s) => s.mySeat);
   const p = g.players[seat];
   const sc = scoreOf(g, seat);
-  const lead = sc.total - scoreOf(g, (1 - seat) as Seat).total;
   return (
     <div className={'sstats' + (compact ? ' compact' : '')} data-seat={seat} role="button" tabIndex={0} onClick={() => setOpen((o) => !o)}>
       <span className="gem coin" title={t('hud.coins')}><CoinIcon size={16} /><b key={p.coins} className="num bump">{p.coins}</b><CoinDelta value={p.coins} /></span>
       <span className="gem empty" title={t('hud.empty', { p: EMPTY_CELL_PENALTY })}><EmptyIcon size={14} /><b key={sc.emptyCells} className="num bump">{sc.emptyCells}</b></span>
       {!compact && seat === mySeat && <NextGem />}
-      {!compact && lead > 0 && <span className="leadrib num" title={t('hud.scoreNow')}>+{lead} {t('hud.lead')}</span>}
-      {!compact && p.bonus7 && <span className="leadrib b7">7×7</span>}
       {open && (
         <div className="pdetail" onClick={(e) => { e.stopPropagation(); setOpen(false); }}>
           <div className="dhead">{t('hud.scoreNow')}</div>
@@ -82,6 +79,20 @@ export function SeatStats({ seat, compact = false }: { seat: Seat; compact?: boo
   );
 }
 
+/** A portrait with the score-lead and 7x7 badges on it (badges never change the layout). */
+export function SeatPortrait({ seat, size }: { seat: Seat; size: number }) {
+  const t = useT();
+  const g = useStore((s) => s.game)!;
+  const lead = scoreOf(g, seat).total - scoreOf(g, (1 - seat) as Seat).total;
+  return (
+    <div className="pwrap">
+      <Portrait seat={seat} size={size} />
+      {lead > 0 && <span className="pbadge num" title={t('hud.scoreNow')}>+{lead}</span>}
+      {g.players[seat].bonus7 && <span className="pbadge b7">7×7</span>}
+    </div>
+  );
+}
+
 /** Top of the table, kept quiet: the opponent's portrait (lead / 7x7 badges sit on it), name and two gems,
  *  with the whole time track as a slim line along the bottom edge. */
 export function OppBar() {
@@ -90,15 +101,10 @@ export function OppBar() {
   const mySeat = useStore((s) => s.mySeat);
   const opp = (1 - mySeat) as Seat;
   const p = g.players[opp];
-  const lead = scoreOf(g, opp).total - scoreOf(g, mySeat).total;
   return (
     <header className="oppbar">
       <div className="oppseat">
-        <div className="pwrap">
-          <Portrait seat={opp} size={42} />
-          {lead > 0 && <span className="pbadge num" title={t('hud.scoreNow')}>+{lead}</span>}
-          {p.bonus7 && <span className="pbadge b7">7×7</span>}
-        </div>
+        <SeatPortrait seat={opp} size={42} />
         <span className="oppname"><span className="n">{p.name}</span>{p.isBot && <span className="botdot" title={t('bot')}>🤖</span>}{!p.connected && <span className="tag warn">{t('offline')}</span>}</span>
         <SeatStats seat={opp} compact />
       </div>

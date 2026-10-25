@@ -8,7 +8,7 @@ import { pushToast, resetSel, rotate, selectOffer, setSel, useStore } from '../s
 import { dragApi } from '../three/dragApi';
 import { nearestValid, previewFor } from '../three/placement';
 import { CoinIcon, TileShape, TimeIcon } from './TileShape';
-import { Portrait, SeatStats } from './Seats';
+import { SeatPortrait, SeatStats } from './Seats';
 import { sfx } from '../audio';
 
 const DRAG_THRESHOLD = 8;
@@ -73,7 +73,7 @@ export function OfferPanel() {
   return (
     <footer className={'dock' + (locked ? ' locked' : '')} aria-disabled={locked}>
       <div className="myseat">
-        <Portrait seat={mySeat} size={54} />
+        <SeatPortrait seat={mySeat} size={54} />
         <SeatStats seat={mySeat} />
       </div>
 

@@ -36,10 +36,11 @@ export function NextGem() {
   const g = useStore((s) => s.game)!;
   const me = g.players[useStore((s) => s.mySeat)];
   const toEnd = TRACK_LENGTH - Math.max(g.players[0].pos, g.players[1].pos);
-  if (g.phase === 'finished') return null;
+  const empty = <span className="gem next num slot-empty" aria-hidden="true"><b>0</b></span>; // keeps its place in the layout
+  if (g.phase === 'finished') return empty;
   if (toEnd <= END_WARN) return <span key={toEnd} className="gem warn num" title={t('bar.end', { d: toEnd })}>🏁<b>{toEnd}</b></span>;
   const nextT = TREASURE_POSITIONS.find((p) => p > me.pos);
-  if (nextT === undefined) return null;
+  if (nextT === undefined) return empty;
   const pays = engravedTotal(me);
   return (
     <span key={nextT - me.pos} className="gem next num" title={pays > 0 ? t('bar.next', { d: nextT - me.pos, c: pays }) : t('bar.nextZero', { d: nextT - me.pos })}>

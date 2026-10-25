@@ -931,3 +931,14 @@ html[dir='rtl'] .xpbar > div { transform-origin: right; }
 .mcard:hover .boardart { scale: 1.03; }
 .vote .heart { display: inline-block; animation: a-heart .45s ease-in-out; }
 .offnote { animation: a-rise .35s ease-out .2s both; }
+
+/* ===== a fixed table: nothing that appears or disappears may change the size of the bars,
+   because a new bar height resizes the 3D canvas (the whole scene jumps and stutters) ===== */
+.oppbar { height: calc(64px + env(safe-area-inset-top)); box-sizing: border-box; }
+.dock { height: calc(176px + env(safe-area-inset-bottom)); box-sizing: border-box; overflow: visible; }
+.myseat, .hand, .side { min-height: 0; }
+.gem b { min-width: 2ch; }                       /* 9 -> 10 coins does not widen the gem */
+.gem.slot-empty { visibility: hidden; }          /* the next-goal slot is kept even when empty */
+.oppname { min-width: 0; overflow: hidden; }
+@media (max-width: 700px) { .dock { height: calc(166px + env(safe-area-inset-bottom)); } }
+@media (max-height: 560px) and (orientation: landscape) { .oppbar { height: auto; } .dock { height: auto; } }
