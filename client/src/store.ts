@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Action, GameState, Seat } from '../../shared/src';
 import type { UpdateInfo } from './update';
 import { Profile, Settings, loadProfile, loadSettings } from './profile';
-import { nearestValid, previewFor } from './three/placement';
+import { hoverKeeping, nearestValid, placedCells } from './three/placement';
 
 export type Screen = 'loading' | 'menu' | 'matchmaking' | 'game' | 'results' | 'museum';
 export interface Popup { id: number; text: string; tone: 'info' | 'good' | 'warn' | 'bad' }
@@ -18,6 +18,9 @@ export interface ResultInfo {
   xpGain: number; xpBefore: number; xpAfter: number; levelBefore: number; levelAfter: number;
 }
 export interface Selection { offer: number | null; rot: number; flip: boolean; hover: [number, number] | null }
+export interface Orient { rot: number; flip: boolean }
+/** The last turn / flip of the ghost, for its animation around `pivot` (a board cell). */
+export interface RotAnim { id: number; kind: 'rot' | 'rotBack' | 'flipH' | 'flipV' | 'set'; pivot: [number, number]; t0: number }
 
 interface Store {
   screen: Screen;
@@ -31,6 +34,8 @@ interface Store {
   turnRecvAt: number;
   connection: 'ok' | 'reconnecting';
   sel: Selection;
+  orient: Record<number, Orient>; // each offered tile (by uid) keeps its own orientation
+  rotAnim: RotAnim | null;
   popups: Popup[];
   flashes: Record<number, number>;
   fx: Fx[];
@@ -59,6 +64,8 @@ export const useStore = create<Store>(() => ({
   turnRecvAt: 0,
   connection: 'ok',
   sel: { offer: null, rot: 0, flip: false, hover: null },
+  orient: {},
+  rotAnim: null,
   popups: [],
   flashes: {},
   fx: [],
@@ -92,23 +99,58 @@ export function spawnFx(fx: Omit<Fx, 'id'>) {
 }
 export const removeFx = (id: number) => useStore.setState((s) => ({ fx: s.fx.filter((f) => f.id !== id) }));
 export const setSel = (p: Partial<Selection>) => useStore.setState((s) => ({ sel: { ...s.sel, ...p } }));
-export const resetSel = () => useStore.setState({ sel: { offer: null, rot: 0, flip: false, hover: null } });
+export const resetSel = () => useStore.setState({ sel: { offer: null, rot: 0, flip: false, hover: null }, rotAnim: null });
 
-/** After the orientation changes, slide the ghost to the nearest spot where the tile still fits. */
-function refit() {
+let animId = 1;
+/**
+ * Change the ghost's orientation without moving it away: the tile cell under `pivot` (the cell the player touched,
+ * or the cell nearest to the ghost's centre) stays where it is. If the turned tile no longer fits there it simply
+ * shows red; it never jumps somewhere else. The orientation is remembered for that card.
+ */
+function reorient(rot: number, flip: boolean, kind: RotAnim['kind'], pivot?: [number, number]) {
   const st = useStore.getState();
-  if (!st.game || st.sel.offer === null) return;
-  const ok = previewFor(st.game, st.mySeat, st.sel)?.valid;
-  if (!ok) setSel({ hover: nearestValid(st.game, st.mySeat, st.sel, st.sel.hover ?? undefined) ?? st.sel.hover });
+  const g = st.game, sel = st.sel;
+  if (!g || sel.offer === null || !g.offer[sel.offer]) return;
+  const tile = g.offer[sel.offer];
+  let hover = sel.hover;
+  let at: [number, number] | null = pivot ?? hover;
+  if (hover && at) {
+    const now = placedCells(tile.cells, sel.rot, sel.flip, hover);
+    let k = now.findIndex(([r, c]) => r === at![0] && c === at![1]);
+    if (k < 0) { // pivot is not on the tile (e.g. the ⟳ button): use the tile cell closest to it
+      let best = Infinity;
+      now.forEach(([r, c], i) => { const d = (r - at![0]) ** 2 + (c - at![1]) ** 2; if (d < best) { best = d; k = i; } });
+    }
+    at = now[k];
+    hover = hoverKeeping(tile.cells, rot, flip, k, at);
+  }
+  useStore.setState({
+    sel: { ...sel, rot, flip, hover },
+    orient: { ...st.orient, [tile.uid]: { rot, flip } },
+    rotAnim: at ? { id: animId++, kind, pivot: at, t0: performance.now() } : null,
+  });
 }
-export const rotate = () => { useStore.setState((st) => ({ sel: { ...st.sel, rot: (st.sel.rot + 1) % 4 } })); refit(); };
+/** Turn the ghost 90° clockwise (counter-clockwise with dir = -1) around `pivot`. */
+export const rotate = (pivot?: [number, number], dir: 1 | -1 = 1) => { const s = useStore.getState().sel; reorient((s.rot + (dir === 1 ? 1 : 3)) % 4, s.flip, dir === 1 ? 'rot' : 'rotBack', pivot); };
 /** Screen-space mirrors of the currently shown orientation (shown = rotate(rot) after flip). */
-export const flipHorizontal = () => { useStore.setState((st) => ({ sel: { ...st.sel, rot: (4 - st.sel.rot) % 4, flip: !st.sel.flip } })); refit(); };
-export const flipVertical = () => { useStore.setState((st) => ({ sel: { ...st.sel, rot: (6 - st.sel.rot) % 4, flip: !st.sel.flip } })); refit(); };
-/** Select an offer card: the tile appears on the board at the nearest place where it fits. */
+export const flipHorizontal = (pivot?: [number, number]) => { const s = useStore.getState().sel; reorient((4 - s.rot) % 4, !s.flip, 'flipH', pivot); };
+export const flipVertical = (pivot?: [number, number]) => { const s = useStore.getState().sel; reorient((6 - s.rot) % 4, !s.flip, 'flipV', pivot); };
+/** Pick one orientation directly (orientation strip). */
+export const setOrientation = (o: Orient) => reorient(o.rot, o.flip, 'set');
+
+/** Take an offer card with the orientation it had last time (drag start: no ghost yet). */
+export const pickOffer = (i: number, hover: [number, number] | null = null) => {
+  const st = useStore.getState();
+  const tile = st.game?.offer[i];
+  const o = (tile && st.orient[tile.uid]) || { rot: 0, flip: false };
+  setSel({ offer: i, rot: o.rot, flip: o.flip, hover });
+};
+/** Select an offer card: the tile appears on the board, in its own orientation, at the nearest place where it fits. */
 export const selectOffer = (i: number) => {
   const st = useStore.getState();
   if (!st.game) return;
-  const sel = { ...st.sel, offer: i };
-  setSel({ offer: i, hover: nearestValid(st.game, st.mySeat, sel, st.sel.hover ?? undefined) });
+  const tile = st.game.offer[i];
+  const o = (tile && st.orient[tile.uid]) || { rot: 0, flip: false };
+  const sel = { ...st.sel, offer: i, rot: o.rot, flip: o.flip };
+  setSel({ offer: i, rot: o.rot, flip: o.flip, hover: nearestValid(st.game, st.mySeat, sel, st.sel.hover ?? undefined) });
 };

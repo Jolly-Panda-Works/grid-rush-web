@@ -3,7 +3,8 @@ import { ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { BOARD_SIZE, Cell, EMPTY_CELL_PENALTY, PlacedTile, SPECIAL_7X7_BONUS, SPECIAL_AREA, Seat, TRACK_LENGTH } from '../../../shared/src';
-import { useStore, setSel } from '../store';
+import { useStore, setSel, rotate } from '../store';
+import type { RotAnim } from '../store';
 import { confirmPlacement } from '../actions';
 import { C, PLAYER_COLORS, UI } from './colors';
 import { patternTexture, tileLook } from '../patterns';
@@ -158,6 +159,28 @@ function Bonus7Outline({ board }: { board: number[] }) {
   );
 }
 
+/** Wraps the ghost: right after a turn / flip it eases from the old orientation into the new one around the pivot cell. */
+function GhostTurn({ anim, offerKey, children }: { anim: RotAnim | null; offerKey: string; children: React.ReactNode }) {
+  const ref = useRef<THREE.Group>(null);
+  const inner = useRef<THREE.Group>(null);
+  const px = anim ? CELL_X(anim.pivot[1]) : 0, py = anim ? CELL_Y(anim.pivot[0]) : 0;
+  useFrame(() => {
+    const g = ref.current, n = inner.current;
+    if (!g || !n) return;
+    const t = anim && !useStore.getState().settings.reduceMotion ? Math.min(1, (performance.now() - anim.t0) / 200) : 1;
+    const e = 1 - Math.pow(1 - t, 3), back = 1 - e;
+    g.rotation.z = anim?.kind === 'rot' ? back * (Math.PI / 2) : anim?.kind === 'rotBack' ? -back * (Math.PI / 2) : 0; // start from the old orientation
+    g.scale.set(anim?.kind === 'flipH' ? 1 - 2 * back : 1, anim?.kind === 'flipV' ? 1 - 2 * back : 1, 1);
+    if (anim?.kind === 'set') g.scale.setScalar(0.85 + 0.15 * e);
+  });
+  void offerKey;
+  return (
+    <group ref={ref} position={[px, py, 0]}>
+      <group ref={inner} position={[-px, -py, 0]}>{children}</group>
+    </group>
+  );
+}
+
 export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: number; scale: number }) {
   const game = useStore((s) => s.game)!;
   const mySeat = useStore((s) => s.mySeat);
@@ -167,6 +190,7 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
   const active = game.current === seat && game.phase !== 'finished';
   const interactive = mine && active && (game.phase === 'placing_reward' || sel.offer !== null);
   const intent = useStore((s) => s.oppIntent);
+  const rotAnim = useStore((s) => s.rotAnim);
   let preview = interactive ? previewFor(game, seat, sel) : null;
   if (!mine && intent && intent.seat === seat && game.current === seat) {
     const a = intent.action;
@@ -222,20 +246,57 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
     const c = Math.floor(lp.x + BOARD_SIZE / 2), r = Math.floor(BOARD_SIZE / 2 - lp.y);
     return r >= 0 && c >= 0 && r < BOARD_SIZE && c < BOARD_SIZE ? [r, c] : null;
   };
+  // Touch: tap the ghost = turn it around that cell; drag = move it (the grabbed cell stays under the finger);
+  // tap elsewhere = move it there; the floating ✓ places it. Mouse: the ghost follows the pointer, click places,
+  // the wheel or a right-click turns it.
+  const gesture = useRef<{ cell: [number, number]; onGhost: boolean; moved: boolean; off: [number, number] } | null>(null);
+  const onGhost = (cell: [number, number]) => !!preview?.abs.some(([r, c]) => r === cell[0] && c === cell[1]);
+  const canTurn = mine && game.phase === 'playing' && sel.offer !== null;
   const onMove = (e: ThreeEvent<PointerEvent>) => {
     if (!interactive) return;
     e.stopPropagation();
     const cell = cellFromEvent(e);
-    if (cell && (!sel.hover || sel.hover[0] !== cell[0] || sel.hover[1] !== cell[1])) setSel({ hover: cell });
+    if (!cell) return;
+    const gs = gesture.current;
+    if (e.pointerType === 'mouse' && !gs) { if (!sel.hover || sel.hover[0] !== cell[0] || sel.hover[1] !== cell[1]) setSel({ hover: cell }); return; }
+    if (!gs || (cell[0] === gs.cell[0] && cell[1] === gs.cell[1] && !gs.moved)) return;
+    gs.moved = true;
+    const h: [number, number] = [cell[0] + gs.off[0], cell[1] + gs.off[1]];
+    if (!sel.hover || sel.hover[0] !== h[0] || sel.hover[1] !== h[1]) setSel({ hover: h });
   };
   const onDown = (e: ThreeEvent<PointerEvent>) => {
     if (!interactive) return;
     e.stopPropagation();
     const cell = cellFromEvent(e);
     if (!cell) return;
-    // touch: tap / drag moves the ghost, the floating ✓ button places it. Mouse: click places.
-    setSel({ hover: cell });
-    if (e.pointerType === 'mouse') confirmPlacement();
+    if (e.pointerType === 'mouse') {
+      if (e.button === 2) return; // right-click turns (onContextMenu)
+      setSel({ hover: cell });
+      confirmPlacement();
+      return;
+    }
+    const on = onGhost(cell);
+    if (!on) setSel({ hover: cell });
+    const hv = on && sel.hover ? sel.hover : cell;
+    gesture.current = { cell, onGhost: on, moved: false, off: [hv[0] - cell[0], hv[1] - cell[1]] };
+  };
+  const onUp = (e: ThreeEvent<PointerEvent>) => {
+    const gs = gesture.current;
+    gesture.current = null;
+    if (!gs || e.pointerType === 'mouse') return;
+    e.stopPropagation();
+    if (!gs.moved && gs.onGhost && canTurn) rotate(gs.cell);
+  };
+  const onWheel = (e: ThreeEvent<WheelEvent>) => {
+    if (!interactive || !canTurn) return;
+    e.stopPropagation();
+    rotate(cellFromEvent(e as unknown as ThreeEvent<PointerEvent>) ?? undefined, e.deltaY < 0 ? -1 : 1);
+  };
+  const onContext = (e: ThreeEvent<MouseEvent>) => {
+    if (!interactive || !canTurn) return;
+    e.nativeEvent.preventDefault();
+    e.stopPropagation();
+    rotate(cellFromEvent(e as unknown as ThreeEvent<PointerEvent>) ?? undefined);
   };
 
   return (
@@ -264,7 +325,9 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
       )}
       {p.tiles.map((t) => <TileMesh key={t.uid} tile={t} />)}
       {show7 && <Bonus7Outline board={p.board} />}
-      {preview && preview.abs.filter(inBounds).map(([r, c]: Cell, i) => (
+      {preview && (
+        <GhostTurn anim={mine ? rotAnim : null} offerKey={`${sel.offer}`}>
+      {preview.abs.filter(inBounds).map(([r, c]: Cell, i) => (
         // the ghost shows the real painted tile (red-tinted where it does not fit), with a glowing rim
         <group key={'pv' + i} position={[CELL_X(c), CELL_Y(r), 0.55]}>
           <mesh position={[0, 0, -0.02]}>
@@ -277,7 +340,9 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
           </mesh>
         </group>
       ))}
-      <mesh position={[0, 0, 0.6]} onPointerMove={onMove} onPointerDown={onDown}>
+        </GhostTurn>
+      )}
+      <mesh position={[0, 0, 0.6]} onPointerMove={onMove} onPointerDown={onDown} onPointerUp={onUp} onPointerLeave={() => { gesture.current = null; }} onWheel={onWheel} onContextMenu={onContext}>
         <planeGeometry args={[BOARD_SIZE, BOARD_SIZE]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>

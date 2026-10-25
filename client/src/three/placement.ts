@@ -1,4 +1,4 @@
-import { BOARD_SIZE, Cell, GameState, cellIdx, cellsFree, transformCells } from '../../../shared/src';
+import { BOARD_SIZE, Cell, GameState, cellIdx, cellsFree, cellsKey, transformCells } from '../../../shared/src';
 import type { Selection } from '../store';
 
 export interface Preview { abs: Cell[]; valid: boolean }
@@ -31,3 +31,46 @@ export function nearestValid(g: GameState, seat: 0 | 1, sel: Selection, from: [n
 }
 export const inBounds = ([r, c]: Cell) => r >= 0 && c >= 0 && r < BOARD_SIZE && c < BOARD_SIZE;
 export { cellIdx };
+
+/** Same orientation as transformCells, but cells keep their original order (cell k of the tile stays index k),
+ *  so a turn can keep one particular cell of the tile in place. */
+export function orientUnsorted(cells: Cell[], rot: number, flip: boolean): Cell[] {
+  let cur = cells.map(([r, c]) => [r, flip ? -c : c] as Cell);
+  for (let i = 0; i < ((rot % 4) + 4) % 4; i++) cur = cur.map(([r, c]) => [c, -r] as Cell);
+  const mr = Math.min(...cur.map((c) => c[0])), mc = Math.min(...cur.map((c) => c[1]));
+  return cur.map(([r, c]) => [r - mr, c - mc] as Cell);
+}
+
+/** Board cells covered by a tile in a given orientation when the ghost is centred on `hover` (as previewFor does). */
+export function placedCells(cells: Cell[], rot: number, flip: boolean, hover: [number, number]): Cell[] {
+  const o = orientUnsorted(cells, rot, flip);
+  const h = Math.max(...o.map((c) => c[0])) + 1, w = Math.max(...o.map((c) => c[1])) + 1;
+  const r0 = hover[0] - Math.floor(h / 2), c0 = hover[1] - Math.floor(w / 2);
+  return o.map(([r, c]) => [r0 + r, c0 + c] as Cell);
+}
+
+/** The ghost centre that puts tile cell `k` of orientation (rot, flip) exactly on board cell `at`. */
+export function hoverKeeping(cells: Cell[], rot: number, flip: boolean, k: number, at: Cell): [number, number] {
+  const o = orientUnsorted(cells, rot, flip);
+  const h = Math.max(...o.map((c) => c[0])) + 1, w = Math.max(...o.map((c) => c[1])) + 1;
+  const r0 = at[0] - o[k][0], c0 = at[1] - o[k][1];
+  return [r0 + Math.floor(h / 2), c0 + Math.floor(w / 2)];
+}
+
+/** Every distinct way a tile can face, with one (rot, flip) that produces it. */
+export function distinctOrientations(cells: Cell[]): { rot: number; flip: boolean; cells: Cell[]; key: string }[] {
+  const out: { rot: number; flip: boolean; cells: Cell[]; key: string }[] = [];
+  for (const flip of [false, true]) for (let rot = 0; rot < 4; rot++) {
+    const o = transformCells(cells, rot, flip), key = cellsKey(o);
+    if (!out.some((x) => x.key === key)) out.push({ rot, flip, cells: o, key });
+  }
+  return out;
+}
+
+/** Does this exact orientation fit anywhere on the board? */
+export function fitsSomewhere(board: number[], oriented: Cell[]): boolean {
+  const h = Math.max(...oriented.map((c) => c[0])) + 1, w = Math.max(...oriented.map((c) => c[1])) + 1;
+  for (let r0 = 0; r0 <= BOARD_SIZE - h; r0++) for (let c0 = 0; c0 <= BOARD_SIZE - w; c0++)
+    if (oriented.every(([r, c]) => board[(r0 + r) * BOARD_SIZE + c0 + c] === 0)) return true;
+  return false;
+}

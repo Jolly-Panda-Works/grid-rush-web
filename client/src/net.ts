@@ -54,7 +54,7 @@ export async function startSearch(solo: boolean) {
   leaving = false; finalized = false; lastEventId = 0; gotFirst = false;
   const st = useStore.getState();
   useStore.setState({
-    screen: 'matchmaking', game: null, result: null, connection: 'ok', popups: [], fx: [], pendingFx: {}, drag: null,
+    screen: 'matchmaking', game: null, result: null, connection: 'ok', popups: [], fx: [], pendingFx: {}, drag: null, orient: {}, rotAnim: null,
     match: { status: 'connecting', solo, waitMs: 0, startedAt: Date.now() },
   });
   resetSel();
@@ -180,6 +180,8 @@ function onState(g: GameState, turnLeft: number | null) {
   useStore.setState({
     game: g, turnLeft, turnRecvAt: performance.now(), oppIntent: null, oppLog,
     sel: myTurnNow ? sel : { offer: null, rot: 0, flip: false, hover: null },
+    // a bought tile leaves the offer: drop its remembered orientation
+    orient: Object.fromEntries(Object.entries(st.orient).filter(([uid]) => g.offer.some((t) => t.uid === Number(uid)))),
   });
   if (g.phase === 'placing_reward' && g.current === st.mySeat && !useStore.getState().sel.hover) {
     setSel({ hover: nearestValid(g, st.mySeat, useStore.getState().sel) });

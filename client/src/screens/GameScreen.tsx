@@ -31,7 +31,7 @@ export default function GameScreen() {
       const c = e.code;
       if (c === 'Enter' || c === 'NumpadEnter') { confirmPlacement(); return; }
       if (g.phase !== 'playing') return;
-      if (c === 'KeyR') rotate();
+      if (c === 'KeyR') rotate(undefined, e.shiftKey ? -1 : 1);
       else if (c === 'KeyF') flipHorizontal();
       else if (c === 'KeyV') flipVertical();
       else if (c === 'Escape') resetSel();
