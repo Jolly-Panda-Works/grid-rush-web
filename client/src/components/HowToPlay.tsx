@@ -15,10 +15,12 @@ export default function HowToPlay() {
       <div className="modal help" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={t('help.title')}>
         <h2>{t('help.title')}</h2>
         <button className="mclose" onClick={close} aria-label={t('help.ok')}>✕</button>
+        <div className="mscroll">
         <p className="muted">{t('help.sub', v)}</p>
         <ul className="rules">{ICONS.map((ic, i) => <li key={i}><span className="ri" aria-hidden="true">{ic}</span><span>{t('help.r' + (i + 1), v)}</span></li>)}</ul>
         <Legend inline />
         <p className="muted small">{t('help.keys')}</p>
+        </div>
         <button className="btn primary" onClick={close}>{t('help.ok')}</button>
       </div>
     </div>

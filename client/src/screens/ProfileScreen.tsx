@@ -93,13 +93,13 @@ export default function ProfileScreen() {
           <div className="modal small" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={t('prof.changeAvatar')}>
             <h3>{t('prof.changeAvatar')}</h3>
             <button className="mclose" onClick={() => setPicking(false)} aria-label={t('settings.close')}>✕</button>
-            <div className="avgrid">
+            <div className="mscroll"><div className="avgrid">
               {AVATARS.map((_, i) => (
                 <button key={i} className={'avpick' + (i === profile.avatar ? ' on' : '')} onClick={() => { update({ avatar: i }); setPicking(false); }}>
                   <span style={{ backgroundImage: `url(${avatarUrl(i)})` }} />
                 </button>
               ))}
-            </div>
+            </div></div>
           </div>
         </div>
       )}

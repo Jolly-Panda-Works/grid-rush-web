@@ -1138,38 +1138,83 @@ html[dir='rtl'] .social { direction: rtl; }
 .avpick span { background-size: contain; background-repeat: no-repeat; }
 .avpick.on { border: 0; box-shadow: 0 0 0 3px #FFE07A, 0 0 16px #FFD34D; }
 
-/* buttons: glazed bars in a gilded mount; the ends keep their shape (3-slice), the middle stretches */
-.btn:not(.ghost), .btn:not(.ghost):hover:not(:disabled) {
-  --frame: var(--art-secondary); --cap: 62; --capw: 1.55em;
-  border: 0; border-radius: 0; background: none; box-shadow: none; padding-inline: max(1.7em, 16px);
-  border-image: var(--frame) 0 var(--cap) fill / 0 var(--capw) / 0 stretch;
+/* buttons: every button is the same glazed bar in the same gilded mount (turquoise = main action, cream = the rest,
+   coral = danger), so buttons side by side match. The ends keep their shape (3-slice), the middle stretches;
+   the label sits centred in the glaze. */
+.btn, .btn:hover:not(:disabled) {
+  --frame: var(--art-secondary); --capw: 1.45em;
+  border: 0; border-radius: 0; background: none; box-shadow: none; min-height: 2.75em; padding: .45em max(1.75em, 18px);
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; line-height: 1.2; text-align: center;
+  border-image: var(--frame) 0 62 fill / 0 var(--capw) / 0 stretch;
   color: var(--ink); text-shadow: 0 1px 0 rgba(255,255,255,.5); filter: drop-shadow(0 4px 5px rgba(0,10,50,.35)); }
-.btn.primary:not(.ghost), .btn.primary:not(.ghost):hover:not(:disabled) { --frame: var(--art-primary-plain); --cap: 70; --capw: 1.45em;
-  color: #fff; text-shadow: 0 1px 2px rgba(0,30,70,.85), 0 0 6px rgba(0,30,70,.45); }
-.btn.danger:not(.ghost), .btn.danger:not(.ghost):hover:not(:disabled) { --frame: var(--art-danger); --cap: 62; --capw: 1.55em;
-  color: #fff; text-shadow: 0 1px 2px rgba(90,20,10,.8); }
-.btn:not(.ghost):hover:not(:disabled) { filter: drop-shadow(0 4px 5px rgba(0,10,50,.35)) brightness(1.08); }
-.btn:not(.ghost):active:not(:disabled) { filter: drop-shadow(0 1px 2px rgba(0,10,50,.35)) brightness(.96); box-shadow: none; }
-.btn:not(.ghost):disabled { filter: grayscale(.6) brightness(.9); opacity: .6; }
-/* the primary bar's centre gem, at its natural shape over the stretched middle */
-.btn.primary:not(.ghost):not(.danger)::after { content: ''; position: absolute; inset-block: 0; left: 50%; aspect-ratio: 78 / 142; translate: -50% 0;
-  background: var(--art-primary-orn) center / 100% 100% no-repeat; pointer-events: none; z-index: -1; } /* under the label, over the bar (the filter makes .btn a stacking context) */
+.btn.primary, .btn.primary:hover:not(:disabled) { --frame: var(--art-primary-bar); background: none; color: #fff; text-shadow: 0 1px 2px rgba(0,40,80,.9), 0 0 6px rgba(0,40,80,.5); }
+.btn.danger, .btn.danger:hover:not(:disabled), .btn.primary.danger { --frame: var(--art-danger); background: none; color: #fff; text-shadow: 0 1px 2px rgba(90,20,10,.8); }
+.btn.small { min-height: 2.6em; --capw: 1.35em; }
+.btn.ghost, .btn.ghost:hover:not(:disabled), .btn.vote.on { background: none; box-shadow: none; }
+.btn.vote.on { --frame: var(--art-danger); color: #fff; text-shadow: 0 1px 2px rgba(90,20,10,.8); }
+.menu .btn.big { padding-inline: max(1.75em, 18px); }
+.btn.big { min-height: 2.9em; --capw: 1.55em; }
+.btn:hover:not(:disabled) { filter: drop-shadow(0 4px 5px rgba(0,10,50,.35)) brightness(1.08); }
+.btn:active:not(:disabled) { transform: translateY(2px) scale(.97); filter: drop-shadow(0 1px 2px rgba(0,10,50,.35)) brightness(.95); box-shadow: none; }
+.btn:disabled { filter: grayscale(.6) brightness(.9); opacity: .6; }
+.playtile, .playtile:hover:not(:disabled) { --capw: 2.35em; padding-inline: 2.6em; justify-content: flex-start; }
 
-/* dialogs: the parchment panel in its gilded frame (9-slice), the crest at the top centre */
-.modal { border: 0; border-radius: 0; background: none; box-shadow: none; outline: none; padding: 52px 30px 36px;
+/* dialogs: the parchment panel in its gilded frame (9-slice) with the crest on top; the frame and the title stay put,
+   only the body (.mscroll) scrolls */
+.modal { border: 0; border-radius: 0; background: none; box-shadow: none; outline: none; padding: 50px 34px 34px; overflow: visible;
+  display: flex; flex-direction: column; max-height: min(88vh, 880px);
   border-image: var(--art-modal-plain) 96 70 80 fill / 58px 42px 48px / 0 stretch round; filter: drop-shadow(0 18px 26px rgba(0,0,20,.55)); }
+.modal > * { flex: none; }
+.modal > .mscroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin-inline: -8px; padding: 4px 8px;
+  -webkit-mask-image: linear-gradient(transparent, #000 12px, #000 calc(100% - 12px), transparent); mask-image: linear-gradient(transparent, #000 12px, #000 calc(100% - 12px), transparent); }
+.modal > .btn, .modal > .row { margin-top: 10px; }
 .modal::before { left: 50%; top: 0; width: 44.6px; height: 58px; translate: -50% 0; opacity: 1; background: var(--art-modal-orn) center / 100% 100% no-repeat; }
 .modal::after { display: none; }
-.modal > h2, .modal > h3 { clip-path: none; padding: 8px 40px 16px; color: #FFE07A; background: var(--art-ribbon) center / 100% 100% no-repeat; }
+/* the title on a lapis ribbon whose curled ends keep their shape */
+.modal > h2, .modal > h3 { clip-path: none; background: none; padding: 7px 2.6em 15px; color: #FFE07A; max-width: 100%;
+  border-image: var(--art-ribbon) 0 95 fill / 0 2.2em / 0 stretch; }
 .mclose { top: 18px; inset-inline-end: 20px; }
 
 /* results: the title on a victory / defeat ribbon */
 .results h1.win, .results h1.lose { padding: .25em 1.6em .5em; background: var(--art-victory) center / 100% 100% no-repeat; color: #fff; text-shadow: 0 2px 0 rgba(120,60,0,.6), 0 0 10px rgba(120,60,0,.4); }
 .results h1.lose { background-image: var(--art-defeat); text-shadow: 0 2px 0 rgba(90,20,10,.6); }
-.playtile.primary { padding-bottom: clamp(20px, 3.2vh, 28px); } /* clear the gilded bottom rim and its gem */
 
 /* the page is a wall of painted 1x1 tiles under a navy wash (text and the board stay readable), with a vignette */
 body { background: radial-gradient(ellipse at 50% 40%, rgba(0,0,0,0) 35%, rgba(0,0,20,.6) 100%), linear-gradient(rgba(4,18,70,.62), rgba(2,10,46,.72)),
   var(--art-bg-tile, none) center / 76px 76px repeat, #0c2468; background-blend-mode: normal; background-attachment: fixed; }
 body[data-screen='game'] { background: radial-gradient(ellipse at 50% 42%, rgba(0,0,0,0) 35%, rgba(0,0,20,.6) 100%), linear-gradient(rgba(4,18,70,.7), rgba(2,10,46,.78)),
   var(--art-bg-tile, none) center / 64px 64px repeat, #0c2468; background-blend-mode: normal; }
+
+/* ---- motion: every list and tile comes in, the home tiles stay alive ---- */
+.navtile { position: relative; overflow: hidden; }
+.navtile:nth-child(4) { animation-delay: .66s; } .navtile:nth-child(5) { animation-delay: .73s; }
+.navtile .nt-ico .aicon { animation: a-float 3.2s ease-in-out infinite; }
+.navtile:nth-child(2) .nt-ico .aicon, .navtile:nth-child(2) .nt-ico { animation-delay: -.6s; }
+.navtile:nth-child(3) .nt-ico .aicon { animation-delay: -1.2s; } .navtile:nth-child(4) .nt-ico .aicon { animation-delay: -1.8s; } .navtile:nth-child(5) .nt-ico .aicon { animation-delay: -2.4s; }
+.navtile:active .nt-ico { animation: a-wiggle .35s ease-in-out; }
+/* a glint crosses each tile now and then, one after the other */
+.navtile::after { content: ''; position: absolute; inset: -20% auto -20% 0; width: 40%; pointer-events: none; rotate: 18deg; translate: -160% 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); animation: a-glint 7s ease-in-out 1.6s infinite; }
+.navtile:nth-child(2)::after { animation-delay: 1.9s; } .navtile:nth-child(3)::after { animation-delay: 2.2s; } .navtile:nth-child(4)::after { animation-delay: 2.5s; } .navtile:nth-child(5)::after { animation-delay: 2.8s; }
+@keyframes a-glint { 0%, 82% { translate: -160% 0; } 100% { translate: 360% 0; } }
+.playtile .pt-ico { animation: a-float 3.6s ease-in-out 1s infinite; }
+.btn.primary.playtile::after { content: ''; position: absolute; inset: 18% auto 18% 12%; width: 30%; pointer-events: none; rotate: 14deg; translate: -100% 0; opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent); animation: a-glint2 5s ease-in-out 1.2s infinite; }
+@keyframes a-glint2 { 0%, 78% { translate: -100% 0; opacity: 0; } 80% { opacity: 1; } 100% { translate: 300% 0; opacity: 0; } }
+
+/* lists come in row by row */
+.lbrow, .frrow, .statcard, .achcard { animation: a-rise .35s cubic-bezier(.2,1.2,.4,1) both; }
+.lblist > :nth-child(2), .statgrid > :nth-child(2), .achgrid > :nth-child(2) { animation-delay: .04s; }
+.lblist > :nth-child(3), .statgrid > :nth-child(3), .achgrid > :nth-child(3) { animation-delay: .08s; }
+.lblist > :nth-child(4), .statgrid > :nth-child(4), .achgrid > :nth-child(4) { animation-delay: .12s; }
+.lblist > :nth-child(5), .statgrid > :nth-child(5), .achgrid > :nth-child(5) { animation-delay: .16s; }
+.lblist > :nth-child(6), .statgrid > :nth-child(6), .achgrid > :nth-child(6) { animation-delay: .2s; }
+.lblist > :nth-child(7), .statgrid > :nth-child(7), .achgrid > :nth-child(7) { animation-delay: .24s; }
+.lblist > :nth-child(8), .statgrid > :nth-child(8), .achgrid > :nth-child(8) { animation-delay: .28s; }
+.lblist > :nth-child(n+9), .statgrid > :nth-child(n+9), .achgrid > :nth-child(n+9) { animation-delay: .32s; }
+.lbmine, .mycode, .addfr, .acctbox, .pc-top, .pc-stats, .pc-ach { animation: a-rise .4s cubic-bezier(.2,1.2,.4,1) .1s both; }
+.lbrow.top1 .lbrank, .lbrow.top2 .lbrank, .lbrow.top3 .lbrank { display: inline-block; animation: a-pop .5s cubic-bezier(.2,1.6,.4,1) .3s both; }
+.achcard.done .ach-ico { animation: a-spin-in .6s cubic-bezier(.2,1.3,.4,1) .2s both; }
+.avpick { animation: a-pop .35s cubic-bezier(.2,1.6,.4,1) both; }
+.avpick:nth-child(4n+2) { animation-delay: .03s; } .avpick:nth-child(4n+3) { animation-delay: .06s; } .avpick:nth-child(4n) { animation-delay: .09s; }
+

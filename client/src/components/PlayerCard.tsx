@@ -19,6 +19,7 @@ export function PlayerCard({ id, onClose, children }: { id: string; onClose: () 
       <div className="modal small playercard" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <h3>{p?.name ?? '…'}</h3>
         <button className="mclose" onClick={onClose} aria-label={t('settings.close')}>✕</button>
+        <div className="mscroll">
         {p === null && <p className="muted">{t('museum.offline')}</p>}
         {p && (
           <>
@@ -40,6 +41,7 @@ export function PlayerCard({ id, onClose, children }: { id: string; onClose: () 
             {children}
           </>
         )}
+        </div>
       </div>
     </div>
   );

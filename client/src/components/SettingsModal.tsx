@@ -30,6 +30,7 @@ export function SettingsModal() {
       <div className="modal small settings-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={t('settings.title')}>
         <h3>{t('settings.title')}</h3>
         <button className="mclose" onClick={close} aria-label={t('settings.close')}>✕</button>
+        <div className="mscroll">
         <div className="seg" role="group" aria-label={t('menu.lang')}>
           <button className={settings.lang === 'fa' ? 'on' : ''} onClick={() => setS({ lang: 'fa' })} lang="fa">فارسی</button>
           <button className={settings.lang === 'en' ? 'on' : ''} onClick={() => setS({ lang: 'en' })} lang="en">English</button>
@@ -51,6 +52,7 @@ export function SettingsModal() {
           <input dir="ltr" value={srv} placeholder={t('menu.serverHint')} onChange={(e) => setSrv(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && save()} />
           <div className={'sstatus ' + (online ? 'on' : 'off')}><i className={'dot ' + (online ? 'on' : 'off')} />{status}</div>
           <button className="btn" onClick={save}>{t('menu.serverSave')}</button>
+        </div>
         </div>
       </div>
     </div>

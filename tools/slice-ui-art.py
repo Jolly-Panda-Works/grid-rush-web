@@ -93,8 +93,9 @@ for a in manifest['assets']:
         f = f.crop(f.getchannel('A').point(lambda v: 255 if v > 24 else 0).getbbox())
         save(f, f'frames/{aid}.webp', 90)
 
-for lang in ('en', 'fa'):
-    w = Image.open(os.path.join(SRC, f'wordmark-{lang}.png')).convert('RGBA')
+# Persian logotype: «نقش‌نبرد», the game's Persian name
+for lang, file in (('en', 'wordmark-en.png'), ('fa', 'wordmark-naqsh-nabard-fa.png')):
+    w = Image.open(os.path.join(SRC, file)).convert('RGBA')
     w = w.crop(w.getchannel('A').point(lambda v: 255 if v > 24 else 0).getbbox())
     w = w.resize((1000, round(w.height * 1000 / w.width)), Image.LANCZOS)
     save(w, f'wordmark-{lang}.webp', 88)
@@ -126,8 +127,27 @@ def lift_ornament(name, x0, x1, y0, y1, clean, band=False):
     save(f, f'frames/{name}-plain.webp', 90)
 
 
-lift_ornament('primary', 138, 216, 0, 142, [(118, 138), (216, 236)])
 lift_ornament('modal', 144, 218, 0, 96, [(129, 139), (223, 233)], band=True)
+
+
+def glaze_recolor(src, name, top, bottom):
+    """A button bar in another glaze with exactly the same gilded mount: the cream marble inside `src` is
+    re-fired in a top-to-bottom glaze gradient, keeping the marble veins as light and dark."""
+    f = Image.open(os.path.join(OUT, 'frames', f'{src}.webp')).convert('RGBA')
+    w, h = f.size
+    px = f.load()
+    for y in range(h):
+        k = y / (h - 1)
+        base = [top[i] + (bottom[i] - top[i]) * k for i in range(3)]
+        for x in range(int(w * 0.13), int(w * 0.87)):
+            r, g, b, a = px[x, y]
+            if r > 150 and b > 0.6 * r and abs(r - g) < 45:  # cream marble, not gold leaf or gems
+                vein = ((r + g + b) / 3 - 232) * 1.6
+                px[x, y] = tuple(max(0, min(255, round(base[i] + vein))) for i in range(3)) + (a,)
+    save(f, f'frames/{name}.webp', 90)
+
+
+glaze_recolor('secondary', 'primary-bar', (70, 214, 238), (0, 128, 172))
 
 total = sum(os.path.getsize(os.path.join(d, f)) for d, _, fs in os.walk(OUT) for f in fs)
 print(f'wrote {sum(len(fs) for _, _, fs in os.walk(OUT))} files, {total // 1024} KB')

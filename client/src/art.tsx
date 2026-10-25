@@ -7,7 +7,7 @@ const BASE = `${import.meta.env.BASE_URL}art/`;
 export type IconId = 'treasure' | 'firouzeh' | 'coins' | 'hourglass' | 'achievement' | 'crown' | 'lock' | 'gift' | 'museum'
   | 'trophy' | 'quests' | 'calendar' | 'pawn-azure' | 'pawn-coral' | 'settings' | 'heart';
 export type FrameId = 'primary' | 'secondary' | 'danger' | 'modal' | 'hero' | 'offer' | 'victory' | 'ribbon' | 'defeat'
-  | 'avatar-frame' | 'xp' | 'board-frame' | 'primary-plain' | 'primary-orn' | 'modal-plain' | 'modal-orn';
+  | 'avatar-frame' | 'xp' | 'board-frame' | 'primary-bar' | 'modal-plain' | 'modal-orn';
 
 /** 12 tile motifs, each on a lapis (1) and a cream (2) ground. */
 export const ART_TILE_COUNT = 24;
@@ -24,7 +24,7 @@ const BG_TILE = 2;
 /** The frames the stylesheet paints buttons, dialogs and ribbons with (and the background tile), as CSS variables (--art-<id>), so their
  *  paths follow Vite's base like every other asset. */
 export function installArtVars() {
-  const ids: FrameId[] = ['primary-plain', 'primary-orn', 'secondary', 'danger', 'modal-plain', 'modal-orn', 'ribbon', 'victory', 'defeat'];
+  const ids: FrameId[] = ['primary-bar', 'secondary', 'danger', 'modal-plain', 'modal-orn', 'ribbon', 'victory', 'defeat'];
   for (const id of ids) document.documentElement.style.setProperty(`--art-${id}`, `url("${frameUrl(id)}")`);
   document.documentElement.style.setProperty('--art-bg-tile', `url("${tileUrl(BG_TILE)}")`);
 }
