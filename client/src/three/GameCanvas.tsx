@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useStore } from '../store';
 import { BoardView } from './BoardView';
 import { TrackView } from './TrackView';
+import { VfxLayer } from './vfx';
 import { computeLayout } from './layout';
 
 function Scene() {
@@ -44,6 +45,7 @@ function Scene() {
       <BoardView seat={mySeat} x={layout.my.x} y={layout.my.y} scale={layout.my.scale} />
       <BoardView seat={opp} x={layout.opp.x} y={layout.opp.y} scale={layout.opp.scale} />
       <TrackView layout={layout} />
+      <VfxLayer />
     </>
   );
 }

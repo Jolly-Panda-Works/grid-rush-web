@@ -9,6 +9,7 @@ import { patternTexture, tileLook } from '../patterns';
 import { inBounds, previewFor } from './placement';
 import { textTexture } from './icons';
 import { dragApi } from './dragApi';
+import { vfx } from './vfx';
 
 const CELL_X = (c: number) => c - (BOARD_SIZE - 1) / 2;
 const CELL_Y = (r: number) => (BOARD_SIZE - 1) / 2 - r;
@@ -33,8 +34,7 @@ function TileMesh({ tile }: { tile: PlacedTile }) {
   const cx = tile.cells.reduce((s, c) => s + CELL_X(c[1]), 0) / tile.cells.length;
   const cy = tile.cells.reduce((s, c) => s + CELL_Y(c[0]), 0) / tile.cells.length;
   const keys = useMemo(() => new Set(tile.cells.map((c) => c.join(','))), [tile]);
-  const dust = useRef<THREE.Group>(null);
-  const dustDirs = useMemo(() => Array.from({ length: 10 }, (_, i) => { const a = (i / 10) * Math.PI * 2 + Math.random() * 0.4; return [Math.cos(a), Math.sin(a), 0.6 + Math.random() * 0.6]; }), []);
+  const landed = useRef(false);
   // the tile drops onto the board, squashes on landing (volume-preserving), then settles; dust puffs out on impact
   useFrame(() => {
     const g = ref.current;
@@ -46,30 +46,22 @@ function TileMesh({ tile }: { tile: PlacedTile }) {
       const k = t / FALL;
       g.position.z = 2.2 * (1 - k * k);
       g.scale.set(1.08, 1.08, 1);
-    } else {
-      const k = Math.min(1, (t - FALL) / 0.22);
-      const sq = Math.sin(k * Math.PI) * (1 - k) * 0.5; // squash then spring back
-      g.position.z = 0;
-      g.scale.set(1 + sq * 0.25, 1 + sq * 0.25, 1 - sq);
+      return;
     }
-    const d = dust.current;
-    if (d) {
-      const k = (t - FALL) / 0.5;
-      d.visible = k > 0 && k < 1;
-      if (d.visible) d.children.forEach((m, i) => {
-        const [dx, dy, sp] = dustDirs[i];
-        m.position.set(dx * (0.4 + k * 1.1 * sp), dy * (0.4 + k * 1.1 * sp), 0.15 + k * 0.4);
-        ((m as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = 0.75 * (1 - k);
-      });
+    const k = Math.min(1, (t - FALL) / 0.22);
+    const sq = Math.sin(k * Math.PI) * (1 - k) * 0.5; // squash then spring back
+    g.position.z = 0;
+    g.scale.set(1 + sq * 0.25, 1 + sq * 0.25, 1 - sq);
+    if (!landed.current) {
+      landed.current = true;
+      if (t < 1) { // only for a tile that was just placed (not when a whole board appears at once)
+        const w = g.getWorldPosition(new THREE.Vector3()), sc = g.parent?.getWorldScale(new THREE.Vector3()).x ?? 1;
+        vfx('dust', w.x, w.y, 0.6, sc);
+      }
     }
   });
   return (
     <group ref={ref} position={[cx, cy, 0]}>
-      <group ref={dust} visible={false}>
-        {dustDirs.map((_, i) => (
-          <mesh key={i}><planeGeometry args={[0.16, 0.16]} /><meshBasicMaterial color="#FFF4DC" transparent opacity={0} depthWrite={false} /></mesh>
-        ))}
-      </group>
       {tile.cells.map(([r, c], i) => {
         const x = CELL_X(c) - cx, y = CELL_Y(r) - cy;
         return (
@@ -153,6 +145,9 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
     else if (a.t === 'reward') preview = { abs: [[a.r, a.c]], valid: true };
   }
   const frame = PLAYER_COLORS[seat];
+  const bonus = p.bonus7;
+  const hadBonus = useRef(bonus);
+  useEffect(() => { if (bonus && !hadBonus.current) vfx('confetti', x, y, 1.2, scale); hadBonus.current = bonus; }, [bonus, x, y, scale]);
   const ghostTile = !mine && intent?.action.t === 'buy' && intent.seat === seat ? game.offer[intent.action.offer] : mine && sel.offer !== null ? game.offer[sel.offer] : null;
   const ghostTex = useMemo(() => (ghostTile ? patternTexture(tileLook(ghostTile.uid, ghostTile.shape)) : null), [ghostTile]);
   // late game: empty cells show what they will cost

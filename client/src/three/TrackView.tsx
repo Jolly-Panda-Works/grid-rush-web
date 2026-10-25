@@ -7,6 +7,7 @@ import { C, PLAYER_COLORS, UI } from './colors';
 import { cellTexture } from './icons';
 import { Layout, trackCoord, trackCoordFrac, windowAlpha, windowTarget } from './layout';
 import { useForecast } from '../forecast';
+import { vfx } from './vfx';
 
 const NORMAL = new THREE.Color('#F6EBCB');
 const END_TINT = new THREE.Color('#F2B49A');
@@ -94,6 +95,7 @@ function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
   const ref = useRef<THREE.Group>(null);
   const disp = useRef<number>(useStore.getState().game!.players[seat].pos);
   const lastInt = useRef(Math.floor(disp.current + 1e-6));
+  const wasActive = useRef(true); // no sparkle on the very first frame
   const cell = layout.track.cell;
 
   const onPass = (i: number) => {
@@ -104,8 +106,9 @@ function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
     delete st.pendingFx[key];
     const [x, y] = trackCoord(layout, i, view.scroll);
     useStore.setState((s) => ({ flashes: { ...s.flashes, [i]: performance.now() } }));
-    if (fx.kind === 'treasure' && fx.coins > 0) spawnFx({ kind: 'coins', x, y, count: Math.min(12, 3 + fx.coins * 2) });
+    if (fx.kind === 'treasure' && fx.coins > 0) vfx('gold', x, y, 0.8);
     if (fx.kind === 'reward') {
+      vfx('sparkle', x, y, 0.8);
       const b = seat === st.mySeat ? layout.my : layout.opp;
       spawnFx({ kind: 'tile', x, y, tx: b.x, ty: b.y, color: C.emerald });
     }
@@ -129,6 +132,8 @@ function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
     if (layout.track.vertical) ref.current.position.set(x - lane, y, 0.5); else ref.current.position.set(x, y + lane, 0.5);
     ref.current.visible = windowAlpha(layout, disp.current, view.scroll) > 0.3;
     const active = g.current === seat && g.phase !== 'finished';
+    if (active && !wasActive.current) vfx('sparkle', ref.current.position.x, ref.current.position.y, 0.8, 0.8); // the turn comes to this marker
+    wasActive.current = active;
     const pulse = active && !s.settings.reduceMotion ? 1 + 0.12 * Math.sin(st.clock.elapsedTime * 5) : 1;
     ref.current.scale.setScalar(pulse * (active ? 1.12 : 0.95));
   });
@@ -150,36 +155,6 @@ function GhostMarker({ layout, to, seat: mySeat }: { layout: Layout; to: number;
 }
 
 /* ---------- effects ---------- */
-function CoinBurst({ id, x, y, count }: { id: number; x: number; y: number; count: number }) {
-  const meshes = useRef<(THREE.Mesh | null)[]>([]);
-  const t0 = useRef(performance.now());
-  const parts = useMemo(() => Array.from({ length: count }, () => ({
-    vx: (Math.random() - 0.5) * 3.6, vy: 2.2 + Math.random() * 3.2, vz: 2 + Math.random() * 2, spin: Math.random() * 8,
-  })), [count]);
-  const mats = useMemo(() => parts.map(() => new THREE.MeshStandardMaterial({ color: C.saffron, roughness: 0.35, metalness: 0.2, transparent: true })), [parts]);
-  useFrame(() => {
-    const t = (performance.now() - t0.current) / 1000;
-    parts.forEach((p, i) => {
-      const m = meshes.current[i];
-      if (!m) return;
-      m.position.set(x + p.vx * t, y + p.vy * t - 4.5 * t * t, 0.8 + p.vz * t - 3 * t * t);
-      m.rotation.set(Math.PI / 2 + t * p.spin, 0, 0);
-      mats[i].opacity = Math.max(0, 1 - t / 1.05);
-    });
-    if (t > 1.1) removeFx(id);
-  });
-  useEffect(() => () => mats.forEach((m) => m.dispose()), [mats]);
-  return (
-    <group>
-      {parts.map((_, i) => (
-        <mesh key={i} ref={(m) => { meshes.current[i] = m; }} material={mats[i]} position={[x, y, 0.8]}>
-          <cylinderGeometry args={[0.2, 0.2, 0.07, 18]} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
 function TileFly({ id, x, y, tx, ty, color }: { id: number; x: number; y: number; tx: number; ty: number; color: string }) {
   const ref = useRef<THREE.Mesh>(null);
   const t0 = useRef(performance.now());
@@ -205,9 +180,7 @@ function FxLayer() {
   const fx = useStore((s) => s.fx);
   return (
     <>
-      {fx.map((f) => f.kind === 'coins'
-        ? <CoinBurst key={f.id} id={f.id} x={f.x} y={f.y} count={f.count ?? 6} />
-        : <TileFly key={f.id} id={f.id} x={f.x} y={f.y} tx={f.tx ?? f.x} ty={f.ty ?? f.y} color={f.color ?? C.emerald} />)}
+      {fx.map((f) => f.kind === 'tile' && <TileFly key={f.id} id={f.id} x={f.x} y={f.y} tx={f.tx ?? f.x} ty={f.ty ?? f.y} color={f.color ?? C.emerald} />)}
     </>
   );
 }
