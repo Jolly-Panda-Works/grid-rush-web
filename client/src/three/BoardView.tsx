@@ -133,11 +133,6 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
         <boxGeometry args={[10.4, 10.4, 0.1]} />
         <meshStandardMaterial color={C.gold} roughness={0.45} metalness={0.25} />
       </mesh>
-      {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sy], k) => (
-        <mesh key={'orn' + k} position={[sx * 5.2, sy * 5.2, -0.05]} rotation={[0, 0, Math.PI / 4]}>
-          <boxGeometry args={[0.5, 0.5, 0.12]} /><meshStandardMaterial color={C.saffron} roughness={0.4} />
-        </mesh>
-      ))}
       <mesh position={[0, 0, -0.1]}>
         <boxGeometry args={[9.8, 9.8, 0.1]} />
         <meshStandardMaterial color={frame} emissive={frame} emissiveIntensity={active ? 0.35 : 0.0} roughness={0.8} />

@@ -35,7 +35,7 @@ export default function GameScreen() {
       else if (/^(Digit|Numpad)[123]$/.test(c)) {
         const i = Number(c.slice(-1)) - 1;
         const me = g.players[st.mySeat];
-        if (g.offer[i] && me.coins >= g.offer[i].coinCost) setSel({ offer: i, rot: 0, flip: false, hover: null });
+        if (g.offer[i] && me.coins >= g.offer[i].coinCost) setSel({ offer: i, hover: null });
       }
     };
     window.addEventListener('keydown', onKey);

@@ -29,11 +29,20 @@ export default function MatchmakingScreen() {
     return (
       <main className="screen center found">
         <div className="vs">
-          <div className="vcard me"><PlayerGlyph seat={mySeat} size={28} /><h3>{me.name}</h3><div className="muted num">{t('hud.lv', { n: profileLevel(profile) })} · {me.rating}</div></div>
+          <div className="vcard opp">
+            <PlayerGlyph seat={(1 - mySeat) as 0 | 1} size={30} />
+            <div className="vtext">
+              <h3>{opp.name}{opp.isBot && <span className="tag bot">{t('mm.botTag', { tier: t('tier.' + opp.botTier) })}</span>}</h3>
+              <div className="muted num">{t('hud.lv', { n: opp.level })} · {opp.rating}</div>
+            </div>
+          </div>
           <div className="vsmark">VS</div>
-          <div className="vcard opp"><PlayerGlyph seat={(1 - mySeat) as 0 | 1} size={28} /><h3>{opp.name}</h3>
-            <div className="muted num">{t('hud.lv', { n: opp.level })} · {opp.rating}</div>
-            {opp.isBot && <div className="tag bot">{t('mm.botTag', { tier: t('tier.' + opp.botTier) })}</div>}
+          <div className="vcard me">
+            <PlayerGlyph seat={mySeat} size={30} />
+            <div className="vtext">
+              <h3>{me.name}</h3>
+              <div className="muted num">{t('hud.lv', { n: profileLevel(profile) })} · {me.rating}</div>
+            </div>
           </div>
         </div>
         <p className="muted">{game.current === mySeat ? t('mm.youStart') : t('mm.oppStarts', { name: opp.name })} {t('mm.ready')}</p>

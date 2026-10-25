@@ -93,7 +93,6 @@ function startLocal(my: number, fallback: boolean) {
     useStore.setState({ screen: 'game' });
     session.begin();
     if (fallback) pushToast(tr('toast.offlineBot'), 'warn');
-    if (session.game.current === session.humanSeat) pushToast(tr('toast.yourTurn'), 'good');
   }, 2600);
 }
 
@@ -108,7 +107,6 @@ function bind(r: Room, my: number) {
       if (my === token && useStore.getState().match.status === 'found') {
         useStore.setState({ screen: 'game' });
         const g = useStore.getState().game;
-        if (g && g.current === m.seat) pushToast(tr('toast.yourTurn'), 'good');
       }
     }, 2600);
   });
@@ -145,13 +143,18 @@ function onState(g: GameState, turnLeft: number | null) {
   lastEventId = g.events.length ? g.events[g.events.length - 1].id : lastEventId;
   if (!first) {
     for (const e of fresh) {
+      // Notifications only for things the player cannot already see on the screen (board, track, turn pill).
       switch (e.k) {
-        case 'buy': pushToast(tr('toast.buy', { name: nameOf(g, e.seat), c: e.coinCost, t: e.timeCost }), e.seat === st.mySeat ? 'good' : 'info'); sfx.place(); break;
-        case 'advance': pushToast(tr('toast.advance', { name: nameOf(g, e.seat), s: e.steps, c: e.coins }), 'info'); sfx.advance(); break;
-        case 'treasure': pushToast(tr('toast.treasure', { name: nameOf(g, e.seat), c: e.coins }), 'good'); sfx.coin(); useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'treasure', coins: e.coins }; break;
-        case 'reward': pushToast(tr('toast.reward', { name: nameOf(g, e.seat) }), 'good'); useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'reward', coins: 0 }; break;
+        case 'buy': sfx.place(); break;
+        case 'advance': sfx.advance(); break;
+        case 'treasure':
+          sfx.coin();
+          if (e.seat === st.mySeat && e.coins > 0) pushToast(tr('toast.treasureMine', { c: e.coins }), 'good');
+          useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'treasure', coins: e.coins };
+          break;
+        case 'reward': useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'reward', coins: 0 }; break;
         case 'bonus7': pushToast(tr('toast.bonus7', { name: nameOf(g, e.seat) }), 'good'); sfx.bonus(); break;
-        case 'turn': if (e.seat === st.mySeat) { sfx.turn(); pushToast(tr('toast.yourTurn'), 'good'); } break;
+        case 'turn': if (e.seat === st.mySeat) sfx.turn(); break;
       }
     }
   }

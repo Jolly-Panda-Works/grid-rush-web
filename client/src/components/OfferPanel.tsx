@@ -32,7 +32,7 @@ export function OfferPanel() {
       if (!st0.active) {
         if (Math.hypot(ev.clientX - st0.x, ev.clientY - st0.y) < DRAG_THRESHOLD) return;
         st0.active = true;
-        if (useStore.getState().sel.offer !== i) setSel({ offer: i, rot: 0, flip: false, hover: null });
+        if (useStore.getState().sel.offer !== i) setSel({ offer: i, hover: null }); // keeps the rotation / flip
       }
       useStore.setState({ drag: { x: ev.clientX, y: ev.clientY + off } });
       setSel({ hover: dragApi.pick?.(ev.clientX, ev.clientY + off) ?? null });
@@ -74,7 +74,7 @@ export function OfferPanel() {
     hint = { cls: '', text: `${np > opp.pos ? t('offer.passes') : t('offer.keeps')}${tre ? ` · ${t('offer.tre', { n: tre, c: gain })}` : ''}${np >= TRACK_LENGTH ? ` · ${t('offer.ends')}` : ''}` };
   } else hint = { cls: '', text: t('offer.hint') };
 
-  const select = (i: number) => { sfx.turn(); setSel({ offer: sel.offer === i ? null : i, rot: 0, flip: false, hover: null }); };
+  const select = (i: number) => { sfx.turn(); setSel({ offer: sel.offer === i ? null : i, hover: null }); }; // (rotation / flip stay as they are)
 
   return (
     <footer className={'panel' + (locked ? ' locked' : '')} aria-disabled={locked}>
@@ -83,41 +83,37 @@ export function OfferPanel() {
           const afford = me.coins >= tile.coinCost;
           const fits = canPlaceAny(me.board, tile.cells);
           const blocked = !afford || !fits;
-          const shown = !locked && sel.offer === i ? transformCells(tile.cells, sel.rot, sel.flip) : tile.cells;
+          const shown = locked ? tile.cells : transformCells(tile.cells, sel.rot, sel.flip); // rotate / flip apply to ALL shown tiles
           return (
             <button key={tile.uid} className={'card ' + (sel.offer === i && !locked ? 'sel ' : '') + (locked ? 'locked ' : blocked ? 'dis' : '')} disabled={locked || blocked}
               onPointerDown={(e) => startDrag(e, i)} onClick={() => { if (!suppressClick.current) select(i); }}
               title={locked ? '' : !afford ? t('offer.noCoins') : !fits ? t('offer.noRoom') : t('offer.select', { n: i + 1 })}>
-              <kbd>{i + 1}</kbd>
               <div className="shape"><TileShape cells={shown} shape={tile.shape} engraved={tile.engraved} cell={16} /></div>
               <div className="costs num">
                 <span className={!afford ? 'bad' : ''}><CoinIcon /> {tile.coinCost}</span>
                 <span><TimeIcon /> {tile.timeCost}</span>
-                {tile.engraved > 0 && <span className="eng" title={t('offer.engraved')}>⛁ {tile.engraved}</span>}
               </div>
-              {!locked && blocked && <div className="why">{!afford ? t('offer.needCoins') : t('offer.room')}</div>}
             </button>
           );
         })}
         {nextTile && (
           <div className="card next" title={t('offer.nextTitle')}>
             <div className="nlabel">{t('offer.next')}</div>
-            <div className="shape"><TileShape cells={nextTile.cells} shape={nextTile.shape} engraved={nextTile.engraved} cell={11} /></div>
+            <div className="shape"><TileShape cells={locked ? nextTile.cells : transformCells(nextTile.cells, sel.rot, sel.flip)} shape={nextTile.shape} engraved={nextTile.engraved} cell={11} /></div>
             <div className="costs num small">
               <span><CoinIcon size={12} /> {nextTile.coinCost}</span>
               <span><TimeIcon size={12} /> {nextTile.timeCost}</span>
-              {nextTile.engraved > 0 && <span className="eng">⛁ {nextTile.engraved}</span>}
             </div>
           </div>
         )}
       </div>
       <div className="actions">
-        <div className={'hint ' + hint.cls}><span className="hint-t">{hint.text}{hint.cls === 'wait' && !finished && <span className="dots" />}</span></div>
+        <div className={'hint ' + hint.cls}><span key={hint.text} className="hint-t">{hint.text}{hint.cls === 'wait' && !finished && <span className="dots" />}</span></div>
         <div className="tools">
-          <button className="btn ghost" disabled={!selTile} onClick={() => setSel({ rot: (sel.rot + 1) % 4 })} title={t('offer.rotate')}><span className="ico">⟳</span><span className="lbl">{t('offer.rotate')} <kbd>R</kbd></span></button>
-          <button className="btn ghost" disabled={!selTile} onClick={flipHorizontal} title={t('offer.flip')}><span className="ico">↔</span><span className="lbl">{t('offer.flip')} <kbd>F</kbd></span></button>
-          <button className="btn ghost" disabled={!selTile} onClick={flipVertical} title={t('offer.flipV')}><span className="ico">↕</span><span className="lbl">{t('offer.flipV')} <kbd>V</kbd></span></button>
-          <button className="btn ghost" disabled={!selTile} onClick={resetSel} title={t('offer.cancel')}><span className="ico">✕</span><span className="lbl">{t('offer.cancel')} <kbd>Esc</kbd></span></button>
+          <button className="btn ghost" disabled={locked} onClick={() => setSel({ rot: (sel.rot + 1) % 4 })} title={t('offer.rotate')}><span className="ico">⟳</span><span className="lbl">{t('offer.rotate')} <kbd>R</kbd></span></button>
+          <button className="btn ghost" disabled={locked} onClick={flipHorizontal} title={t('offer.flip')}><span className="ico">↔</span><span className="lbl">{t('offer.flip')} <kbd>F</kbd></span></button>
+          <button className="btn ghost" disabled={locked} onClick={flipVertical} title={t('offer.flipV')}><span className="ico">↕</span><span className="lbl">{t('offer.flipV')} <kbd>V</kbd></span></button>
+          <button className="btn ghost" disabled={locked || (sel.offer === null && sel.rot === 0 && !sel.flip)} onClick={resetSel} title={t('offer.cancel')}><span className="ico">✕</span><span className="lbl">{t('offer.cancel')} <kbd>Esc</kbd></span></button>
         </div>
         <button className={'btn primary adv ' + (advEnds && !locked ? 'danger' : '')} disabled={locked} onClick={() => { sfx.advance(); resetSel(); send.advance(); }}>
           {t('offer.advance')} <kbd>A</kbd>

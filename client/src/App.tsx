@@ -15,6 +15,7 @@ export default function App() {
   const settings = useStore((s) => s.settings);
   const help = useStore((s) => s.showHelp);
   const settingsOpen = useStore((s) => s.showSettings);
+  useEffect(() => { document.body.dataset.screen = screen; }, [screen]);
   useEffect(() => {
     saveSettings(settings);
     document.documentElement.classList.toggle('reduce-motion', settings.reduceMotion);
