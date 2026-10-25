@@ -651,3 +651,28 @@ body[data-screen='game']::after { content: none; }
 .medal::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; pointer-events: none; opacity: 0; box-shadow: 0 0 20px 4px rgba(79,209,224,.75); }
 .dock:not(.locked) .medal::after { animation: glowfade 2.2s ease-in-out infinite; will-change: opacity; }
 .oppbar .trackbar.ending .bchip { animation: none; }
+
+/* ===== quieter opponent bar: one row + a slim track line along its bottom edge ===== */
+.oppbar { display: block; padding-bottom: 12px; }
+.oppseat { gap: 10px; }
+.pwrap { position: relative; flex: none; }
+.pbadge { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); font: 800 10.5px var(--head); color: #0d3d22; background: linear-gradient(180deg, #8EE3B5, #3FB57A); border: 1.5px solid #E8B730; border-radius: 6px; padding: 0 5px; white-space: nowrap; }
+.pbadge.b7 { bottom: auto; top: -6px; background: linear-gradient(180deg, #FFE07A, #E3A030); color: #3a2200; }
+.oppname { display: inline-flex; align-items: center; gap: 4px; flex: 1; min-width: 0; font: 700 15px var(--head); }
+.oppname .n { overflow: hidden; text-overflow: ellipsis; max-width: none; }
+.botdot { font-size: 13px; }
+.oppseat .sstats.compact { margin-inline-start: auto; }
+.trackline { position: absolute; left: 14px; right: 18px; bottom: 3px; height: 10px; }
+.trackline i { position: absolute; top: 5px; transform: translate(-50%, -50%); display: block; }
+.trackline .mline { position: absolute; left: 0; right: 0; top: 4px; height: 2px; border-radius: 1px; background: rgba(246,235,203,.55); }
+.trackline .mt { width: 5px; height: 5px; border-radius: 1px; background: var(--saffron); } .trackline .mt.past { opacity: .3; }
+.trackline .mr { width: 5px; height: 5px; border-radius: 1px; background: var(--emerald); }
+.trackline .mf { width: 7px; height: 9px; background: repeating-conic-gradient(#1b1f3a 0 25%, #fff 0 50%) 0 0 / 4px 4px; }
+.trackline .mp { width: 9px; height: 9px; border: 1.5px solid #fff; transition: left .5s ease-out; }
+.trackline .mp.p0 { border-radius: 50%; background: var(--p0); } .trackline .mp.p1 { background: var(--p1); transform: translate(-50%, -50%) rotate(45deg); width: 8px; height: 8px; }
+.trackline .mp.cur { box-shadow: 0 0 0 2px rgba(255,180,0,.8); } .trackline .mp.ghost { opacity: .5; border-style: dashed; }
+.trackline.ending .mline { background: #FF6B4A; }
+/* my next goal gem */
+.gem.next img { width: 15px; height: 15px; } .gem.next small { font-size: 10px; color: #FFE07A; margin-inline-start: 1px; }
+.gem.warn { background: linear-gradient(180deg, #C9503A, #7a1f14); }
+.trackline { left: 66px; }
