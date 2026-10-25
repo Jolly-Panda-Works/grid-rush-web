@@ -18,7 +18,7 @@ export default function App() {
   const settings = useStore((s) => s.settings);
   const help = useStore((s) => s.showHelp);
   const settingsOpen = useStore((s) => s.showSettings);
-  useEffect(() => { document.body.dataset.screen = screen; }, [screen]);
+  useEffect(() => { document.body.dataset.screen = screen; window.scrollTo(0, 0); }, [screen]); // the page itself never scrolls
   useEffect(() => { checkForUpdate(); }, []); // once per launch
   useEffect(() => {
     saveSettings(settings);
