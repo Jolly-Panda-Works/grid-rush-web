@@ -26,7 +26,7 @@ function TrackCell({ i, layout }: { i: number; layout: Layout }) {
     return NORMAL.clone().lerp(END_TINT, (i / TRACK_LENGTH) * 0.9).getStyle();
   }, [i, finish, treasure, reward]);
   // Treasure = chest, reward = 1x1 tile, finish = checkered flag; every cell shows its index.
-  const tex = useMemo(() => cellTexture(finish ? 'flag' : treasure ? 'chest' : reward ? 'reward' : null, i), [i, finish, treasure, reward]);
+  const tex = useMemo(() => cellTexture(finish ? 'flag' : treasure ? 'chest' : reward ? 'reward' : null, i, layout.track.vertical ? 'five' : 'all'), [i, finish, treasure, reward, layout.track.vertical]);
 
   useFrame(() => {
     if (!ref.current) return;
@@ -90,7 +90,8 @@ function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
     if (cur > lastInt.current) { for (let i = lastInt.current + 1; i <= cur; i++) onPass(i); lastInt.current = cur; }
     else if (cur < lastInt.current) lastInt.current = cur;
     const [x, y] = trackCoordFrac(layout, disp.current);
-    ref.current.position.set(x, y + (seat === 0 ? 1 : -1) * cell * 0.17, 0.5);
+    const lane = (seat === 0 ? 1 : -1) * cell * 0.17;
+    if (layout.track.vertical) ref.current.position.set(x - lane, y, 0.5); else ref.current.position.set(x, y + lane, 0.5);
     const active = g.current === seat && g.phase !== 'finished';
     const pulse = active && !s.settings.reduceMotion ? 1 + 0.12 * Math.sin(st.clock.elapsedTime * 5) : 1;
     ref.current.scale.setScalar(pulse * (active ? 1.12 : 0.95));
@@ -177,15 +178,15 @@ function FxLayer() {
 
 export function TrackView({ layout }: { layout: Layout }) {
   const cells = useMemo(() => Array.from({ length: TRACK_LENGTH + 1 }, (_, i) => i), []);
-  const { cols, cell, rowGap, rows, x, y } = layout.track;
+  const { plate } = layout.track;
   return (
     <group>
-      <mesh position={[x, y - ((rows - 1) * rowGap) / 2, -0.09]}>
-        <boxGeometry args={[cols * cell + 0.75, (rows - 1) * rowGap + cell + 0.65, 0.08]} />
+      <mesh position={[plate.x, plate.y, -0.09]}>
+        <boxGeometry args={[plate.w + 0.25, plate.h + 0.25, 0.08]} />
         <meshStandardMaterial color={C.gold} roughness={0.45} metalness={0.25} />
       </mesh>
-      <mesh position={[x, y - ((rows - 1) * rowGap) / 2, -0.05]}>
-        <boxGeometry args={[cols * cell + 0.5, (rows - 1) * rowGap + cell + 0.4, 0.08]} />
+      <mesh position={[plate.x, plate.y, -0.05]}>
+        <boxGeometry args={[plate.w, plate.h, 0.08]} />
         <meshStandardMaterial color={UI.plate} roughness={1} />
       </mesh>
       {cells.map((i) => <TrackCell key={i} i={i} layout={layout} />)}

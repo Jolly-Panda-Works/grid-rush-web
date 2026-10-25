@@ -25,8 +25,10 @@ function loadIcon(k: IconKind) {
 
 const texCache = new Map<string, THREE.CanvasTexture>();
 /** Texture for a track cell: optional icon + its index number in the corner. */
-export function cellTexture(kind: IconKind | null, num: number): THREE.CanvasTexture {
-  const key = `${kind ?? '-'}:${num}`;
+/** `numMode`: 'all' = small number on every cell (desktop); 'five' = large number only on every 5th cell (phone, small cells). */
+export function cellTexture(kind: IconKind | null, num: number, numMode: 'all' | 'five' = 'all'): THREE.CanvasTexture {
+  const showNum = numMode === 'all' || num % 5 === 0;
+  const key = `${kind ?? '-'}:${showNum ? num : '_'}:${numMode}`;
   const hit = texCache.get(key);
   if (hit) return hit;
   const cv = document.createElement('canvas');
@@ -34,11 +36,15 @@ export function cellTexture(kind: IconKind | null, num: number): THREE.CanvasTex
   const ctx = cv.getContext('2d')!;
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;
-  ctx.font = '700 30px Inter, Arial, sans-serif';
-  ctx.textAlign = 'right';
-  ctx.fillStyle = 'rgba(19,34,79,.78)';
-  ctx.fillText(String(num), 120, 120);
-  if (kind) loadIcon(kind).then((im) => { ctx.drawImage(im, 18, 4, 92, 92); tex.needsUpdate = true; }).catch(() => {});
+  const big = numMode === 'five';
+  if (showNum) {
+    ctx.font = `800 ${big ? 62 : 30}px Inter, Arial, sans-serif`;
+    ctx.textAlign = big ? 'center' : 'right';
+    ctx.textBaseline = big ? 'middle' : 'alphabetic';
+    ctx.fillStyle = 'rgba(19,34,79,.85)';
+    if (big) ctx.fillText(String(num), 64, 68); else ctx.fillText(String(num), 120, 120);
+  }
+  if (kind) loadIcon(kind).then((im) => { if (big) ctx.clearRect(0, 0, 128, 128); ctx.drawImage(im, big ? 10 : 18, big ? 10 : 4, big ? 108 : 92, big ? 108 : 92); tex.needsUpdate = true; }).catch(() => {});
   texCache.set(key, tex);
   return tex;
 }

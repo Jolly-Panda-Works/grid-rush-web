@@ -112,7 +112,7 @@ export function OfferPanel() {
         )}
       </div>
       <div className="actions">
-        <div className={'hint ' + hint.cls}>{hint.text}{hint.cls === 'wait' && !finished && <span className="dots" />}</div>
+        <div className={'hint ' + hint.cls}><span className="hint-t">{hint.text}{hint.cls === 'wait' && !finished && <span className="dots" />}</span></div>
         <div className="tools">
           <button className="btn ghost" disabled={!selTile} onClick={() => setSel({ rot: (sel.rot + 1) % 4 })} title={t('offer.rotate')}><span className="ico">⟳</span><span className="lbl">{t('offer.rotate')} <kbd>R</kbd></span></button>
           <button className="btn ghost" disabled={!selTile} onClick={flipHorizontal} title={t('offer.flip')}><span className="ico">↔</span><span className="lbl">{t('offer.flip')} <kbd>F</kbd></span></button>

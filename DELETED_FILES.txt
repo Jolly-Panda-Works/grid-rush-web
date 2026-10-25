@@ -1,6 +1,1 @@
-Files that no longer exist in the project (delete them from your repo):
-
-.github/scripts/version.sh        (replaced by tools/changes.mjs + the "Version" job in build.yml)
-
-Also: .github/workflows/android.yml is now only a harmless stub that cannot start a build.
-Delete it too when you can: build.yml does everything (version, tag, Android build, release).
+No files were deleted in this change.

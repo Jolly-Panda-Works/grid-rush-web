@@ -4,6 +4,7 @@ import { Hud } from '../components/Hud';
 import { OfferPanel } from '../components/OfferPanel';
 import { useT } from '../i18n';
 import { Popup } from '../components/Popup';
+import { GameMenu } from '../components/GameMenu';
 import { Legend } from '../components/Legend';
 import { DragGhost } from '../components/DragGhost';
 import { resign, send } from '../net';
@@ -48,8 +49,7 @@ export default function GameScreen() {
       <section className="stage">
         <Suspense fallback={<div className="center muted">{t('game.loading3d')}</div>}><GameCanvas /></Suspense>
         <Popup />
-        <button className="helpbtn" onClick={() => useStore.setState({ showHelp: true })} aria-label={t('game.help')}>?</button>
-        <button className="resign" onClick={() => useStore.setState({ confirmResign: true })}>{t('game.resign')}</button>
+        <GameMenu />
         {conn === 'reconnecting' && <div className="overlay soft"><div className="modal small">{t('game.reconnecting')}</div></div>}
         {game.phase === 'finished' && <div className="overlay soft"><div className="modal small">{t('game.over')}</div></div>}
       </section>
