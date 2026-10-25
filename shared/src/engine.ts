@@ -1,5 +1,5 @@
 import {
-  ADVANCE_COIN_RATE, BOARD_SIZE, EMPTY_CELL_PENALTY, OFFER_SIZE, REWARD_ENGRAVED, REWARD_POSITIONS,
+  ADVANCE_COIN_RATE, BOARD_SIZE, COIN_SCORE_DIVISOR, EMPTY_CELL_PENALTY, OFFER_SIZE, REWARD_ENGRAVED, REWARD_POSITIONS,
   SPECIAL_7X7_BONUS, SPECIAL_AREA, STARTING_COINS, STARTING_POSITION, TRACK_LENGTH, TREASURE_POSITIONS,
 } from './constants';
 import { MONO_SHAPE, makeTile } from './tiles';
@@ -82,7 +82,8 @@ export function scoreOf(s: GameState, seat: Seat): ScoreBreakdown {
   const empty = emptyCount(p);
   const bonus = p.bonus7 ? SPECIAL_7X7_BONUS : 0;
   const penalty = empty * EMPTY_CELL_PENALTY;
-  return { coins: p.coins, bonus, emptyCells: empty, penalty, total: p.coins + bonus - penalty };
+  const coinPoints = Math.floor(p.coins / COIN_SCORE_DIVISOR); // score = coins / 2 (rounded down) + 7x7 bonus - 2 x empty cells
+  return { coins: p.coins, coinPoints, bonus, emptyCells: empty, penalty, total: coinPoints + bonus - penalty };
 }
 
 function ev(s: GameState, e: GameEventBody) {

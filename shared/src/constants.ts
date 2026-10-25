@@ -6,6 +6,8 @@ export const ADVANCE_COIN_RATE = 1;
 export const SPECIAL_7X7_BONUS = 7;
 export const SPECIAL_AREA = 7;
 export const EMPTY_CELL_PENALTY = 2;
+// CONFIRMED (rule change): coins left over count half at the end, rounded down.
+export const COIN_SCORE_DIVISOR = 2;
 export const OFFER_SIZE = 3;
 
 // ASSUMPTION: TRACK_LENGTH is a balance parameter in the docs (no fixed value).

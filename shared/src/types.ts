@@ -38,6 +38,7 @@ export type EndReason = 'track_end' | 'board_full' | 'forfeit' | 'timeout';
 
 export interface ScoreBreakdown {
   coins: number;
+  coinPoints: number; // floor(coins / COIN_SCORE_DIVISOR)
   bonus: number;
   emptyCells: number;
   penalty: number;

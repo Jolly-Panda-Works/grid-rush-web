@@ -1,4 +1,4 @@
-import { BOARD_SIZE, REWARD_POSITIONS, TREASURE_POSITIONS } from './constants';
+import { BOARD_SIZE, REWARD_POSITIONS, TREASURE_POSITIONS, COIN_SCORE_DIVISOR } from './constants';
 import { allPlacements, applyAction, boardFull, cellIdx, cloneForSim, emptyCount, engravedTotal, other } from './engine';
 import type { Action, GameState, PlayerState, Rng, Seat } from './types';
 
@@ -54,14 +54,18 @@ function futureRewards(p: PlayerState, s: GameState): number {
   return REWARD_POSITIONS.filter((rp, i) => rp > p.pos && !s.rewardTaken[i]).length * 0.4;
 }
 
+const COIN_SPEND_VALUE = 0.2;
+
 function value(sim: GameState, seat: Seat, cfg: TierCfg): number {
   if (sim.phase === 'finished') {
     const win = sim.result?.winner === seat;
     return (win ? 1 : -1) * (cfg.endAware ? 10000 : 150);
   }
   const me = sim.players[seat], op = sim.players[other(seat)];
+  // a coin scores 1/COIN_SCORE_DIVISOR at the end; COIN_SPEND_VALUE is what it is still worth for buying tiles
+  const coinValue = 1 / COIN_SCORE_DIVISOR + COIN_SPEND_VALUE;
   const side = (p: PlayerState) =>
-    p.coins + 2 * (BOARD_SIZE * BOARD_SIZE - emptyCount(p)) + (p.bonus7 ? 7 : 0) + futureTreasure(p) - 0;
+    coinValue * (p.coins + futureTreasure(p)) + 2 * (BOARD_SIZE * BOARD_SIZE - emptyCount(p)) + (p.bonus7 ? 7 : 0);
   let v = side(me) - side(op);
   v -= holePenalty(me) * cfg.holeWeight;
   v += holePenalty(op) * 0.2;

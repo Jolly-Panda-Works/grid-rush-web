@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BOARD_SIZE, EMPTY_CELL_PENALTY, Seat, levelProgress } from '../../../shared/src';
+import { BOARD_SIZE, COIN_SCORE_DIVISOR, EMPTY_CELL_PENALTY, Seat, levelProgress } from '../../../shared/src';
 import { BoardArt } from '../components/BoardArt';
 import { Popup } from '../components/Popup';
 import { PlayerGlyph } from '../components/TileShape';
@@ -51,10 +51,10 @@ export default function ResultsScreen() {
               <div className="pname"><PlayerGlyph seat={seat} /> <b>{p.name}</b>{seat === mySeat && <span className="tag">{t('you')}</span>}{p.isBot && <span className="tag bot">{t('bot')}</span>}</div>
               <BoardArt tiles={p.tiles} size={150} marked={marked} />
               <table className="num"><tbody>
-                <tr><td>{t('res.coins')}</td><td>{s.coins}</td></tr>
+                <tr><td>{t('res.coinsHalf', { c: s.coins, d: COIN_SCORE_DIVISOR })}</td><td>{s.coinPoints}</td></tr>
                 <tr><td>{t('res.bonus')}</td><td>{s.bonus ? `+${s.bonus}` : '0'}</td></tr>
                 <tr className={counted < s.emptyCells ? 'live' : ''}><td>{t('res.empty', { n: counted, p: EMPTY_CELL_PENALTY })}</td><td dir="ltr">−{counted * EMPTY_CELL_PENALTY}</td></tr>
-                <tr className="total"><td>{t('res.final')}</td><td dir="ltr">{s.coins + s.bonus - counted * EMPTY_CELL_PENALTY}</td></tr>
+                <tr className="total"><td>{t('res.final')}</td><td dir="ltr">{s.coinPoints + s.bonus - counted * EMPTY_CELL_PENALTY}</td></tr>
               </tbody></table>
               <div className="muted small">{t('res.filled', { a: BOARD_SIZE * BOARD_SIZE - s.emptyCells, b: BOARD_SIZE * BOARD_SIZE })}</div>
             </div>

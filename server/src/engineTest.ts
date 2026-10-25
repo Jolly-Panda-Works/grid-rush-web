@@ -1,7 +1,7 @@
 // Fast rules test (npm test). Checks the confirmed rules from 02_Core_Rules.md and that bots always play legal moves.
 import assert from 'node:assert/strict';
 import {
-  BOARD_SIZE, EMPTY_CELL_PENALTY, REWARD_POSITIONS, SPECIAL_7X7_BONUS, STARTING_COINS, TRACK_LENGTH, TREASURE_POSITIONS,
+  BOARD_SIZE, COIN_SCORE_DIVISOR, EMPTY_CELL_PENALTY, REWARD_POSITIONS, SPECIAL_7X7_BONUS, STARTING_COINS, TRACK_LENGTH, TREASURE_POSITIONS,
   GameState, TileDef, applyAction, applyAdvance, applyBuy, applyReward, botTierFor, chooseAction, cellIdx, createGame, emptyCount,
   eloDelta, finishGame, levelFromXp, legalActions, scoreOf, transformCells, orientations, cellsKey,
 } from '../../shared/src';
@@ -85,14 +85,22 @@ test('7x7 bonus: only the first player gets it, once', () => {
   assert.equal(buy(s, domino(1, 1), [[0, 0], [0, 1]]), null);
   assert.equal(s.players[1].bonus7, false, 'second player gets nothing');
 });
-test('game ends at the end of the track; score = coins + bonus - 2 x empty cells', () => {
+test('game ends at the end of the track; score = coins / 2 (rounded down) + bonus - 2 x empty cells', () => {
   const s = fresh(); s.players[0].pos = TRACK_LENGTH - 1; s.players[1].pos = TRACK_LENGTH;
   s.players[1].pos = 20; s.players[0].coins = 20;
   assert.equal(buy(s, domino(3, 1)), null);
   assert.equal(s.phase, 'finished'); assert.equal(s.result!.reason, 'track_end'); assert.equal(s.players[0].pos, TRACK_LENGTH, 'clamped');
   const sc = scoreOf(s, 0);
-  assert.equal(sc.total, sc.coins + sc.bonus - EMPTY_CELL_PENALTY * emptyCount(s.players[0]));
+  assert.equal(sc.coinPoints, Math.floor(sc.coins / COIN_SCORE_DIVISOR));
+  assert.equal(sc.total, sc.coinPoints + sc.bonus - EMPTY_CELL_PENALTY * emptyCount(s.players[0]));
   assert.equal(sc.emptyCells, BOARD_SIZE * BOARD_SIZE - 2);
+});
+test('leftover coins count half, rounded down (7 coins -> 3 points)', () => {
+  const s = fresh();
+  s.players[0].coins = 7; s.players[1].coins = 8;
+  assert.equal(scoreOf(s, 0).coinPoints, 3);
+  assert.equal(scoreOf(s, 1).coinPoints, 4);
+  assert.equal(scoreOf(s, 0).total, 3 - EMPTY_CELL_PENALTY * BOARD_SIZE * BOARD_SIZE);
 });
 test('a full board ends the game', () => {
   const s = fresh(); s.players[1].pos = 30;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { BOARD_SIZE, EMPTY_CELL_PENALTY, Seat, TRACK_LENGTH, TURN_SECONDS, scoreOf } from '../../../shared/src';
+import { BOARD_SIZE, COIN_SCORE_DIVISOR, EMPTY_CELL_PENALTY, Seat, TRACK_LENGTH, TURN_SECONDS, scoreOf } from '../../../shared/src';
 import { useT } from '../i18n';
 import { patternUrl, tileLook } from '../patterns';
 import { useStore } from '../store';
@@ -67,7 +67,7 @@ export function SeatStats({ seat, compact = false }: { seat: Seat; compact?: boo
       {open && (
         <div className="pdetail" onClick={(e) => { e.stopPropagation(); setOpen(false); }}>
           <div className="dhead">{t('hud.scoreNow')}</div>
-          <div><span>{t('res.coins')}</span><b className="num">{sc.coins}</b></div>
+          <div><span>{t('res.coinsHalf', { c: sc.coins, d: COIN_SCORE_DIVISOR })}</span><b className="num">{sc.coinPoints}</b></div>
           {sc.bonus > 0 && <div><span>{t('res.bonus')}</span><b className="num">+{sc.bonus}</b></div>}
           <div><span>{t('res.empty', { n: sc.emptyCells, p: EMPTY_CELL_PENALTY })}</span><b className="num" dir="ltr">−{sc.penalty}</b></div>
           <div className="dtotal"><span>{t('res.final')}</span><b className="num" dir="ltr">{sc.total}</b></div>
