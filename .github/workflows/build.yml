@@ -17,6 +17,8 @@
 #     VITE_SERVER_URL   (optional) public Colyseus endpoint, e.g. wss://game.example.com
 #     VITE_STORE_URL    (optional) store page of the app; the in-app update prompt opens it instead of the release APK
 #                       Without it the apps play against bots offline and ask for a server address in Settings.
+#     PLAY_GAMES_APP_ID          (optional) Play Games Services project id (Play Console); enables "Link Google Play Games"
+#     VITE_PLAY_GAMES_CLIENT_ID  (optional) OAuth *Web* client id of the same Google Cloud project (the server uses its secret)
 #   Secrets (optional, for a signed Android release APK/AAB)
 #     ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
 
@@ -50,6 +52,9 @@ env:
   VITE_SERVER_URL: ${{ vars.VITE_SERVER_URL || vars.SERVER_URL || '' }}
   # Where the in-app update prompt sends Android players (empty = download the APK from the latest release).
   VITE_STORE_URL: ${{ vars.VITE_STORE_URL || '' }}
+  # Google Play Games sign-in (both empty = the link button stays disabled).
+  VITE_PLAY_GAMES_CLIENT_ID: ${{ vars.VITE_PLAY_GAMES_CLIENT_ID || '' }}
+  PLAY_GAMES_APP_ID: ${{ vars.PLAY_GAMES_APP_ID || '' }}
 
 jobs:
   # ------------------------------------------------------------------ version
@@ -237,6 +242,11 @@ jobs:
           sed -i -E "s/versionCode [0-9]+/versionCode ${{ needs.version.outputs.code }}/" app/build.gradle
           sed -i -E "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" app/build.gradle
           grep -E "versionCode|versionName" app/build.gradle
+
+      - name: Set the Play Games project id
+        if: env.PLAY_GAMES_APP_ID != ''
+        working-directory: client/android
+        run: sed -i -E "s#(name=\"game_services_project_id\"[^>]*>)[^<]*<#\1${PLAY_GAMES_APP_ID}<#" app/src/main/res/values/strings.xml
 
       - name: Build debug APK
         working-directory: client/android

@@ -47,6 +47,11 @@ npm start     # build + اجرا روی http://localhost:2567
 - سرور یک دیتابیس SQLite دارد (`server/data/gridrush.db`، با `DB_FILE` قابل تغییر) که با SQLite داخلی Node ساخته می‌شود؛ پس سرور به **Node 22.13 یا بالاتر** نیاز دارد و ماژول native لازم نیست. روی هاست واقعی این فایل باید روی دیسک ماندگار باشد.
 - هر بازیکن اول **مهمان** است: یک حساب روی سرور با توکنی که روی دستگاه ذخیره می‌شود (`/api/auth/guest`). پیشرفت (XP، برد/باخت، آمار، دستاوردها) از دستگاه همگام می‌شود و هیچ‌وقت عقب نمی‌رود. **رتبه (rating) فقط روی سرور** و فقط در بازی‌های آنلاین تغییر می‌کند تا لیدربورد قابل دستکاری از گوشی نباشد.
 - **اتصال Google Play Games** (`/api/auth/google`): سرور کد یک‌بارمصرف را با گوگل عوض می‌کند. متغیرهای `GOOGLE_CLIENT_ID` و `GOOGLE_CLIENT_SECRET` (کلاینت Web در Google Cloud همان پروژه‌ی Play Games) باید روی سرور تنظیم شوند؛ بدون آن‌ها پاسخ «تنظیم نشده» است.
+  - اپ اندروید پلاگین `PlayGamesAuth` را دارد (`client/android/.../PlayGamesAuthPlugin.java`، کتابخانه‌ی `play-services-games-v2`). برای فعال شدن:
+    1. در Play Console بخش Play Games Services را برای اپ بسازید و **Project ID** را بردارید.
+    2. در Google Cloud همان پروژه یک کلاینت OAuth از نوع **Android** (با SHA-1 کلید امضا) و یکی از نوع **Web** بسازید.
+    3. در GitHub متغیرهای `PLAY_GAMES_APP_ID` (Project ID) و `VITE_PLAY_GAMES_CLIENT_ID` (کلاینت Web) را بگذارید؛ روی سرور `GOOGLE_CLIENT_ID` و `GOOGLE_CLIENT_SECRET` همان کلاینت Web.
+    - تا وقتی این‌ها تنظیم نشده‌اند دکمه‌ی «اتصال به Google Play Games» غیرفعال است و بازی بدون آن کار می‌کند.
 - لیدربورد (`/api/leaderboard`): بر اساس رتبه یا سطح، همه یا فقط دوستان، ۵۰ نفر اول + رتبه‌ی خودت. دوستان (`/api/friends`): افزودن با کد دوست ۶ حرفی، پذیرفتن، حذف.
 - `npm test` علاوه بر قوانین، APIها را هم روی یک دیتابیس در حافظه تست می‌کند.
 

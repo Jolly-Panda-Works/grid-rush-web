@@ -4,4 +4,6 @@
     <string name="title_activity_main">Grid Rush</string>
     <string name="package_name">com.jollypanda.grid_rush</string>
     <string name="custom_url_scheme">com.jollypanda.gridrush</string>
+    <!-- Google Play Games project id (Play Console > Play Games Services > Configuration). "0" = not set up; CI replaces it. -->
+    <string name="game_services_project_id" translatable="false">0</string>
 </resources>
