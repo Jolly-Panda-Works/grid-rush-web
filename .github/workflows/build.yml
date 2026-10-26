@@ -13,7 +13,8 @@
 #   GitHub bumps package.json, commits it ("chore(release): vX.Y.Z [skip ci]"), tags vX.Y.Z and
 #   publishes the Release with the final builds and a "What's changed" list.
 #   Set a higher version in package.json yourself to choose it; Run workflow can force a bump.
-#   Pull requests build X.Y.Z-dev.<run> artifacts only.
+#   Pull requests (and pushes with nothing to release) build X.Y.(Z+1)-dev.<run> artifacts only: newer than the last
+#   release, so the in-app update check does not offer that release again.
 # Android versionCode = MAJOR*1000000 + MINOR*1000 + PATCH (always grows with the version).
 #
 # Repository settings (Settings -> Secrets and variables -> Actions):
@@ -114,7 +115,7 @@ jobs:
             echo "Bump: $KIND"
 
             if [[ "$KIND" == "none" ]]; then
-              VERSION="$PKG-dev.$GITHUB_RUN_NUMBER"; RELEASE=false
+              VERSION="$(node -p "const [a,b,c]='$PKG'.split('.').map(Number); [a,b,c+1].join('.')")-dev.$GITHUB_RUN_NUMBER"; RELEASE=false  # newer than the last release: a preview of the next patch
               echo "::notice::Only docs/chore/ci changes since v$LATEST: no new release. Artifacts are attached to this run."
             elif [[ "$KIND" == "chosen" ]]; then
               VERSION="$PKG"; RELEASE=true
@@ -137,7 +138,7 @@ jobs:
             SHA=$(git rev-parse HEAD)
           else
             PKG=$(node -p "require('./package.json').version")
-            VERSION="$PKG-dev.$GITHUB_RUN_NUMBER"; RELEASE=false
+            VERSION="$(node -p "const [a,b,c]='$PKG'.split('.').map(Number); [a,b,c+1].join('.')")-dev.$GITHUB_RUN_NUMBER"; RELEASE=false  # newer than the last release: a preview of the next patch
           fi
 
           CODE=$(node -e "const [a,b,c]='$VERSION'.split('-')[0].split('.').map(Number); console.log(a*1000000+b*1000+c)")
