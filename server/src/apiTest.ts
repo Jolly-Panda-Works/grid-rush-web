@@ -8,6 +8,8 @@ import express from 'express';
 async function main() {
   const { accountsRouter, applyOnlineResult } = await import('./accounts');
   const { socialRouter } = await import('./social');
+  const { storyRouter } = await import('./story');
+  const { LEVELS, STORY, applySoloAction, createSoloGame, solveLevel } = await import('../../shared/src');
   const { setMailer } = await import('./mailer');
   const { resetRateLimits } = await import('./accounts');
   const { db, MIGRATIONS } = await import('./db');
@@ -16,6 +18,7 @@ async function main() {
   const app = express();
   app.use('/api', accountsRouter());
   app.use('/api', socialRouter());
+  app.use('/api', storyRouter());
   const server = createServer(app);
   await new Promise<void>((r) => server.listen(0, r));
   const base = `http://127.0.0.1:${(server.address() as { port: number }).port}/api`;
@@ -176,6 +179,109 @@ async function main() {
     const g = await guest();
     db.prepare('UPDATE sessions SET last_used = ?, created_at = ? WHERE user_id = ?').run(Date.now() - 181 * 86400_000, Date.now() - 181 * 86400_000, g.user.id);
     assert.equal((await call('GET', '/me', undefined, g.token)).status, 401);
+  });
+
+  console.log('story');
+  const winActions = (id: number) => { const r = solveLevel(LEVELS[id - 1]); assert.ok(r.won, `the solver wins level ${id}`); return r.actions; };
+  const loseActions = (id: number) => {
+    const g = createSoloGame(LEVELS[id - 1]);
+    const out: ({ t: 'advance' } | { t: 'reward'; r: number; c: number })[] = [];
+    while (!g.solo!.outcome) {
+      const i = g.players[0].board.indexOf(0);
+      const a = g.phase === 'placing_reward' ? { t: 'reward' as const, r: Math.floor(i / 9), c: i % 9 } : { t: 'advance' as const };
+      assert.equal(applySoloAction(g, a), null); out.push(a);
+    }
+    assert.equal(g.solo!.outcome, 'lost');
+    return out;
+  };
+  const setLevel = (userId: string, level: number) => db.prepare('UPDATE story_progress SET level = ? WHERE user_id = ?').run(level, userId);
+  let st = { token: '', user: { id: '' } };
+  await test('a new player starts at level 1 with everything locked; one who already played is unlocked', async () => {
+    st = await guest();
+    const r = await call('GET', '/story', undefined, st.token);
+    assert.equal(r.body.level, 1); assert.equal(r.body.unlocked, false); assert.equal(r.body.lives, STORY.LIVES_MAX); assert.equal(r.body.coins, 0);
+    const old = await call('POST', '/auth/guest', { name: 'Old', xp: 500 });
+    assert.equal((await call('GET', '/story', undefined, old.body.token)).body.unlocked, true);
+  });
+  await test('a tutorial level is replayed by the server: a win gives one brick and coins, a replay no brick', async () => {
+    const actions = winActions(1);
+    const r = await call('POST', '/story/level/finish', { level: 1, actions }, st.token);
+    assert.equal(r.status, 200); assert.equal(r.body.won, true); assert.equal(r.body.bricks, 1); assert.ok(r.body.coins >= STORY.WIN_COINS[0]);
+    assert.equal(r.body.story.level, 2); assert.equal(r.body.story.bricks, 1);
+    const again = await call('POST', '/story/level/finish', { level: 1, actions }, st.token);
+    assert.equal(again.body.bricks, 0); assert.equal(again.body.coins, 0, 'no coins without more stars'); assert.equal(again.body.story.bricks, 1);
+  });
+  await test('made-up results and locked levels are refused', async () => {
+    assert.equal((await call('POST', '/story/level/finish', { level: 2, actions: [{ t: 'finish' }] }, st.token)).status, 400);
+    assert.equal((await call('POST', '/story/level/finish', { level: 5, actions: winActions(5) }, st.token)).status, 403);
+    assert.equal((await call('POST', '/story/level/start', { level: 9 }, st.token)).status, 403);
+    setLevel(st.user.id, 11);
+    assert.equal((await call('POST', '/story/level/finish', { level: 11, actions: [] }, st.token)).status, 400, 'after the tutorial a level needs an attempt');
+  });
+  await test('after the tutorial: a loss costs a life (refilled on server time), a win gives it back', async () => {
+    let r = await call('POST', '/story/level/start', { level: 11 }, st.token);
+    assert.equal(r.status, 200); assert.equal(r.body.story.lives, STORY.LIVES_MAX - 1);
+    r = await call('POST', '/story/level/finish', { attemptId: r.body.attemptId, actions: loseActions(11) }, st.token);
+    assert.equal(r.body.won, false); assert.equal(r.body.story.lives, STORY.LIVES_MAX - 1); assert.ok(r.body.story.livesIn > 0);
+    const start = await call('POST', '/story/level/start', { level: 11 }, st.token);
+    r = await call('POST', '/story/level/finish', { attemptId: start.body.attemptId, actions: winActions(11) }, st.token);
+    assert.equal(r.body.won, true); assert.equal(r.body.story.lives, STORY.LIVES_MAX - 1); assert.equal(r.body.story.level, 12);
+    assert.equal((await call('POST', '/story/level/finish', { attemptId: start.body.attemptId, actions: [] }, st.token)).status, 404, 'an attempt ends once');
+    db.prepare('UPDATE wallets SET lives = 0, lives_at = ? WHERE user_id = ?').run(Date.now() - 1, st.user.id);
+    assert.equal((await call('GET', '/story', undefined, st.token)).body.lives, 1, 'the clock refilled a life');
+    db.prepare('UPDATE wallets SET lives = 0, lives_at = ? WHERE user_id = ?').run(Date.now() + 60_000, st.user.id);
+    assert.equal((await call('POST', '/story/level/start', { level: 12 }, st.token)).body.error, 'no_lives');
+    db.prepare('UPDATE wallets SET lives = 5, lives_at = NULL WHERE user_id = ?').run(st.user.id);
+  });
+  await test('tools: only the ones owned (plus the free sample) can be used, and they are used up', async () => {
+    db.prepare('UPDATE wallets SET coins = 1000, tools = ? WHERE user_id = ?').run('{}', st.user.id);
+    let r = await call('POST', '/story/shop', { item: 'wheel' }, st.token);
+    assert.equal(r.body.tools.wheel, 1); assert.equal(r.body.coins, 1000 - STORY.TOOL_PRICE.wheel);
+    const start = await call('POST', '/story/level/start', { level: 12 }, st.token);
+    const three = [{ t: 'wheel' }, { t: 'wheel' }, { t: 'wheel' }];
+    assert.equal((await call('POST', '/story/level/finish', { attemptId: start.body.attemptId, actions: three }, st.token)).body.error, 'replay');
+    const s2 = await call('POST', '/story/level/start', { level: 12 }, st.token);
+    r = await call('POST', '/story/level/finish', { attemptId: s2.body.attemptId, actions: [{ t: 'wheel' }, { t: 'wheel' }] }, st.token);
+    assert.equal(r.status, 200); assert.equal(r.body.story.tools.wheel, 0, 'one free sample + the bought one');
+  });
+  await test('a continue must be paid before it is played', async () => {
+    db.prepare('UPDATE wallets SET coins = 2000 WHERE user_id = ?').run(st.user.id);
+    const start = await call('POST', '/story/level/start', { level: 12 }, st.token);
+    const lose = loseActions(12);
+    assert.equal((await call('POST', '/story/level/finish', { attemptId: start.body.attemptId, actions: [...lose, { t: 'continue' }] }, st.token)).body.error, 'unpaid_continue');
+    const s2 = await call('POST', '/story/level/start', { level: 12 }, st.token);
+    const c = await call('POST', '/story/continue', { attemptId: s2.body.attemptId }, st.token);
+    assert.equal(c.body.price, STORY.CONTINUE_PRICE); assert.equal(c.body.story.coins, 2000 - STORY.CONTINUE_PRICE);
+    const r = await call('POST', '/story/level/finish', { attemptId: s2.body.attemptId, actions: [...lose, { t: 'continue' }] }, st.token);
+    assert.equal(r.status, 200);
+  });
+  await test('restoration steps cost bricks, in order; designs can be changed for free', async () => {
+    db.prepare('UPDATE story_progress SET bricks = 3, steps = ? WHERE user_id = ?').run('{}', st.user.id);
+    assert.equal((await call('POST', '/story/step', { space: 'museum', step: 2, choice: 0 }, st.token)).body.error, 'order');
+    let r = await call('POST', '/story/step', { space: 'museum', step: 1 }, st.token);
+    assert.equal(r.body.bricks, 2); assert.equal(r.body.steps.museum.done, 1);
+    assert.equal((await call('POST', '/story/step', { space: 'museum', step: 2 }, st.token)).body.error, 'choice');
+    r = await call('POST', '/story/step', { space: 'museum', step: 2, choice: 1 }, st.token);
+    assert.equal(r.body.bricks, 0); assert.equal(r.body.steps.museum.choices.door, 1);
+    r = await call('POST', '/story/step', { space: 'museum', step: 2, choice: 2 }, st.token);
+    assert.equal(r.body.bricks, 0); assert.equal(r.body.steps.museum.choices.door, 2);
+    assert.equal((await call('POST', '/story/step', { space: 'museum', step: 3, choice: 0 }, st.token)).body.error, 'bricks');
+  });
+  await test('winning level 10 opens PvP and the museum, with the gift', async () => {
+    const g = await guest();
+    await call('GET', '/story', undefined, g.token);
+    setLevel(g.user.id, 10);
+    const r = await call('POST', '/story/level/finish', { level: 10, actions: winActions(10) }, g.token);
+    assert.equal(r.body.won, true); assert.equal(r.body.unlockedNow, true); assert.equal(r.body.story.unlocked, true);
+    assert.ok(r.body.story.coins >= STORY.UNLOCK_GIFT.coins); assert.equal(r.body.story.tools.chisel, 2);
+  });
+  await test('migration 5: players who already played are unlocked', async () => {
+    const { DatabaseSync } = await import('node:sqlite');
+    const d = new DatabaseSync(':memory:');
+    for (const m of MIGRATIONS.slice(0, 4)) d.exec(m);
+    d.prepare("INSERT INTO users (id, name, friend_code, xp, created_at, updated_at, last_seen) VALUES ('u1', 'A', 'ABCDEF', 90, 1, 1, 1), ('u2', 'B', 'ABCDEG', 0, 1, 1, 1)").run();
+    d.exec(MIGRATIONS[4]);
+    assert.deepEqual(d.prepare('SELECT user_id, unlocked FROM story_progress').all().map((r) => ({ ...r })), [{ user_id: 'u1', unlocked: 1 }]);
   });
 
   server.close();

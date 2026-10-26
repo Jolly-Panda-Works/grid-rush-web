@@ -4,7 +4,9 @@ import {
   BOARD_SIZE, COIN_SCORE_DIVISOR, EMPTY_CELL_PENALTY, REWARD_POSITIONS, SPECIAL_7X7_BONUS, STARTING_COINS, TRACK_LENGTH, TREASURE_POSITIONS,
   GameState, TileDef, applyAction, applyAdvance, applyBuy, applyReward, botTierFor, chooseAction, cellIdx, createGame, emptyCount,
   eloDelta, finishGame, levelFromXp, legalActions, scoreOf, transformCells, orientations, cellsKey,
+  LEVELS, RELIC_UID, STONE, STORY, applySoloAction, createSoloGame, goalsDone, replaySolo, solveLevel, starsOf, trackLen,
 } from '../../shared/src';
+import type { LevelDef } from '../../shared/src';
 
 let n = 0;
 const test = (name: string, fn: () => void) => { fn(); n++; console.log('  ok  ' + name); };
@@ -131,6 +133,59 @@ test('bots (tiers 1-3) always play legal moves and finish games', () => {
 });
 test('there is always at least one legal action (Advance)', () => {
   const s = fresh(); assert.ok(legalActions(s, 0).some((a) => a.t === 'advance'));
+});
+console.log('story levels');
+const lvl = (over: Partial<LevelDef>): LevelDef => ({
+  id: 20, seed: 5, trackLength: 30, pacerStep: 2, startingCoins: 5, treasures: [], rewards: [], goals: [{ type: 'fill_count', n: 4 }], stars: [10, 20], ...over,
+});
+test('the pacer moves its step until it is ahead, and takes the oldest offer away', () => {
+  const s = createSoloGame(lvl({}));
+  const second = s.offer[1].uid;
+  assert.equal(s.current, 0);
+  assert.equal(applySoloAction(s, { t: 'advance' }), null);
+  assert.equal(s.players[0].pos, 1); assert.equal(s.players[1].pos, 2); assert.equal(s.current, 0, 'the turn is back at once');
+  assert.equal(s.offer[0].uid, second, 'the offers moved up');
+});
+test('stones take no tile and are neither empty nor filled; prefilled cells are old tiles', () => {
+  const s = createSoloGame(lvl({ cells: { stone: [[0, 0]], filled: [[8, 8], [8, 7], [0, 8]] } }));
+  const me = s.players[0];
+  assert.equal(me.board[0], STONE); assert.equal(emptyCount(me), 81 - 4);
+  assert.equal(me.tiles.length, 2, 'two groups of prefilled cells'); assert.ok(me.tiles.every((t) => t.uid >= RELIC_UID));
+  s.offer[0] = { uid: 500, shape: 'domino', cells: [[0, 0], [0, 1]], timeCost: 1, coinCost: 0, engraved: 0 };
+  assert.notEqual(applySoloAction(s, { t: 'buy', offer: 0, cells: [[0, 0], [0, 1]] }), null);
+});
+test('gold pays one coin, once (not again after the chisel)', () => {
+  const s = createSoloGame(lvl({ cells: { gold: [[4, 4]] } }), { tools: { chisel: 1 } });
+  s.offer[0] = { uid: 500, shape: 'domino', cells: [[0, 0], [0, 1]], timeCost: 1, coinCost: 0, engraved: 0 };
+  const coins = s.players[0].coins;
+  assert.equal(applySoloAction(s, { t: 'buy', offer: 0, cells: [[4, 4], [4, 5]] }), null);
+  assert.equal(s.players[0].coins, coins + 1);
+  assert.equal(applySoloAction(s, { t: 'chisel', uid: 500 }), null);
+  assert.equal(s.players[0].board[cellIdx(4, 4)], 0, 'the chisel freed the cells');
+  assert.notEqual(applySoloAction(s, { t: 'chisel', uid: 500 }), null, 'no chisel left');
+});
+test('goals done -> finish wins and turns the track left into coins; the track end without goals loses', () => {
+  const s = createSoloGame(lvl({}));
+  assert.notEqual(applySoloAction(s, { t: 'finish' }), null);
+  s.offer[0] = { uid: 500, shape: 'o4', cells: [[0, 0], [0, 1], [1, 0], [1, 1]], timeCost: 2, coinCost: 0, engraved: 0 };
+  assert.equal(applySoloAction(s, { t: 'buy', offer: 0, cells: [[0, 0], [0, 1], [1, 0], [1, 1]] }), null);
+  assert.ok(goalsDone(s));
+  assert.equal(applySoloAction(s, { t: 'finish' }), null);
+  assert.equal(s.solo!.outcome, 'won'); assert.equal(s.solo!.early, 30 - 2); assert.ok(starsOf(s) >= 1);
+  const l = createSoloGame(lvl({ trackLength: 6 }));
+  while (!l.solo!.outcome) assert.equal(applySoloAction(l, { t: 'advance' }), null);
+  assert.equal(l.solo!.outcome, 'lost'); assert.equal(starsOf(l), 0);
+  assert.equal(applySoloAction(l, { t: 'continue' }), null, 'a continue reopens the level');
+  assert.equal(trackLen(l), 6 + STORY.CONTINUE_CELLS); assert.equal(l.phase, 'playing');
+});
+test('a level replays to the same result (the server check)', () => {
+  const lv = LEVELS[0];
+  const r = solveLevel(lv);
+  const again = replaySolo(lv, {}, r.actions);
+  assert.equal(again.error, null); assert.equal(again.state.solo!.outcome, 'won');
+});
+test('every story level can be won by the greedy player', () => {
+  for (const lv of LEVELS) assert.ok(solveLevel(lv).won, `level ${lv.id}`);
 });
 void SPECIAL_7X7_BONUS;
 console.log(`\n${n} tests passed`);

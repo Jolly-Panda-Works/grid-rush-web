@@ -7,6 +7,7 @@
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "test:bots": "tsx src/botMatch.ts",
+    "test:levels": "tsx src/levelCheck.ts",
     "smoke": "tsx src/smoke.ts",
     "test": "tsx src/engineTest.ts && tsx src/apiTest.ts"
   },

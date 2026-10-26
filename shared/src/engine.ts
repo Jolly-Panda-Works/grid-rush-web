@@ -8,6 +8,10 @@ import type {
 } from './types';
 
 export const other = (s: Seat): Seat => (s === 0 ? 1 : 0);
+/** The track of this game (story levels have their own). */
+export const trackLen = (s: GameState) => s.track?.length ?? TRACK_LENGTH;
+export const treasuresOf = (s: GameState) => s.track?.treasures ?? TREASURE_POSITIONS;
+export const rewardsOf = (s: GameState) => s.track?.rewards ?? REWARD_POSITIONS;
 export const cellIdx = (r: number, c: number) => r * BOARD_SIZE + c;
 
 /* ---------- geometry ---------- */
@@ -86,7 +90,7 @@ export function scoreOf(s: GameState, seat: Seat): ScoreBreakdown {
   return { coins: p.coins, coinPoints, bonus, emptyCells: empty, penalty, total: coinPoints + bonus - penalty };
 }
 
-function ev(s: GameState, e: GameEventBody) {
+export function ev(s: GameState, e: GameEventBody) {
   s.events.push({ ...e, id: s.eventSeq++ } as GameState['events'][number]);
   if (s.events.length > 40) s.events.shift();
 }
@@ -112,27 +116,27 @@ export function createGame(inits: [PlayerInit, PlayerInit], rng: Rng = Math.rand
 function moveTo(s: GameState, seat: Seat, steps: number): number {
   const p = s.players[seat];
   const from = p.pos;
-  const to = Math.min(TRACK_LENGTH, from + steps);
+  const to = Math.min(trackLen(s), from + steps);
   p.pos = to;
   if (to > from) ev(s, { k: 'move', seat, from, to });
   for (let i = from + 1; i <= to; i++) {
-    if (TREASURE_POSITIONS.includes(i)) {
+    if (treasuresOf(s).includes(i)) {
       const coins = engravedTotal(p);
       p.coins += coins;
       ev(s, { k: 'treasure', seat, pos: i, coins });
     }
-    const ri = REWARD_POSITIONS.indexOf(i);
+    const ri = rewardsOf(s).indexOf(i);
     if (ri >= 0 && !s.rewardTaken[ri]) {
       s.rewardTaken[ri] = true;
       s.pendingRewards++;
       ev(s, { k: 'reward', seat, pos: i });
     }
   }
-  if (to >= TRACK_LENGTH && s.endTriggeredBy === null) s.endTriggeredBy = seat;
+  if (to >= trackLen(s) && s.endTriggeredBy === null) s.endTriggeredBy = seat;
   return to - from;
 }
 
-function check7x7(s: GameState, seat: Seat) {
+export function check7x7(s: GameState, seat: Seat) {
   if (s.bonus7By !== null) return;
   const p = s.players[seat];
   const span = BOARD_SIZE - SPECIAL_AREA;
@@ -141,7 +145,7 @@ function check7x7(s: GameState, seat: Seat) {
       let ok = true;
       for (let r = 0; r < SPECIAL_AREA && ok; r++)
         for (let c = 0; c < SPECIAL_AREA; c++)
-          if (p.board[cellIdx(r0 + r, c0 + c)] === 0) { ok = false; break; }
+          if (p.board[cellIdx(r0 + r, c0 + c)] <= 0) { ok = false; break; } // a stone (story levels) is not a tile
       if (ok) { s.bonus7By = seat; p.bonus7 = true; ev(s, { k: 'bonus7', seat }); return; }
     }
   }

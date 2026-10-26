@@ -62,10 +62,19 @@ export type GameEventBody =
   | { k: 'place1x1'; seat: Seat }
   | { k: 'bonus7'; seat: Seat }
   | { k: 'turn'; seat: Seat }
+  | { k: 'tool'; seat: Seat; tool: string }
+  | { k: 'gold'; seat: Seat; coins: number }
   | { k: 'end'; reason: EndReason };
 export type GameEvent = GameEventBody & { id: number };
 
+/** A track other than the PvP one (story levels set their own length, treasures and 1x1 rewards). */
+export interface TrackDef { length: number; treasures: number[]; rewards: number[] }
+
 export interface GameState {
+  /** absent = the PvP track (TRACK_LENGTH, TREASURE_POSITIONS, REWARD_POSITIONS) */
+  track?: TrackDef;
+  /** a story level (see story/solo.ts); absent in PvP */
+  solo?: import('./story/solo').SoloState;
   phase: Phase;
   current: Seat;
   players: [PlayerState, PlayerState];

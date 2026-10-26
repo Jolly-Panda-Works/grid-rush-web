@@ -9,6 +9,7 @@ import { GridRushRoom } from './GridRushRoom';
 import { museumRouter } from './museum';
 import { accountsRouter } from './accounts';
 import { socialRouter } from './social';
+import { storyRouter } from './story';
 
 const port = Number(process.env.PORT || 2567);
 const app = express();
@@ -17,6 +18,7 @@ app.get('/health', (_req, res) => res.json({ ok: true, game: 'Grid Rush' }));
 app.use('/museum', museumRouter());
 app.use('/api', accountsRouter());
 app.use('/api', socialRouter());
+app.use('/api', storyRouter());
 
 // Optional: serve the production client build (npm run build && npm start)
 const dist = path.resolve(__dirname, '../../client/dist');

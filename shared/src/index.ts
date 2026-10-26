@@ -4,3 +4,7 @@ export * from './tiles';
 export * from './engine';
 export * from './bot';
 export * from './progression';
+export * from './story/solo';
+export * from './story/levels';
+export * from './story/solver';
+export * from './story/restore';

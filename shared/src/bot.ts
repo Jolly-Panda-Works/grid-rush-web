@@ -1,5 +1,5 @@
-import { BOARD_SIZE, REWARD_POSITIONS, TREASURE_POSITIONS, COIN_SCORE_DIVISOR } from './constants';
-import { allPlacements, applyAction, boardFull, cellIdx, cloneForSim, emptyCount, engravedTotal, other } from './engine';
+import { BOARD_SIZE, COIN_SCORE_DIVISOR } from './constants';
+import { allPlacements, applyAction, boardFull, cellIdx, cloneForSim, emptyCount, engravedTotal, other, rewardsOf, treasuresOf } from './engine';
 import type { Action, GameState, PlayerState, Rng, Seat } from './types';
 
 interface TierCfg { randomChance: number; noise: number; endAware: boolean; holeWeight: number }
@@ -46,12 +46,12 @@ function holePenalty(p: PlayerState): number {
   return pen;
 }
 
-function futureTreasure(p: PlayerState): number {
-  const ahead = TREASURE_POSITIONS.filter((t) => t > p.pos).length;
+function futureTreasure(p: PlayerState, s: GameState): number {
+  const ahead = treasuresOf(s).filter((t) => t > p.pos).length;
   return engravedTotal(p) * ahead * 0.8;
 }
 function futureRewards(p: PlayerState, s: GameState): number {
-  return REWARD_POSITIONS.filter((rp, i) => rp > p.pos && !s.rewardTaken[i]).length * 0.4;
+  return rewardsOf(s).filter((rp, i) => rp > p.pos && !s.rewardTaken[i]).length * 0.4;
 }
 
 const COIN_SPEND_VALUE = 0.2;
@@ -65,7 +65,7 @@ function value(sim: GameState, seat: Seat, cfg: TierCfg): number {
   // a coin scores 1/COIN_SCORE_DIVISOR at the end; COIN_SPEND_VALUE is what it is still worth for buying tiles
   const coinValue = 1 / COIN_SCORE_DIVISOR + COIN_SPEND_VALUE;
   const side = (p: PlayerState) =>
-    coinValue * (p.coins + futureTreasure(p)) + 2 * (BOARD_SIZE * BOARD_SIZE - emptyCount(p)) + (p.bonus7 ? 7 : 0);
+    coinValue * (p.coins + futureTreasure(p, sim)) + 2 * (BOARD_SIZE * BOARD_SIZE - emptyCount(p)) + (p.bonus7 ? 7 : 0);
   let v = side(me) - side(op);
   v -= holePenalty(me) * cfg.holeWeight;
   v += holePenalty(op) * 0.2;

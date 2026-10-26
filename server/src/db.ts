@@ -82,6 +82,53 @@ export const MIGRATIONS: string[] = [
      sent_at INTEGER NOT NULL
    );
    ALTER TABLE sessions ADD COLUMN last_used INTEGER;`,
+  // 5: story mode (docs/story-mode.md): level progress, bricks and restoration steps, the meta wallet, attempts.
+  //    Players who already played keep everything open.
+  `CREATE TABLE story_progress (
+     user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+     level INTEGER NOT NULL DEFAULT 1,
+     bricks INTEGER NOT NULL DEFAULT 0,
+     steps TEXT NOT NULL DEFAULT '{}',
+     unlocked INTEGER NOT NULL DEFAULT 0,
+     updated_at INTEGER NOT NULL
+   );
+   CREATE TABLE level_results (
+     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     level INTEGER NOT NULL,
+     best_stars INTEGER NOT NULL,
+     best_score INTEGER NOT NULL,
+     attempts INTEGER NOT NULL,
+     PRIMARY KEY (user_id, level)
+   );
+   CREATE TABLE wallets (
+     user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+     coins INTEGER NOT NULL DEFAULT 0,
+     lives INTEGER NOT NULL DEFAULT 5,
+     lives_at INTEGER,
+     tools TEXT NOT NULL DEFAULT '{}'
+   );
+   CREATE TABLE wallet_log (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     delta_coins INTEGER NOT NULL,
+     reason TEXT NOT NULL,
+     at INTEGER NOT NULL
+   );
+   CREATE INDEX wallet_log_user ON wallet_log(user_id);
+   CREATE TABLE level_attempts (
+     id TEXT PRIMARY KEY,
+     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     level INTEGER NOT NULL,
+     coin_bag INTEGER NOT NULL,
+     tools TEXT NOT NULL,
+     life INTEGER NOT NULL,
+     continues_paid INTEGER NOT NULL DEFAULT 0,
+     started_at INTEGER NOT NULL,
+     finished_at INTEGER
+   );
+   CREATE INDEX level_attempts_user ON level_attempts(user_id);
+   INSERT INTO story_progress (user_id, unlocked, updated_at)
+     SELECT id, 1, CAST(strftime('%s', 'now') AS INTEGER) * 1000 FROM users WHERE xp > 0;`,
 ];
 
 db.exec('CREATE TABLE IF NOT EXISTS schema_version (v INTEGER NOT NULL)');
