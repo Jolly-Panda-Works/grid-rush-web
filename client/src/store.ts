@@ -3,10 +3,12 @@ import type { Action, GameState, Seat } from '../../shared/src';
 import type { UpdateInfo } from './update';
 import type { Account, OtherProfile } from './account';
 import { Profile, Settings, loadProfile, loadSettings } from './profile';
+import { StoryView, loadStory } from './story';
+import type { Attempt, LevelResult } from './story';
 import { bestFit, hoverKeeping, placedCells } from './three/placement';
 import { tr } from './i18n';
 
-export type Screen = 'splash' | 'loading' | 'profile' | 'leaderboard' | 'friends' | 'menu' | 'matchmaking' | 'game' | 'results' | 'museum';
+export type Screen = 'splash' | 'loading' | 'profile' | 'leaderboard' | 'friends' | 'menu' | 'matchmaking' | 'game' | 'results' | 'museum' | 'map' | 'restore';
 export interface Popup { id: number; text: string; tone: 'info' | 'good' | 'warn' | 'bad' }
 export interface RibbonMsg { id: number; title: string; sub?: string; tone: 'mine' | 'opp' | 'big' }
 export interface Fx { id: number; kind: 'coins' | 'tile'; x: number; y: number; tx?: number; ty?: number; count?: number; color?: string }
@@ -19,6 +21,14 @@ export interface ResultInfo {
   won: boolean; ratingBefore: number; ratingAfter: number; delta: number;
   xpGain: number; xpBefore: number; xpAfter: number; levelBefore: number; levelAfter: number; newAch?: string[]; practice?: boolean;
 }
+/** The story level being played: the attempt the server gave, and how it ended (won / lost, then the server's result). */
+export interface LevelPlay {
+  id: number;
+  attempt: Attempt;
+  end: { outcome: 'won' | 'lost'; result?: LevelResult; busy?: boolean; quit?: boolean } | null;
+}
+/** A line of story dialog: who speaks (a portrait), the i18n key, and the face. */
+export interface DialogLine { who: 'master' | 'grandchild'; key: string; mood?: 'normal' | 'happy' | 'surprised' }
 export interface Selection { offer: number | null; rot: number; flip: boolean; hover: [number, number] | null }
 export interface Orient { rot: number; flip: boolean }
 /** The last turn / flip of the ghost, for its animation around `pivot` (a board cell). */
@@ -55,14 +65,26 @@ interface Store {
   showSettings: boolean;
   /** "this needs the server" warning: what was asked for (an i18n key), and whether to go back to the menu after */
   serverNotice: { what: string; back?: boolean } | null;
-  /** the first-launch tutorial game is running (coinsSeen = the treasure explanation was read) */
-  tutorial: { coinsSeen: boolean } | null;
   /** a sign-in found another profile: waiting for the player to confirm the switch */
   accountSwitch: { other: OtherProfile | null; resolve: (yes: boolean) => void } | null;
   /** the email sign-in dialog ('save' = link to this profile, 'signin' = played before on another phone) */
   emailLogin: 'save' | 'signin' | null;
   confirmResign: boolean;
   result: ResultInfo | null;
+  /** story mode: the server's view of my progress (cached on the device) and when it was fetched */
+  story: StoryView;
+  storyAt: number;
+  /** the level-start card for this level */
+  levelPrep: number | null;
+  levelPlay: LevelPlay | null;
+  /** story dialog on screen, and what happens after its last line */
+  dialog: { lines: DialogLine[]; i: number; then?: () => void } | null;
+  /** level coach: which hint is up (level.teach), and what it points at */
+  coach: { key: string; focus?: string } | null;
+  /** a tool waiting for a cell on the board */
+  toolMode: 'chisel' | 'brush' | null;
+  /** after level 10: the bottom bar's new buttons are introduced one by one */
+  unlockTour: 'battle' | 'museum' | null;
 }
 
 export const useStore = create<Store>(() => ({
@@ -95,12 +117,25 @@ export const useStore = create<Store>(() => ({
   showHelp: false,
   showSettings: false,
   serverNotice: null,
-  tutorial: null,
   accountSwitch: null,
   emailLogin: null,
   confirmResign: false,
   result: null,
+  story: loadStory(loadProfile().xp),
+  storyAt: Date.now(),
+  levelPrep: null,
+  levelPlay: null,
+  dialog: null,
+  coach: null,
+  toolMode: null,
+  unlockTour: null,
 }));
+
+/** Show story dialog lines; `then` runs after the last one (or when skipped). */
+export function showDialog(lines: DialogLine[], then?: () => void) {
+  if (!lines.length) { then?.(); return; }
+  useStore.setState({ dialog: { lines, i: 0, then } });
+}
 
 let popupId = 1;
 /** Notifications are shown one by one in a popup in the middle of the stage. */

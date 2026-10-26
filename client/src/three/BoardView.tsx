@@ -2,8 +2,11 @@ import { memo, useEffect, useMemo, useRef } from 'react';
 import { ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { BOARD_SIZE, Cell, EMPTY_CELL_PENALTY, PlacedTile, SPECIAL_7X7_BONUS, SPECIAL_AREA, Seat, TRACK_LENGTH } from '../../../shared/src';
-import { useStore, setSel, rotate } from '../store';
+import { BOARD_SIZE, Cell, EMPTY_CELL_PENALTY, PlacedTile, RELIC_SHAPE, RELIC_UID, SPECIAL_7X7_BONUS, SPECIAL_AREA, Seat, trackLen } from '../../../shared/src';
+import { useStore, setSel, rotate, pushToast } from '../store';
+import { send } from '../net';
+import { sfx } from '../audio';
+import { tr } from '../i18n';
 import type { RotAnim } from '../store';
 import { confirmPlacement } from '../actions';
 import { C, PLAYER_COLORS, UI } from './colors';
@@ -13,6 +16,7 @@ import { textTexture } from './icons';
 import { localDigits } from '../digits';
 import { dragApi } from './dragApi';
 import { vfx } from './vfx';
+import { SoloCells } from './SoloCells';
 
 const CELL_X = (c: number) => c - (BOARD_SIZE - 1) / 2;
 const CELL_Y = (r: number) => (BOARD_SIZE - 1) / 2 - r;
@@ -33,6 +37,9 @@ const bodyMats = new Map<string, THREE.MeshStandardMaterial>();
 const bodyMat = (color: string) => { let m = bodyMats.get(color); if (!m) { m = new THREE.MeshStandardMaterial({ color, roughness: 0.75 }); bodyMats.set(color, m); } return m; };
 const topMats = new Map<THREE.Texture, THREE.MeshStandardMaterial>();
 const topMat = (map: THREE.Texture) => { let m = topMats.get(map); if (!m) { m = new THREE.MeshStandardMaterial({ map, roughness: 0.28, metalness: 0.05 }); topMats.set(map, m); } return m; };
+/** The designer's prefilled tiles of a story level look old: faded glaze, a dull body. */
+const oldMats = new Map<THREE.Texture, THREE.MeshStandardMaterial>();
+const oldMat = (map: THREE.Texture) => { let m = oldMats.get(map); if (!m) { m = new THREE.MeshStandardMaterial({ map, color: '#B3A88F', roughness: 0.95 }); oldMats.set(map, m); } return m; };
 const MONO_MAT = () => new THREE.MeshBasicMaterial({ map: textTexture('1×1'), transparent: true });
 
 /** One placed piece, merged into a few meshes: the tile bodies (+ the joins between them), the glazed tops, the gold stars. */
@@ -58,7 +65,8 @@ const TileMesh = memo(function TileMesh({ tile }: { tile: PlacedTile }) {
     return merged;
   }, [tile.uid]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => { geo.body.dispose(); geo.tops.dispose(); geo.stars?.dispose(); }, [geo]);
-  const top = useMemo(() => topMat(patternTexture(look)), [look]);
+  const relic = tile.shape === RELIC_SHAPE;
+  const top = useMemo(() => (relic ? oldMat : topMat)(patternTexture(look)), [look, relic]);
   const mono = useMemo(() => (tile.shape === 'mono' ? MONO_MAT() : null), [tile.shape]);
   const phase = useRef<'fall' | 'land' | 'rest'>('fall');
   // the tile drops onto the board, squashes on landing (volume-preserving), then settles; dust puffs out on impact
@@ -89,7 +97,7 @@ const TileMesh = memo(function TileMesh({ tile }: { tile: PlacedTile }) {
   });
   return (
     <group ref={ref} position={[cx, cy, 0]}>
-      <mesh geometry={geo.body} material={bodyMat(look.color)} />
+      <mesh geometry={geo.body} material={bodyMat(relic ? '#9C907A' : look.color)} />
       <mesh geometry={geo.tops} material={top} />
       {geo.stars && <mesh geometry={geo.stars} material={SHAMSEH_MAT} />}
       {mono && <mesh position={[0, 0, 0.37]} material={mono}><planeGeometry args={[0.8, 0.8]} /></mesh>}
@@ -129,7 +137,7 @@ function best7(board: number[]): { r0: number; c0: number; filled: number } {
   const span = BOARD_SIZE - SPECIAL_AREA;
   for (let r0 = 0; r0 <= span; r0++) for (let c0 = 0; c0 <= span; c0++) {
     let n = 0;
-    for (let r = 0; r < SPECIAL_AREA; r++) for (let c = 0; c < SPECIAL_AREA; c++) if (board[(r0 + r) * BOARD_SIZE + c0 + c] !== 0) n++;
+    for (let r = 0; r < SPECIAL_AREA; r++) for (let c = 0; c < SPECIAL_AREA; c++) if (board[(r0 + r) * BOARD_SIZE + c0 + c] > 0) n++; // a stone is not a tile
     if (n > best.filled) best = { r0, c0, filled: n };
   }
   return best;
@@ -189,7 +197,8 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
   const p = game.players[seat];
   const mine = seat === mySeat;
   const active = game.current === seat && game.phase !== 'finished';
-  const interactive = mine && active && (game.phase === 'placing_reward' || sel.offer !== null);
+  const toolMode = useStore((s) => s.toolMode);
+  const interactive = mine && active && (game.phase === 'placing_reward' || sel.offer !== null || (!!toolMode && game.phase === 'playing'));
   const intent = useStore((s) => s.oppIntent);
   const rotAnim = useStore((s) => s.rotAnim);
   let preview = interactive ? previewFor(game, seat, sel) : null;
@@ -205,8 +214,9 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
   const ghostTile = !mine && intent?.action.t === 'buy' && intent.seat === seat ? game.offer[intent.action.offer] : mine && sel.offer !== null ? game.offer[sel.offer] : null;
   const ghostTex = useMemo(() => (ghostTile ? patternTexture(tileLook(ghostTile.uid, ghostTile.shape)) : null), [ghostTile]);
   // late game: empty cells show what they will cost
-  const lateGame = mine && game.phase !== 'finished' && TRACK_LENGTH - Math.max(game.players[0].pos, game.players[1].pos) <= 8;
-  const show7 = mine && game.bonus7By === null && game.phase !== 'finished';
+  // (not in story levels: an empty cell costs nothing there unless a goal says so)
+  const lateGame = mine && !game.solo && game.phase !== 'finished' && trackLen(game) - Math.max(game.players[0].pos, game.players[1].pos) <= 8;
+  const show7 = mine && game.bonus7By === null && game.phase !== 'finished' && (!game.solo || game.solo.goals.some((g) => g.type === 'bonus7'));
   const boardKey = lateGame ? p.board.join(',') : '';
   const penalty = useMemo(() => (lateGame ? penaltyTexture(p.board) : null), [boardKey]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => penalty?.dispose(), [penalty]);
@@ -242,6 +252,13 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
     return () => { dragApi.pick = null; dragApi.cellPx = null; dragApi.cellToScreen = null; };
   }, [mine, camera, gl, x, y, scale]);
 
+  const toolAt = (tool: 'chisel' | 'brush', [r, c]: [number, number]) => {
+    const v = p.board[r * BOARD_SIZE + c];
+    if (tool === 'chisel' && (v <= 0 || v >= RELIC_UID)) { sfx.bad(); pushToast(tr('tool.pick.chisel'), 'warn'); return; }
+    if (tool === 'brush' && v !== 0) { sfx.bad(); pushToast(tr('tool.pick.brush'), 'warn'); return; }
+    useStore.setState({ toolMode: null });
+    send.solo(tool === 'chisel' ? { t: 'chisel', uid: v } : { t: 'brush', r, c });
+  };
   const cellFromEvent = (e: ThreeEvent<PointerEvent>): [number, number] | null => {
     const lp = e.object.worldToLocal(e.point.clone());
     const c = Math.floor(lp.x + BOARD_SIZE / 2), r = Math.floor(BOARD_SIZE / 2 - lp.y);
@@ -270,6 +287,7 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
     e.stopPropagation();
     const cell = cellFromEvent(e);
     if (!cell) return;
+    if (toolMode) { toolAt(toolMode, cell); return; }
     if (e.pointerType === 'mouse') {
       if (e.button === 2) return; // right-click turns (onContextMenu)
       setSel({ hover: cell });
@@ -318,6 +336,7 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
         <planeGeometry args={[BOARD_SIZE, BOARD_SIZE]} />
         <meshBasicMaterial map={gridTexture()} />
       </mesh>
+      {mine && game.solo && <SoloCells solo={game.solo} board={p.board} />}
       {penalty && (
         <mesh position={[0, 0, 0.05]}>
           <planeGeometry args={[BOARD_SIZE, BOARD_SIZE]} />

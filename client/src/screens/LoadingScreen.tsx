@@ -3,6 +3,8 @@ import { Logo } from '../components/Logo';
 import { useT } from '../i18n';
 import { pingServer } from '../net';
 import { bootstrapAccount } from '../account';
+import { refreshStory } from '../story';
+import { firstLaunch } from '../levelFlow';
 import { Icon, frameUrl, preloadArt, screenArtUrl } from '../art';
 import { useStore } from '../store';
 
@@ -21,12 +23,12 @@ export default function LoadingScreen() {
       const ok = await pingServer();
       if (!alive) return;
       useStore.setState({ serverOnline: ok });
-      if (ok) await Promise.race([bootstrapAccount(), new Promise((r) => setTimeout(r, 4000))]); // sign in (guest) in the background of loading
+      if (ok) await Promise.race([bootstrapAccount().then(() => refreshStory()), new Promise((r) => setTimeout(r, 5000))]); // sign in (guest) and the story state
       setP(0.85); setLabel(ok ? 'loading.online' : 'loading.offline');
       await new Promise((r) => setTimeout(r, Math.max(0, 1500 - (performance.now() - t0))));
       if (!alive) return;
       setP(1);
-      setTimeout(() => alive && useStore.setState({ screen: 'menu' }), 250);
+      setTimeout(() => { if (!alive) return; useStore.setState({ screen: 'map' }); firstLaunch(); }, 250);
     })();
     return () => { alive = false; };
   }, []);

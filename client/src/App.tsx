@@ -11,6 +11,9 @@ import MatchmakingScreen from './screens/MatchmakingScreen';
 import GameScreen from './screens/GameScreen';
 import ResultsScreen from './screens/ResultsScreen';
 import MuseumScreen from './screens/MuseumScreen';
+import MapScreen from './screens/MapScreen';
+import RestoreScreen from './screens/RestoreScreen';
+import { LevelStart, StoryDialog } from './components/StoryUI';
 import HowToPlay from './components/HowToPlay';
 import { RotateOverlay } from './components/RotateOverlay';
 import { SettingsModal } from './components/SettingsModal';
@@ -44,6 +47,10 @@ export default function App() {
       {screen === 'profile' && <ProfileScreen />}
       {screen === 'leaderboard' && <LeaderboardScreen />}
       {screen === 'friends' && <FriendsScreen />}
+      {screen === 'map' && <MapScreen />}
+      {screen === 'restore' && <RestoreScreen />}
+      <LevelStart />
+      <StoryDialog />
       {help && <HowToPlay />}
       {settingsOpen && <SettingsModal />}
       <UpdatePrompt />

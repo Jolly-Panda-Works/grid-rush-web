@@ -1,4 +1,4 @@
-import { GameState, REWARD_POSITIONS, Seat, TRACK_LENGTH, TREASURE_POSITIONS, engravedTotal } from '../../shared/src';
+import { GameState, Seat, engravedTotal, rewardsOf, trackLen, treasuresOf } from '../../shared/src';
 import { useStore } from './store';
 
 /** What one action would do on the time track. Mirrors the engine rules (display only, nothing is applied). */
@@ -17,20 +17,20 @@ export interface Forecast {
 /** RULE v0.4: Advance jumps to exactly (opponent position + 1), clamped at the finish. */
 export function advanceSteps(g: GameState, seat: Seat): number {
   const me = g.players[seat], opp = g.players[1 - seat];
-  return Math.min(TRACK_LENGTH - me.pos, Math.max(1, opp.pos + 1 - me.pos));
+  return Math.min(trackLen(g) - me.pos, Math.max(1, opp.pos + 1 - me.pos));
 }
 
 export function forecast(g: GameState, seat: Seat, kind: 'buy' | 'advance', steps: number, extraEngraved = 0): Forecast {
   const me = g.players[seat], opp = g.players[1 - seat];
-  const from = me.pos, to = Math.min(TRACK_LENGTH, from + steps);
+  const from = me.pos, to = Math.min(trackLen(g), from + steps);
   const crossed = (p: number) => p > from && p <= to;
-  const treasures = TREASURE_POSITIONS.filter(crossed);
-  const rewards = REWARD_POSITIONS.filter((p, i) => crossed(p) && !g.rewardTaken[i]);
+  const treasures = treasuresOf(g).filter(crossed);
+  const rewards = rewardsOf(g).filter((p, i) => crossed(p) && !g.rewardTaken[i]);
   return {
     seat, kind, from, to, treasures, rewards,
     treasureCoins: treasures.length * (engravedTotal(me) + extraEngraved), // a bought tile is placed BEFORE the move
     advanceCoins: kind === 'advance' ? to - from : 0,
-    passes: to > opp.pos, ends: to >= TRACK_LENGTH,
+    passes: to > opp.pos, ends: to >= trackLen(g),
   };
 }
 

@@ -4,6 +4,7 @@ import { shake } from './shake';
 import { isMobile } from '../device';
 import * as THREE from 'three';
 import { useStore } from '../store';
+import { trackLen } from '../../../shared/src';
 import { BoardView } from './BoardView';
 import { TrackView } from './TrackView';
 import { VfxLayer } from './vfx';
@@ -16,7 +17,9 @@ function Scene() {
   const game = useStore((s) => s.game);
   const mySeat = useStore((s) => s.mySeat);
   const aspect = size.width / Math.max(1, size.height);
-  const layout = useMemo(() => computeLayout(aspect), [aspect]);
+  const len = useStore((s) => (s.game ? trackLen(s.game) : undefined));
+  const solo = useStore((s) => !!s.game?.solo);
+  const layout = useMemo(() => computeLayout(aspect, len, solo), [aspect, len, solo]);
 
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
@@ -56,7 +59,7 @@ function Scene() {
       <ambientLight intensity={1.25} />
       <directionalLight position={[-6, 10, 18]} intensity={0.9} />
       <BoardView seat={mySeat} x={layout.my.x} y={layout.my.y} scale={layout.my.scale} />
-      <BoardView seat={opp} x={layout.opp.x} y={layout.opp.y} scale={layout.opp.scale} />
+      {!game.solo && <BoardView seat={opp} x={layout.opp.x} y={layout.opp.y} scale={layout.opp.scale} />}
       <TrackView layout={layout} />
       <VfxLayer />
       <SteerLayer layout={layout} />

@@ -1,6 +1,7 @@
 import { TRACK_LENGTH } from '../../../shared/src';
 
 export interface TrackLayout {
+  len: number;                   // last track index (the PvP track or a story level's own)
   x: number; y: number;          // desktop: centre of the first line; phone: centre of the visible window
   cell: number;                  // cell size
   vertical: boolean;             // (legacy two-column phone track, unused)
@@ -22,17 +23,18 @@ export interface Layout {
 /** The opponent's board is intentionally smaller than the player's own board.
  *  Phones (portrait): opponent board on top, a zoomed scrolling strip of the time track in the middle, my board below.
  *  Desktop (landscape): boards side by side, the whole time track below. */
-export function computeLayout(aspect: number): Layout {
-  const n = TRACK_LENGTH + 1;
+export function computeLayout(aspect: number, len: number = TRACK_LENGTH, solo = false): Layout {
+  const n = len + 1;
   if (aspect >= 1.1) {
     const lineLen = Math.ceil(n / 3), lines = 3;
     const cell = Math.min(0.8, 16 / lineLen), across = cell * 1.12, y = -6.3;
     return {
       landscape: true, w: 18.8, h: 13.9, cx: 0, cy: -1.75,
       my: { x: -3.75, y: 0, scale: 1 }, opp: { x: 5.7, y: 0.4, scale: 0.6 },
-      info: { x0: 5.7 - 3.12, x1: 5.7 + 3.12, y0: -5.55, y1: 0.4 - 3.12 - 0.25 },
+      // a story level has no opponent board: the goals take its place
+      info: solo ? { x0: 5.7 - 3.12, x1: 5.7 + 3.12, y0: -5.55, y1: 0.4 + 3.12 } : { x0: 5.7 - 3.12, x1: 5.7 + 3.12, y0: -5.55, y1: 0.4 - 3.12 - 0.25 },
       track: {
-        x: 0, y, cell, vertical: false, window: 0, lineLen, lines, step: cell, across,
+        len, x: 0, y, cell, vertical: false, window: 0, lineLen, lines, step: cell, across,
         plate: { x: 0, y: y - ((lines - 1) * across) / 2, w: lineLen * cell + 0.75, h: (lines - 1) * across + cell + 0.65 },
       },
     };
@@ -50,9 +52,9 @@ export function computeLayout(aspect: number): Layout {
     landscape: false, w: 11.2, h: top - bottom + 0.5, cx: 0, cy: (top + bottom) / 2,
     // the opponent board sits on the right, the player panels fill the space on its left
     my: { x: 0, y: 0, scale: 1 }, opp: { x: 5.6 - 5.2 * oppScale - 0.15, y: oy, scale: oppScale },
-    info: { x0: -5.5, x1: 5.6 - 2 * 5.2 * oppScale - 0.45, y0: oy - 5.2 * oppScale, y1: oy + 5.2 * oppScale },
+    info: { x0: -5.5, x1: solo ? 5.5 : 5.6 - 2 * 5.2 * oppScale - 0.45, y0: oy - 5.2 * oppScale, y1: oy + 5.2 * oppScale },
     track: {
-      x: tx, y: ty, cell, vertical: false, window: win, lineLen: n, lines: 1, step, across: 0,
+      len, x: tx, y: ty, cell, vertical: false, window: win, lineLen: n, lines: 1, step, across: 0,
       plate: { x: tx, y: ty, w: plateW, h: plateH },
     },
   };
@@ -74,7 +76,7 @@ export function trackCoord(l: Layout, i: number, scroll = 0): [number, number] {
   return [t.x + (col - (t.lineLen - 1) / 2) * t.step, t.y - row * t.across];
 }
 export function trackCoordFrac(l: Layout, f: number, scroll = 0): [number, number] {
-  const i0 = Math.floor(f), i1 = Math.min(TRACK_LENGTH, i0 + 1), t = f - i0;
+  const i0 = Math.floor(f), i1 = Math.min(l.track.len, i0 + 1), t = f - i0;
   const a = trackCoord(l, i0, scroll), b = trackCoord(l, i1, scroll);
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 }
@@ -91,5 +93,5 @@ export function windowTarget(l: Layout, a: number, b: number, current: number): 
   const half = (l.track.window - 1) / 2;
   const lo = Math.min(a, b), hi = Math.max(a, b);
   const c = hi - lo <= l.track.window - 2 ? (lo + hi) / 2 : current + half - 1;
-  return Math.max(half, Math.min(TRACK_LENGTH - half, c));
+  return Math.max(half, Math.min(l.track.len - half, c));
 }

@@ -1,5 +1,4 @@
 import { Suspense, lazy, useEffect } from 'react';
-import { TRACK_LENGTH } from '../../../shared/src';
 import { OfferPanel, TurnScroll } from '../components/OfferPanel';
 import { PlayerPanels } from '../components/Seats';
 import { GameMenu } from '../components/GameMenu';
@@ -12,10 +11,9 @@ import { resign, send } from '../net';
 import { flipHorizontal, flipVertical, resetSel, rotate, selectOffer, useStore } from '../store';
 import { confirmPlacement } from '../actions';
 import { PlaceBar } from '../components/PlaceBar';
-import { TutorialCoach } from '../components/TutorialCoach';
+import { GoalsPanel, LevelCoach, LevelEnd } from '../components/StoryUI';
 
 const GameCanvas = lazy(() => import('../three/GameCanvas'));
-void TRACK_LENGTH;
 
 export default function GameScreen() {
   const t = useT();
@@ -58,20 +56,21 @@ export default function GameScreen() {
         <Ribbon />
         <RewardCardFx />
         <Popup />
-        <PlayerPanels />
+        {game.solo ? <GoalsPanel /> : <PlayerPanels />}
         <GameMenu />
-        <TutorialCoach />
+        {game.solo && <LevelCoach />}
+        {game.solo && <LevelEnd />}
         {conn === 'reconnecting' && <div className="overlay soft"><div className="modal small">{t('game.reconnecting')}</div></div>}
-        {game.phase === 'finished' && <div className="overlay soft"><div className="modal small">{t('game.over')}</div></div>}
+        {game.phase === 'finished' && !game.solo && <div className="overlay soft"><div className="modal small">{t('game.over')}</div></div>}
       </section>
       <OfferPanel />
       <DragGhost />
       {confirm && (
         <div className="overlay" onClick={() => useStore.setState({ confirmResign: false })}>
           <div className="modal small" onClick={(e) => e.stopPropagation()}>
-            <h3>{t('game.resignTitle')}</h3>
-            <p className="muted">{t('game.resignText')}</p>
-            <div className="row"><button className="btn danger" onClick={resign}>{t('game.resign')}</button><button className="btn ghost" onClick={() => useStore.setState({ confirmResign: false })}>{t('game.keep')}</button></div>
+            <h3>{t(game.solo ? 'lvl.leaveTitle' : 'game.resignTitle')}</h3>
+            <p className="muted">{t(game.solo ? (game.solo.level > 10 ? 'lvl.leaveTextLife' : 'lvl.leaveText') : 'game.resignText')}</p>
+            <div className="row"><button className="btn danger" onClick={resign}>{t(game.solo ? 'lvl.leave' : 'game.resign')}</button><button className="btn ghost" onClick={() => useStore.setState({ confirmResign: false })}>{t('game.keep')}</button></div>
           </div>
         </div>
       )}

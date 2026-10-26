@@ -6,7 +6,9 @@ import { pushRibbon, pushToast, resetSel, setSel, useStore } from './store';
 import { TRAUMA, addTrauma } from './three/shake';
 import { nearestValid } from './three/placement';
 import { tr, trErr } from './i18n';
-import { LocalSession } from './local';
+import { LevelSession, LocalSession } from './local';
+import type { LevelDef, SoloAction } from '../../shared/src';
+import type { Attempt } from './story';
 import { addToCollection } from './museum';
 import { matchToken, syncProgress } from './account';
 import { GameSummary, newlyUnlocked } from './achievements';
@@ -49,25 +51,21 @@ let lastEventId = 0;
 let finalized = false;
 let gotFirst = false;
 let local: LocalSession | null = null;   // offline game running inside the app
+let level: LevelSession | null = null;   // story level running inside the app
 let mine = { treasures: 0, treasureCoins: 0, rewards: 0 }; // my counts in the current game (for stats / achievements)
 
-/** The scripted first-launch tutorial: a bot game where every move is planned (see tutorial.ts). */
-export function startTutorial() {
-  void startSearch(true, true);
-}
-
-export async function startSearch(solo: boolean, tutorial = false) {
+export async function startSearch(solo: boolean) {
   const my = ++token;
   leaveRoom();
   leaving = false; finalized = false; lastEventId = 0; gotFirst = false; mine = { treasures: 0, treasureCoins: 0, rewards: 0 };
   const st = useStore.getState();
   useStore.setState({
     screen: 'matchmaking', game: null, result: null, connection: 'ok', popups: [], fx: [], pendingFx: {}, drag: null, orient: {}, rotAnim: null,
-    match: { status: 'connecting', solo, waitMs: 0, startedAt: Date.now() }, tutorial: tutorial ? { coinsSeen: false } : null,
+    match: { status: 'connecting', solo, waitMs: 0, startedAt: Date.now() },
   });
   resetSel();
   // Playing against a bot never needs the server: it runs on this device.
-  if (solo) return startLocal(my, false, tutorial);
+  if (solo) return startLocal(my, false);
   if (!getWsUrl()) return startLocal(my, true);
   try {
     client = new Client(getWsUrl());
@@ -83,8 +81,27 @@ export async function startSearch(solo: boolean, tutorial = false) {
   }
 }
 
+/** A story level: straight into the game screen (no matchmaking), one board against the pacer. */
+export function startLevelGame(def: LevelDef, attempt: Attempt) {
+  ++token;
+  leaveRoom();
+  leaving = false; finalized = false; lastEventId = 0; gotFirst = false; mine = { treasures: 0, treasureCoins: 0, rewards: 0 };
+  const st = useStore.getState();
+  const session = new LevelSession(def, attempt, st.profile.name, (g) => onState(g, null), (m) => { pushToast(trErr(m), 'bad'); sfx.bad(); });
+  level = session;
+  useStore.setState({
+    screen: 'game', game: null, result: null, connection: 'ok', popups: [], fx: [], pendingFx: {}, drag: null, orient: {}, rotAnim: null,
+    mySeat: 0, oppIntent: null, oppLog: null, toolMode: null,
+    match: { status: 'idle', solo: true, waitMs: 0, startedAt: 0 }, levelPlay: { id: def.id, attempt, end: null },
+  });
+  resetSel();
+  onState(session.snapshot(), null);
+}
+/** The actions of the level being played, in order (for the server's replay). */
+export const levelActions = (): SoloAction[] => [...(level?.actions ?? [])];
+
 /** Offline bot game. `fallback` = the player asked for an online match but no server could be reached. */
-function startLocal(my: number, fallback: boolean, tutorial = false) {
+function startLocal(my: number, fallback: boolean) {
   const st = useStore.getState();
   const session = new LocalSession({
     human: { name: st.profile.name, isBot: false, level: profileLevel(st.profile), rating: st.profile.rating },
@@ -92,10 +109,6 @@ function startLocal(my: number, fallback: boolean, tutorial = false) {
     deliver: (g) => onState(g, null),
     onError: (m) => { pushToast(trErr(m), 'bad'); sfx.bad(); },
     onIntent: (seat, action) => useStore.setState({ oppIntent: { seat, action } }),
-    tutorial: tutorial ? {
-      coinsSeen: () => !!useStore.getState().tutorial?.coinsSeen,
-      onBlocked: (key) => { pushToast(tr(key), 'warn'); sfx.bad(); },
-    } : undefined,
   });
   local = session;
   onState(session.snapshot(), null);
@@ -186,7 +199,10 @@ function onState(g: GameState, turnLeft: number | null) {
           break;
         case 'reward': if (e.seat === st.mySeat) mine.rewards++; useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'reward', coins: 0 }; break;
         case 'bonus7': pushRibbon(tr('rib.bonus7'), 'big', tr('toast.bonus7', { name: nameOf(g, e.seat) })); sfx.bonus(); addTrauma(TRAUMA.large); break;
+        case 'gold': sfx.coin(); break;
+        case 'tool': sfx.place(); addTrauma(TRAUMA.small); break;
         case 'turn':
+          if (g.solo) break; // the pacer's turn takes no time: nothing to announce
           // the hand-over is the rule players miss most, so it is always announced in words
           // the hand-over is the rule players miss most: a big banner every time
           if (e.seat === st.mySeat) { sfx.turn(); pushRibbon(tr('rib.yourTurn'), 'mine'); }
@@ -206,12 +222,20 @@ function onState(g: GameState, turnLeft: number | null) {
   if (g.phase === 'placing_reward' && g.current === st.mySeat && !useStore.getState().sel.hover) {
     setSel({ hover: nearestValid(g, st.mySeat, useStore.getState().sel) });
   }
+  if (g.solo) {
+    // a level ends when its outcome is known; a continue opens it again
+    if (g.solo.outcome && !finalized) {
+      finalized = true;
+      const outcome = g.solo.outcome;
+      setTimeout(() => useStore.setState((s) => ({ levelPlay: s.levelPlay && { ...s.levelPlay, end: { outcome } } })), outcome === 'won' ? 900 : 1200);
+    } else if (!g.solo.outcome) finalized = false;
+    return;
+  }
   if (g.phase === 'finished' && !finalized) finalize(g);
 }
 
 function finalize(g: GameState) {
   finalized = true;
-  if (useStore.getState().tutorial) { backToMenu(); return; } // leaving the tutorial early: no result, no stats
   const st = useStore.getState();
   const me = st.mySeat;
   const won = g.result!.winner === me;
@@ -251,16 +275,26 @@ function finalize(g: GameState) {
 export function leaveRoom() {
   leaving = true;
   local?.stop(); local = null;
+  level?.stop(); level = null;
   try { room?.leave(); } catch { /* ignore */ }
   room = null;
 }
 export function cancelSearch() { token++; leaveRoom(); useStore.setState({ screen: 'menu', match: { status: 'idle', solo: false, waitMs: 0, startedAt: 0 } }); }
-export function backToMenu() { token++; leaveRoom(); useStore.setState({ screen: 'menu', game: null, result: null, confirmResign: false, tutorial: null, match: { status: 'idle', solo: false, waitMs: 0, startedAt: 0 } }); resetSel(); }
-export function resign() { if (local) local.resign(); else room?.send('resign'); useStore.setState({ confirmResign: false }); }
+export function backToMenu() { token++; leaveRoom(); useStore.setState({ screen: 'menu', game: null, result: null, confirmResign: false, match: { status: 'idle', solo: false, waitMs: 0, startedAt: 0 } }); resetSel(); }
+export function resign() {
+  useStore.setState({ confirmResign: false });
+  // leaving a level: it counts as lost (no life is taken before the first move)
+  if (level) { useStore.setState((s) => ({ levelPlay: s.levelPlay && { ...s.levelPlay, end: { outcome: 'lost', quit: true } } })); return; }
+  if (local) local.resign(); else room?.send('resign');
+}
+/** Back to the story map (after a level, or from the battle menu). */
+export function backToMap() { backToMenu(); useStore.setState({ screen: 'map', levelPlay: null, toolMode: null }); }
 
 export const send = {
-  advance: () => (local ? local.act({ t: 'advance' }) : room?.send('advance')),
-  buy: (offer: number, cells: [number, number][]) => (local ? local.act({ t: 'buy', offer, cells }) : room?.send('buy', { offer, cells })),
-  reward: (r: number, c: number) => (local ? local.act({ t: 'reward', r, c }) : room?.send('reward', { r, c })),
+  advance: () => (level ? level.act({ t: 'advance' }) : local ? local.act({ t: 'advance' }) : room?.send('advance')),
+  buy: (offer: number, cells: [number, number][]) => (level ? level.act({ t: 'buy', offer, cells }) : local ? local.act({ t: 'buy', offer, cells }) : room?.send('buy', { offer, cells })),
+  reward: (r: number, c: number) => (level ? level.act({ t: 'reward', r, c }) : local ? local.act({ t: 'reward', r, c }) : room?.send('reward', { r, c })),
+  /** story levels only: tools, finishing early, a continue */
+  solo: (a: SoloAction) => level?.act(a),
 };
 void levelFromXp;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { BOARD_SIZE, COIN_SCORE_DIVISOR, EMPTY_CELL_PENALTY, Seat, TRACK_LENGTH, TURN_SECONDS, scoreOf } from '../../../shared/src';
+import { BOARD_SIZE, COIN_SCORE_DIVISOR, EMPTY_CELL_PENALTY, Seat, TURN_SECONDS, scoreOf, trackLen } from '../../../shared/src';
 import { useT } from '../i18n';
 import { avatarFor, avatarUrl, isHero } from './Medal';
 import { useStore } from '../store';
@@ -78,7 +78,7 @@ export function SeatStats({ seat, compact = false }: { seat: Seat; compact?: boo
           {sc.bonus > 0 && <div><span>{t('res.bonus')}</span><b className="num">+{sc.bonus}</b></div>}
           <div><span>{t('res.empty', { n: sc.emptyCells, p: EMPTY_CELL_PENALTY })}</span><b className="num" dir="ltr">−{sc.penalty}</b></div>
           <div className="dtotal"><span>{t('res.final')}</span><b className="num" dir="ltr">{sc.total}</b></div>
-          <div><span>{t('hud.position')}</span><b className="num">{p.pos}/{TRACK_LENGTH}</b></div>
+          <div><span>{t('hud.position')}</span><b className="num">{p.pos}/{trackLen(g)}</b></div>
           <div><span>{t('hud.filled')}</span><b className="num">{BOARD_SIZE * BOARD_SIZE - sc.emptyCells}/{BOARD_SIZE * BOARD_SIZE}</b></div>
         </div>
       )}

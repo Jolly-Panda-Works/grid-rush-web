@@ -170,7 +170,7 @@ export function SaveReminder() {
   const screen = useStore((s) => s.screen);
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    if (screen !== 'menu' || !account || account.linked) return;
+    if ((screen !== 'menu' && screen !== 'map') || !account || account.linked) return;
     if (profile.stats.games < 5 && levelFromXp(profile.xp) < 5) return;
     try { if (localStorage.getItem(REMIND_KEY)) return; localStorage.setItem(REMIND_KEY, '1'); } catch { return; }
     setOpen(true);

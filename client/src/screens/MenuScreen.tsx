@@ -3,8 +3,8 @@ import { Logo } from '../components/Logo';
 import { Medal } from '../components/Medal';
 import { levelProgress } from '../../../shared/src';
 import { useT } from '../i18n';
-import { startSearch, startTutorial } from '../net';
-import { tutorialDone } from '../tutorial';
+import { startSearch } from '../net';
+import { MainNav } from '../components/StoryUI';
 import { profileLevel } from '../profile';
 import { needServer, useStore } from '../store';
 
@@ -14,8 +14,8 @@ export default function MenuScreen() {
   const t = useT();
   const profile = useStore((s) => s.profile);
   const online = useStore((s) => s.serverOnline);
-  const firstTime = !tutorialDone();
   const account = useStore((s) => s.account);
+  const unlocked = useStore((s) => s.story.unlocked); // the bottom bar has these then
   const lp = levelProgress(profile.xp);
   return (
     <main className="screen menu lobby">
@@ -34,8 +34,7 @@ export default function MenuScreen() {
       </div>
 
       <div className="playtiles">
-        {firstTime && <div className="coach-hint">{t('tut.play.hint')}</div>}
-        <button className={'btn primary playtile' + (firstTime ? ' tut-glow' : '')} onClick={() => (firstTime ? startTutorial() : startSearch(true))}>
+        <button className="btn primary playtile" onClick={() => startSearch(true)}>
           <span className="pt-ico" aria-hidden="true"><Icon id="play" size={40} /></span>
           <span className="pt-txt"><b>{t('menu.bot')}</b><small>{t('menu.botSub')}</small></span>
         </button>
@@ -49,13 +48,16 @@ export default function MenuScreen() {
       </div>
 
       <nav className="navtiles">
+        {!unlocked && <>
         <button className={'navtile' + (online ? '' : ' needsrv')} onClick={() => needServer('off.what.lb', () => useStore.setState({ screen: 'leaderboard' }))}><span className="nt-ico"><Icon id="trophy" size={34} /></span><span>{t('lb.short')}</span></button>
         <button className={'navtile' + (online ? '' : ' needsrv')} onClick={() => needServer('off.what.fr', () => useStore.setState({ screen: 'friends' }))}><span className="nt-ico"><Icon id="friends" size={34} /></span><span>{t('fr.title')}</span></button>
         <button className="navtile" onClick={() => useStore.setState({ screen: 'museum' })}><span className="nt-ico"><Icon id="museum" size={34} /></span><span>{t('museum.title')}</span></button>
+        </>}
         <button className="navtile" onClick={() => useStore.setState({ showHelp: true })}><span className="nt-ico"><Icon id="quests" size={34} /></span><span>{t('menu.how')}</span></button>
         <button className="navtile" onClick={() => useStore.setState({ showSettings: true })}><span className="nt-ico"><Icon id="settings" size={34} /></span><span>{t('menu.settings')}</span></button>
       </nav>
       <div className="version num" dir="ltr" data-latin>v{__APP_VERSION__}</div>
+      <MainNav />
     </main>
   );
 }

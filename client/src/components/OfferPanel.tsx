@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { TRACK_LENGTH, TileDef, canPlaceAny, transformCells } from '../../../shared/src';
+import { TileDef, canPlaceAny, trackLen, transformCells } from '../../../shared/src';
 import { Forecast, advanceSteps, useForecast } from '../forecast';
 import { iconUrl } from '../three/icons';
 import { useT, tr } from '../i18n';
@@ -68,7 +68,7 @@ export function OfferPanel() {
   };
 
   const advSteps = advanceSteps(g, mySeat);
-  const advEnds = me.pos + advSteps >= TRACK_LENGTH;
+  const advEnds = me.pos + advSteps >= trackLen(g);
   const setAdv = (on: boolean) => { if (useStore.getState().advPreview !== on) useStore.setState({ advPreview: on }); };
   // tap a card = take it (it appears on your board); tap it again = place it where it is shown
   const select = (i: number) => { if (sel.offer === i) { confirmPlacement(); return; } sfx.select(); selectOffer(i); };
@@ -160,7 +160,8 @@ export function TurnScroll() {
 /** Plain-language result of the action being previewed (mine) or announced (the opponent's): who plays next, plus what it collects or ends. */
 function Outcome({ fc, oppName, mine, lead }: { fc: Forecast; oppName: string; mine: boolean; lead?: string }) {
   const t = useT();
-  const next = mine ? (fc.passes ? t('out.pass', { name: oppName }) : t('out.keep')) : (fc.passes ? t('out.yourNext') : t('out.oppAgain', { name: oppName }));
+  const solo = !!useStore((s) => s.game?.solo);
+  const next = mine ? (fc.passes ? (solo ? t('out.pacer') : t('out.pass', { name: oppName })) : t('out.keep')) : (fc.passes ? t('out.yourNext') : t('out.oppAgain', { name: oppName }));
   return (
     <span className="outcome">
       {lead && <span className="olead">{lead}</span>}

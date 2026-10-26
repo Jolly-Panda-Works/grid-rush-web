@@ -1,7 +1,7 @@
 import { memo, useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { REWARD_POSITIONS, Seat, TRACK_LENGTH, TREASURE_POSITIONS } from '../../../shared/src';
+import { Seat, rewardsOf, treasuresOf } from '../../../shared/src';
 import { pushRewardCard, removeFx, spawnFx, useStore } from '../store';
 import { C, PLAYER_COLORS, UI } from './colors';
 import { cellTexture } from './icons';
@@ -26,16 +26,17 @@ const cellBox = (cell: number) => { let b = boxes.get(cell); if (!b) { b = new T
 
 /** A track cell. It re-renders only when its own preview mark changes; all animation runs in TrackView's single frame loop. */
 const TrackCell = memo(function TrackCell({ i, layout, mark, hit, who, slot }: { i: number; layout: Layout; mark: PathMark; hit: boolean; who: Seat; slot: Slot }) {
-  const reward = useStore((s) => { const ri = REWARD_POSITIONS.indexOf(i); return ri >= 0 && !s.game!.rewardTaken[ri]; });
+  const reward = useStore((s) => { const ri = rewardsOf(s.game!).indexOf(i); return ri >= 0 && !s.game!.rewardTaken[ri]; });
   const cell = layout.track.cell;
-  const treasure = TREASURE_POSITIONS.includes(i);
-  const finish = i === TRACK_LENGTH;
+  const treasure = useStore((s) => treasuresOf(s.game!).includes(i));
+  const len = layout.track.len;
+  const finish = i === len;
   const base = useMemo(() => {
     if (finish) return '#E9DDF0';
     if (treasure) return '#FFE08A';
     if (reward) return '#BDEBD2';
-    return NORMAL.clone().lerp(END_TINT, (i / TRACK_LENGTH) * 0.9).getStyle();
-  }, [i, finish, treasure, reward]);
+    return NORMAL.clone().lerp(END_TINT, (i / len) * 0.9).getStyle();
+  }, [i, len, finish, treasure, reward]);
   // Treasure = chest, reward = 1x1 tile, finish = checkered flag; numbers on every cell (desktop) or every 5th (phone).
   const big = layout.track.vertical || layout.track.window > 0;
   const tex = useMemo(() => cellTexture(finish ? 'flag' : treasure ? 'chest' : reward ? 'reward' : null, i, big ? 'five' : 'all'), [i, finish, treasure, reward, big]);
@@ -62,7 +63,22 @@ const TrackCell = memo(function TrackCell({ i, layout, mark, hit, who, slot }: {
   );
 });
 
-function MarkerMesh({ seat, cell, ghost = false }: { seat: Seat; cell: number; ghost?: boolean }) {
+/** The pacer of a story level: a bronze hourglass (seen from above, so a flat silhouette with a little depth). */
+const HOURGLASS = new Map<number, THREE.ExtrudeGeometry>();
+function hourglassGeo(cell: number) {
+  let g = HOURGLASS.get(cell);
+  if (g) return g;
+  const w = cell * 0.24, h = cell * 0.3, s = cell * 0.05;
+  const sh = new THREE.Shape();
+  sh.moveTo(-w, h); sh.lineTo(w, h); sh.lineTo(s, 0); sh.lineTo(w, -h); sh.lineTo(-w, -h); sh.lineTo(-s, 0); sh.closePath();
+  g = new THREE.ExtrudeGeometry(sh, { depth: 0.3, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 1 });
+  g.translate(0, 0, -0.15);
+  HOURGLASS.set(cell, g);
+  return g;
+}
+
+function MarkerMesh({ seat, cell, ghost = false, pacer = false }: { seat: Seat; cell: number; ghost?: boolean; pacer?: boolean }) {
+  if (pacer) return <mesh geometry={hourglassGeo(cell)}><meshStandardMaterial color="#B07A3A" metalness={0.5} roughness={0.35} emissive="#4a2a00" emissiveIntensity={0.3} /></mesh>;
   const color = PLAYER_COLORS[seat];
   const mat = <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.25} transparent={ghost} opacity={ghost ? 0.5 : 1} depthWrite={!ghost} />;
   return seat === 0
@@ -120,7 +136,8 @@ function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
     const pulse = active && !s.settings.reduceMotion ? 1 + 0.12 * Math.sin(st.clock.elapsedTime * 5) : 1;
     ref.current.scale.setScalar(pulse * (active ? 1.12 : 0.95));
   });
-  return <group ref={ref}><MarkerMesh seat={seat} cell={cell} /></group>;
+  const pacer = useStore((s) => !!s.game?.solo) && seat === 1;
+  return <group ref={ref}><MarkerMesh seat={seat} cell={cell} pacer={pacer} /></group>;
 }
 
 /** Semi-transparent copy of a marker where the previewed (or announced) action would put it. */
@@ -169,7 +186,7 @@ function FxLayer() {
 }
 
 export function TrackView({ layout }: { layout: Layout }) {
-  const cells = useMemo(() => Array.from({ length: TRACK_LENGTH + 1 }, (_, i) => i), []);
+  const cells = useMemo(() => Array.from({ length: layout.track.len + 1 }, (_, i) => i), [layout.track.len]);
   const { plate } = layout.track;
   const fc = useForecast();
   const slots = useMemo<Slot[]>(() => cells.map(() => ({ g: null, hl: null, mark: null, hit: false })), [cells]);

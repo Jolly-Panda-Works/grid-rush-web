@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useT } from '../i18n';
-import { startTutorial } from '../net';
+import { openLevel } from '../levelFlow';
 import { useStore } from '../store';
 import { AccountSection } from './AccountUI';
 import { Icon, IconId } from '../art';
@@ -50,7 +50,7 @@ export function SettingsModal() {
         <h3>{t('settings.title')}</h3>
         <button className="mclose" onClick={close} aria-label={t('settings.close')}>✕</button>
         <div className="mscroll">
-          <button className="btn primary wide" onClick={() => { useStore.setState({ showSettings: false }); startTutorial(); }}><Icon id="play" size={24} />{t('set.tutorial')}</button>
+          <button className="btn primary wide" onClick={() => { useStore.setState({ showSettings: false, screen: 'map' }); openLevel(1); }}><Icon id="play" size={24} />{t('set.tutorial')}</button>
           <button className="btn wide" onClick={() => useStore.setState({ showSettings: false, showHelp: true })}><Icon id="quests" size={24} />{t('menu.how')}</button>
           <div className="setrow">
             <span className="tr-ico" aria-hidden="true"><Icon id="language" size={26} /></span>
