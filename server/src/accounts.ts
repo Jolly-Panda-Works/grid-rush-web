@@ -2,10 +2,12 @@ import crypto from 'crypto';
 import express, { NextFunction, Request, Response, Router } from 'express';
 import { DEFAULT_RATING, eloDelta, levelFromXp } from '../../shared/src';
 import { db, tx } from './db';
+import { maskEmail, sendLoginCode } from './mailer';
 
 /**
  * Accounts. Every player starts as a guest (a server account bound to a random token kept on the device) and can
- * link a Google Play Games account so the same profile works on any phone.
+ * attach sign-in methods (an email with one-time codes, Google Play Games) so the same profile works on any phone.
+ * See docs/accounts.md.
  * The device owns progress (XP, wins, stats, achievements) and sends it here; the rating is owned by the server
  * and only changes in online matches, so the leaderboard cannot be pushed up from a phone.
  */
@@ -15,6 +17,8 @@ export interface UserRow {
 }
 
 const ONLINE_MS = 2 * 60_000;
+const SESSION_IDLE_MS = 180 * 24 * 3600_000; // a session unused for 180 days has expired
+const CODE_TTL_MS = 10 * 60_000, CODE_MAX_TRIES = 5, RESEND_S = 60;
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O, 1/I
 
 const hash = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
@@ -37,7 +41,23 @@ export function newSession(userId: string): string {
 
 export function userByToken(token: unknown): UserRow | null {
   if (typeof token !== 'string' || token.length < 20 || token.length > 100) return null;
-  return (db.prepare('SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?').get(hash(token)) as UserRow | undefined) ?? null;
+  return (db.prepare('SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND COALESCE(s.last_used, s.created_at) > ?')
+    .get(hash(token), Date.now() - SESSION_IDLE_MS) as UserRow | undefined) ?? null;
+}
+
+/** The sign-in methods of an account, as the player may see them (never the full email). */
+function logins(userId: string) {
+  const rows = db.prepare('SELECT provider, subject FROM identities WHERE user_id = ?').all(userId) as { provider: string; subject: string }[];
+  const email = rows.find((r) => r.provider === 'email')?.subject;
+  return { ...(email ? { email: maskEmail(email) } : {}), google: rows.some((r) => r.provider === 'google') };
+}
+const ownerOf = (provider: string, subject: string) =>
+  (db.prepare('SELECT u.* FROM identities i JOIN users u ON u.id = i.user_id WHERE i.provider = ? AND i.subject = ?').get(provider, subject) as UserRow | undefined) ?? null;
+function attach(provider: string, subject: string, userId: string) {
+  tx(() => {
+    db.prepare('DELETE FROM identities WHERE provider = ? AND user_id = ?').run(provider, userId); // one email / one Google per account
+    db.prepare('INSERT INTO identities (provider, subject, user_id, created_at) VALUES (?, ?, ?, ?)').run(provider, subject, userId, Date.now());
+  });
 }
 export const userById = (id: string) => (db.prepare('SELECT * FROM users WHERE id = ?').get(id) as UserRow | undefined) ?? null;
 
@@ -45,8 +65,12 @@ export const userById = (id: string) => (db.prepare('SELECT * FROM users WHERE i
 export function selfView(u: UserRow) {
   return {
     id: u.id, name: u.name, avatar: u.avatar, xp: u.xp, level: levelFromXp(u.xp), rating: u.rating, ratedGames: u.rated_games,
-    wins: u.wins, losses: u.losses, stats: JSON.parse(u.stats), ach: JSON.parse(u.ach), friendCode: u.friend_code, linked: !!u.google_id,
+    wins: u.wins, losses: u.losses, stats: JSON.parse(u.stats), ach: JSON.parse(u.ach), friendCode: u.friend_code, ...withLogins(u.id),
   };
+}
+function withLogins(userId: string) {
+  const l = logins(userId);
+  return { logins: l, linked: !!l.email || l.google };
 }
 /** What other players may see (friends, leaderboard, public profile). */
 export function publicView(u: UserRow) {
@@ -56,26 +80,32 @@ export function publicView(u: UserRow) {
   };
 }
 
-export interface AuthedRequest extends Request { user?: UserRow }
+export interface AuthedRequest extends Request { user?: UserRow; tokenHash?: string }
 /** Requires "Authorization: Bearer <token>". */
 export function auth(req: AuthedRequest, res: Response, next: NextFunction) {
   const m = /^Bearer (.+)$/.exec(req.headers.authorization ?? '');
   const u = userByToken(m?.[1]);
   if (!u) return res.status(401).json({ error: 'not signed in' });
-  db.prepare('UPDATE users SET last_seen = ? WHERE id = ?').run(Date.now(), u.id);
+  const now = Date.now();
+  db.prepare('UPDATE users SET last_seen = ? WHERE id = ?').run(now, u.id);
+  req.tokenHash = hash(m![1]);
+  db.prepare('UPDATE sessions SET last_used = ? WHERE token_hash = ?').run(now, req.tokenHash);
   req.user = u;
   next();
 }
 
-/** Small per-IP limiter for account creation. */
+/** Small in-memory rate limiter (one server is enough; several servers would need it in the database). */
 const hits = new Map<string, number[]>();
-function limited(req: Request, max: number, perMs: number): boolean {
-  const key = req.ip ?? '?', now = Date.now();
+function limited(req: Request, max: number, perMs: number, key = 'ip:' + (req.ip ?? '?')): boolean {
+  const now = Date.now();
   const list = (hits.get(key) ?? []).filter((t) => now - t < perMs);
   list.push(now);
   hits.set(key, list);
   return list.length > max;
 }
+
+/** Tests only: forget the rate-limit counters. */
+export function resetRateLimits() { hits.clear(); }
 
 /** Progress a device reports. Values never go backwards (another device may have an older copy). */
 function applyProgress(u: UserRow, body: Record<string, unknown>) {
@@ -146,14 +176,86 @@ export function accountsRouter(): Router {
       if (!code) return res.status(400).json({ error: 'missing code' });
       const g = await googlePlayerId(code);
       if (!g) return res.status(401).json({ error: 'Google rejected the sign-in' });
-      const owner = db.prepare('SELECT * FROM users WHERE google_id = ?').get(g.id) as UserRow | undefined;
-      if (owner && owner.id !== req.user!.id) return res.json({ switched: true, token: newSession(owner.id), user: selfView(owner) });
-      db.prepare('UPDATE users SET google_id = ?, updated_at = ? WHERE id = ?').run(g.id, Date.now(), req.user!.id);
+      const owner = ownerOf('google', g.id);
+      if (owner && owner.id !== req.user!.id) return res.json({ switched: true, token: newSession(owner.id), user: selfView(owner), other: otherView(owner) });
+      attach('google', g.id, req.user!.id);
       res.json({ switched: false, user: selfView(userById(req.user!.id)!) });
     } catch (e) {
       res.status((e as { status?: number }).status ?? 500).json({ error: (e as Error).message });
     }
   });
 
+  // ---- email with one-time codes ----
+  r.post('/auth/email/start', auth, async (req: AuthedRequest, res: Response) => {
+    const email = normEmail(req.body?.email);
+    if (!email) return res.status(400).json({ error: 'bad email' });
+    // the same answer whether or not the email has an account, so nobody can probe which emails play
+    if (limited(req, 1, 60_000, 'mail1:' + email) || limited(req, 5, 3600_000, 'mailh:' + email) || limited(req, 10, 3600_000, 'mailip:' + (req.ip ?? '?'))) {
+      return res.status(429).json({ error: 'too many codes', resendIn: RESEND_S });
+    }
+    const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
+    const now = Date.now();
+    db.prepare(`INSERT INTO login_codes (email, code_hash, expires_at, attempts, sent_at) VALUES (?, ?, ?, 0, ?)
+      ON CONFLICT(email) DO UPDATE SET code_hash = excluded.code_hash, expires_at = excluded.expires_at, attempts = 0, sent_at = excluded.sent_at`)
+      .run(email, hash(email + ':' + code), now + CODE_TTL_MS, now);
+    try { await sendLoginCode(email, code, req.body?.lang === 'fa' ? 'fa' : 'en'); } catch (e) {
+      console.error('[mail] sending failed', e);
+      return res.status(502).json({ error: 'could not send the email' });
+    }
+    res.json({ ok: true, resendIn: RESEND_S });
+  });
+
+  r.post('/auth/email/verify', auth, (req: AuthedRequest, res: Response) => {
+    const email = normEmail(req.body?.email);
+    const code = typeof req.body?.code === 'string' ? req.body.code.trim() : '';
+    if (!email || !/^\d{6}$/.test(code)) return res.status(400).json({ error: 'bad code' });
+    if (limited(req, 30, 3600_000, 'verify:' + (req.ip ?? '?'))) return res.status(429).json({ error: 'too many tries' });
+    const row = db.prepare('SELECT * FROM login_codes WHERE email = ?').get(email) as { code_hash: string; expires_at: number; attempts: number } | undefined;
+    if (!row || row.expires_at < Date.now() || row.attempts >= CODE_MAX_TRIES) return res.status(401).json({ error: 'code expired' });
+    const ok = crypto.timingSafeEqual(Buffer.from(row.code_hash, 'hex'), Buffer.from(hash(email + ':' + code), 'hex'));
+    if (!ok) {
+      db.prepare('UPDATE login_codes SET attempts = attempts + 1 WHERE email = ?').run(email);
+      return res.status(401).json({ error: 'wrong code', triesLeft: Math.max(0, CODE_MAX_TRIES - row.attempts - 1) });
+    }
+    db.prepare('DELETE FROM login_codes WHERE email = ?').run(email); // one use only
+    const owner = ownerOf('email', email);
+    if (owner && owner.id !== req.user!.id) return res.json({ switched: true, token: newSession(owner.id), user: selfView(owner), other: otherView(owner) });
+    attach('email', email, req.user!.id);
+    res.json({ switched: false, user: selfView(userById(req.user!.id)!) });
+  });
+
+  // ---- unlink, sign out, delete ----
+  const unlink = (provider: string) => (req: AuthedRequest, res: Response) => {
+    db.prepare('DELETE FROM identities WHERE provider = ? AND user_id = ?').run(provider, req.user!.id); // other sessions stay signed in
+    res.json({ user: selfView(userById(req.user!.id)!) });
+  };
+  r.delete('/auth/email', auth, unlink('email'));
+  r.delete('/auth/google', auth, unlink('google'));
+  r.post('/auth/logout', auth, (req: AuthedRequest, res: Response) => {
+    db.prepare('DELETE FROM sessions WHERE token_hash = ?').run(req.tokenHash!);
+    res.json({ ok: true });
+  });
+  r.delete('/me', auth, (req: AuthedRequest, res: Response) => {
+    if (req.body?.confirm !== 'DELETE') return res.status(400).json({ error: 'confirm with "DELETE"' });
+    const id = req.user!.id;
+    tx(() => {
+      // museum boards are keyed by the device's player id, which the client sends along
+      const pid = typeof req.body?.pid === 'string' ? req.body.pid : '';
+      if (pid) db.prepare('DELETE FROM exhibits WHERE owner_id = ?').run(pid);
+      db.prepare('DELETE FROM users WHERE id = ?').run(id); // sessions, identities and friends go with it (ON DELETE CASCADE)
+    });
+    res.json({ ok: true });
+  });
+
   return r;
+}
+
+/** The profile a sign-in would switch to, for the confirmation (only shown after a correct code / Google sign-in). */
+const otherView = (u: UserRow) => ({ name: u.name, level: levelFromXp(u.xp), rating: u.rating });
+
+/** trim + lower case, at most 254 characters, a simple x@y.z check. Gmail dots and "+" are kept (that rule is Gmail's own). */
+export function normEmail(v: unknown): string | null {
+  if (typeof v !== 'string') return null;
+  const e = v.trim().toLowerCase();
+  return e.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? e : null;
 }

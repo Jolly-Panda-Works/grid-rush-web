@@ -8,6 +8,11 @@ import express from 'express';
 async function main() {
   const { accountsRouter, applyOnlineResult } = await import('./accounts');
   const { socialRouter } = await import('./social');
+  const { setMailer } = await import('./mailer');
+  const { resetRateLimits } = await import('./accounts');
+  const { db, MIGRATIONS } = await import('./db');
+  const sent = new Map<string, string>(); // email -> last code "sent"
+  setMailer(async (email, code) => { sent.set(email, code); });
   const app = express();
   app.use('/api', accountsRouter());
   app.use('/api', socialRouter());
@@ -71,6 +76,106 @@ async function main() {
   });
   await test('Google link answers "not configured" when the server has no Google credentials', async () => {
     assert.equal((await call('POST', '/auth/google', { code: 'abc' }, a)).status, 501);
+  });
+
+  // ---- email sign-in (docs/accounts.md) ----
+  const guest = async () => (await call('POST', '/auth/guest', { name: 'G' })).body as { token: string; user: { id: string } };
+  await test('email: start then verify with the right code links the email to the guest', async () => {
+    const g = await guest();
+    let r = await call('POST', '/auth/email/start', { email: ' Alireza@Example.com ' }, g.token);
+    assert.equal(r.status, 200); assert.equal(r.body.resendIn, 60);
+    r = await call('POST', '/auth/email/verify', { email: 'alireza@example.com', code: sent.get('alireza@example.com') }, g.token);
+    assert.equal(r.body.switched, false); assert.equal(r.body.user.logins.email, 'ali•••@example.com'); assert.equal(r.body.user.linked, true);
+    assert.equal(JSON.stringify(r.body).includes('alireza@example.com'), false, 'the full email is never sent back');
+  });
+  await test('email: 5 wrong codes, then even the right one is refused', async () => {
+    const g = await guest();
+    await call('POST', '/auth/email/start', { email: 'five@x.io' }, g.token);
+    const right = sent.get('five@x.io')!, wrong = right === '000000' ? '111111' : '000000';
+    for (let i = 0; i < 5; i++) assert.equal((await call('POST', '/auth/email/verify', { email: 'five@x.io', code: wrong }, g.token)).status, 401);
+    assert.equal((await call('POST', '/auth/email/verify', { email: 'five@x.io', code: right }, g.token)).status, 401);
+  });
+  await test('email: an expired code is refused', async () => {
+    const g = await guest();
+    await call('POST', '/auth/email/start', { email: 'old@x.io' }, g.token);
+    db.prepare('UPDATE login_codes SET expires_at = ? WHERE email = ?').run(Date.now() - 1, 'old@x.io');
+    assert.equal((await call('POST', '/auth/email/verify', { email: 'old@x.io', code: sent.get('old@x.io') }, g.token)).status, 401);
+  });
+  await test('email: a code works only once', async () => {
+    const g = await guest(), h = await guest();
+    await call('POST', '/auth/email/start', { email: 'once@x.io' }, g.token);
+    const code = sent.get('once@x.io');
+    assert.equal((await call('POST', '/auth/email/verify', { email: 'once@x.io', code }, g.token)).status, 200);
+    assert.equal((await call('POST', '/auth/email/verify', { email: 'once@x.io', code }, h.token)).status, 401);
+  });
+  await test('email: a second account with the same email switches to the first, with its name/level/rating', async () => {
+    const first = await guest();
+    await call('PUT', '/me', { name: 'Owner', xp: 900 }, first.token);
+    await call('POST', '/auth/email/start', { email: 'same@x.io' }, first.token);
+    await call('POST', '/auth/email/verify', { email: 'same@x.io', code: sent.get('same@x.io') }, first.token);
+    const second = await guest();
+    db.prepare('DELETE FROM login_codes').run();
+    resetRateLimits();
+    await call('POST', '/auth/email/start', { email: 'same@x.io' }, second.token);
+    const r = await call('POST', '/auth/email/verify', { email: 'same@x.io', code: sent.get('same@x.io') }, second.token);
+    assert.equal(r.body.switched, true); assert.equal(r.body.user.id, first.user.id);
+    assert.equal(r.body.other.name, 'Owner'); assert.ok(r.body.other.level > 1); assert.equal(typeof r.body.other.rating, 'number');
+    assert.equal((await call('GET', '/me', undefined, r.body.token)).body.id, first.user.id, 'the new token signs in to the first profile');
+  });
+  await test('email: start answers the same for a known and an unknown email', async () => {
+    const g = await guest();
+    const known = await call('POST', '/auth/email/start', { email: 'alireza@example.com' }, g.token);
+    const unknown = await call('POST', '/auth/email/start', { email: 'nobody@example.com' }, g.token);
+    assert.equal(known.status, unknown.status); assert.deepEqual(known.body, unknown.body);
+  });
+  await test('email: one code per email per minute', async () => {
+    const g = await guest();
+    assert.equal((await call('POST', '/auth/email/start', { email: 'rate@x.io' }, g.token)).status, 200);
+    assert.equal((await call('POST', '/auth/email/start', { email: 'rate@x.io' }, g.token)).status, 429);
+  });
+  await test('email: unlink, then link it to another account', async () => {
+    const g = await guest(), h = await guest();
+    resetRateLimits();
+    await call('POST', '/auth/email/start', { email: 'move@x.io' }, g.token);
+    await call('POST', '/auth/email/verify', { email: 'move@x.io', code: sent.get('move@x.io') }, g.token);
+    const r = await call('DELETE', '/auth/email', undefined, g.token);
+    assert.equal(r.body.user.logins.email, undefined); assert.equal(r.body.user.linked, false);
+    resetRateLimits();
+    await call('POST', '/auth/email/start', { email: 'move@x.io' }, h.token);
+    const v = await call('POST', '/auth/email/verify', { email: 'move@x.io', code: sent.get('move@x.io') }, h.token);
+    assert.equal(v.body.switched, false); assert.equal(v.body.user.id, h.user.id);
+  });
+  await test('logout ends only this session', async () => {
+    const g = await guest();
+    assert.equal((await call('POST', '/auth/logout', undefined, g.token)).status, 200);
+    assert.equal((await call('GET', '/me', undefined, g.token)).status, 401);
+  });
+  await test('deleting the account removes its sign-in methods, sessions and museum boards', async () => {
+    const g = await guest();
+    resetRateLimits();
+    await call('POST', '/auth/email/start', { email: 'bye@x.io' }, g.token);
+    await call('POST', '/auth/email/verify', { email: 'bye@x.io', code: sent.get('bye@x.io') }, g.token);
+    db.prepare("INSERT INTO exhibits (id, owner_id, owner_name, tiles, created_at) VALUES ('ex1', 'device-pid-1', 'G', '[]', 0)").run();
+    assert.equal((await call('DELETE', '/me', { confirm: 'nope' }, g.token)).status, 400);
+    assert.equal((await call('DELETE', '/me', { confirm: 'DELETE', pid: 'device-pid-1' }, g.token)).status, 200);
+    assert.equal((await call('GET', '/me', undefined, g.token)).status, 401);
+    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM identities WHERE user_id = ?').get(g.user.id)!.n, 0);
+    assert.equal(db.prepare('SELECT COUNT(*) AS n FROM sessions WHERE user_id = ?').get(g.user.id)!.n, 0);
+    assert.equal(db.prepare("SELECT COUNT(*) AS n FROM exhibits WHERE id = 'ex1'").get()!.n, 0);
+  });
+  await test('migration 4: a user with google_id gets an identities row', async () => {
+    const { DatabaseSync } = await import('node:sqlite');
+    const d = new DatabaseSync(':memory:');
+    d.exec(MIGRATIONS[0]);
+    d.prepare("INSERT INTO users (id, name, friend_code, google_id, created_at, updated_at, last_seen) VALUES ('u1', 'G', 'ABCDEF', 'g-123', 1, 1, 1)").run();
+    for (const m of MIGRATIONS.slice(1)) d.exec(m);
+    const row = d.prepare("SELECT user_id FROM identities WHERE provider = 'google' AND subject = 'g-123'").get() as { user_id: string };
+    assert.equal(row.user_id, 'u1');
+  });
+  await test('a session unused for 180 days has expired', async () => {
+    const g = await guest();
+    db.prepare('UPDATE sessions SET last_used = ?, created_at = ? WHERE user_id = ?').run(Date.now() - 181 * 86400_000, Date.now() - 181 * 86400_000, g.user.id);
+    assert.equal((await call('GET', '/me', undefined, g.token)).status, 401);
   });
 
   server.close();

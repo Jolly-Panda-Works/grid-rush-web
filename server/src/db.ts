@@ -12,7 +12,7 @@ if (FILE !== ':memory:') fs.mkdirSync(path.dirname(FILE), { recursive: true });
 export const db = new DatabaseSync(FILE);
 db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
 
-const MIGRATIONS: string[] = [
+export const MIGRATIONS: string[] = [
   // 1: accounts
   `CREATE TABLE users (
      id TEXT PRIMARY KEY,
@@ -63,6 +63,25 @@ const MIGRATIONS: string[] = [
      PRIMARY KEY (exhibit_id, voter_id)
    );
    CREATE INDEX exhibits_owner ON exhibits(owner_id);`,
+  // 4: sign-in methods (email codes, Google), one account may have several; sessions remember their last use
+  `CREATE TABLE identities (
+     provider TEXT NOT NULL,
+     subject TEXT NOT NULL,
+     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     created_at INTEGER NOT NULL,
+     PRIMARY KEY (provider, subject)
+   );
+   CREATE INDEX identities_user ON identities(user_id);
+   INSERT INTO identities (provider, subject, user_id, created_at)
+     SELECT 'google', google_id, id, created_at FROM users WHERE google_id IS NOT NULL;
+   CREATE TABLE login_codes (
+     email TEXT PRIMARY KEY,
+     code_hash TEXT NOT NULL,
+     expires_at INTEGER NOT NULL,
+     attempts INTEGER NOT NULL DEFAULT 0,
+     sent_at INTEGER NOT NULL
+   );
+   ALTER TABLE sessions ADD COLUMN last_used INTEGER;`,
 ];
 
 db.exec('CREATE TABLE IF NOT EXISTS schema_version (v INTEGER NOT NULL)');
