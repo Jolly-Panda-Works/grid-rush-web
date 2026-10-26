@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { sfx } from '../audio';
 import { bootstrapAccount } from '../account';
 import { Icon } from '../art';
 import { useT } from '../i18n';
@@ -10,6 +11,7 @@ export function ServerNotice() {
   const t = useT();
   const notice = useStore((s) => s.serverNotice);
   const [busy, setBusy] = useState(false);
+  useEffect(() => { if (notice) sfx.warn(); }, [notice]);
   if (!notice) return null;
   const close = () => useStore.setState({ serverNotice: null, ...(notice.back ? { screen: 'menu' as const } : {}) });
   const retry = async () => {

@@ -58,6 +58,7 @@ export default function ResultsScreen() {
   useEffect(() => {
     if (!done || !res) return;
     (res.won ? sfx.win : sfx.lose)();
+    if (res.newAch?.length) setTimeout(() => sfx.achievement(), 900);
     if (res.levelAfter > res.levelBefore) { const tm = setTimeout(() => setLevelUp('open'), 1100); return () => clearTimeout(tm); }
   }, [done]); // eslint-disable-line react-hooks/exhaustive-deps
 

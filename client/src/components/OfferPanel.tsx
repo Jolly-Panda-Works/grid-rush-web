@@ -70,7 +70,7 @@ export function OfferPanel() {
   const advEnds = me.pos + advSteps >= TRACK_LENGTH;
   const setAdv = (on: boolean) => { if (useStore.getState().advPreview !== on) useStore.setState({ advPreview: on }); };
   // tap a card = take it (it appears on your board); tap it again = rotate it
-  const select = (i: number) => { sfx.turn(); if (sel.offer === i) rotate(); else selectOffer(i); };
+  const select = (i: number) => { sfx.select(); if (sel.offer === i) rotate(); else selectOffer(i); };
   const orient = useStore((s) => s.orient);
   const n = g.offer.length;
 

@@ -9,8 +9,9 @@ import { Medal } from './Medal';
 export function LevelUp({ from, to, xp, avatar, onClose }: { from: number; to: number; xp: number; avatar: number; onClose: () => void }) {
   const t = useT();
   const [lv, setLv] = useState(from);
+  useEffect(() => { sfx.levelUp(); }, []);
   useEffect(() => {
-    sfx.bonus();
+    if (lv > from) sfx.tick();
     if (lv >= to) return;
     const tm = setTimeout(() => setLv((n) => n + 1), lv === from ? 700 : 350);
     return () => clearTimeout(tm);
