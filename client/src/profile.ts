@@ -14,7 +14,8 @@ export interface Profile {
   stats: Stats;
   ach: Record<string, number>; // achievement id -> unlock time
 }
-export interface Settings { reduceMotion: boolean; sound: boolean; lang: 'en' | 'fa' }
+/** sound = master switch (the in-game menu toggles it); soundVol / musicVol = the two sliders, 0..1 */
+export interface Settings { reduceMotion: boolean; sound: boolean; lang: 'en' | 'fa'; soundVol: number; musicVol: number; vibration: boolean; notifications: boolean }
 
 const PK = 'gridrush.profile.v1';
 const SK = 'gridrush.settings.v1';
@@ -48,8 +49,9 @@ export function loadSettings(): Settings {
   const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   try {
     const s = JSON.parse(localStorage.getItem(SK) || 'null');
-    if (s) return { reduceMotion: !!s.reduceMotion, sound: s.sound !== false, lang: s.lang === 'fa' || s.lang === 'en' ? s.lang : defaultLang() };
+    const vol = (v: unknown, d: number) => (typeof v === 'number' && v >= 0 && v <= 1 ? v : d);
+    if (s) return { reduceMotion: !!s.reduceMotion, sound: s.sound !== false, lang: s.lang === 'fa' || s.lang === 'en' ? s.lang : defaultLang(), soundVol: vol(s.soundVol, 0.8), musicVol: vol(s.musicVol, 0.5), vibration: s.vibration !== false, notifications: s.notifications !== false };
   } catch { /* ignore */ }
-  return { reduceMotion: reduced, sound: true, lang: defaultLang() };
+  return { reduceMotion: reduced, sound: true, lang: defaultLang(), soundVol: 0.8, musicVol: 0.5, vibration: true, notifications: true };
 }
 export function saveSettings(s: Settings) { try { localStorage.setItem(SK, JSON.stringify(s)); } catch { /* ignore */ } }

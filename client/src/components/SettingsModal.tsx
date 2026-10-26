@@ -4,6 +4,7 @@ import { getWsUrl, normalizeServer, pingServer, setServerUrl } from '../net';
 import { needServer, useStore } from '../store';
 import { bootstrapAccount, canLinkGoogle, linkGoogle } from '../account';
 import { Icon, IconId } from '../art';
+import { sfx, vibrate } from '../audio';
 
 /** A tile-styled on/off switch. */
 function Toggle({ on, onChange, label, icon }: { on: boolean; onChange: (v: boolean) => void; label: string; icon: IconId }) {
@@ -16,45 +17,103 @@ function Toggle({ on, onChange, label, icon }: { on: boolean; onChange: (v: bool
   );
 }
 
+/** A volume slider (0..100 %) in the same row style. */
+function Slider({ value, onChange, onRelease, label, icon }: { value: number; onChange: (v: number) => void; onRelease?: () => void; label: string; icon: IconId }) {
+  const pct = Math.round(value * 100);
+  return (
+    <label className="trow slider">
+      <span className="tr-ico" aria-hidden="true"><Icon id={icon} size={26} /></span>
+      <span className="tr-l">{label}</span>
+      <input type="range" min={0} max={100} step={5} value={pct} style={{ '--v': `${pct}%` } as React.CSSProperties} aria-label={label}
+        onChange={(e) => onChange(Number(e.target.value) / 100)} onPointerUp={onRelease} onKeyUp={onRelease} />
+      <span className="sl-v num">{pct}</span>
+    </label>
+  );
+}
+
+/** Settings, laid out like a game's options panel: how to play and language on top, then sound and music sliders,
+ *  vibration / notifications / reduce motion, about us and the version; the account and server sit at the end. */
 export function SettingsModal() {
   const t = useT();
   const settings = useStore((s) => s.settings);
   const online = useStore((s) => s.serverOnline);
   const account = useStore((s) => s.account);
   const [srv, setSrv] = useState(getWsUrl());
+  const [about, setAbout] = useState(false);
   const close = () => useStore.setState({ showSettings: false });
   const setS = (patch: Partial<typeof settings>) => useStore.setState({ settings: { ...settings, ...patch } });
   const save = async () => { setServerUrl(srv); setSrv(normalizeServer(srv)); const ok = await pingServer(); useStore.setState({ serverOnline: ok }); if (ok) void bootstrapAccount(); };
   const status = !getWsUrl() ? t('settings.none') : online ? t('settings.on') : t('settings.off');
+  const notify = async (on: boolean) => {
+    setS({ notifications: on });
+    if (on && typeof Notification !== 'undefined' && Notification.permission === 'default') { try { await Notification.requestPermission(); } catch { /* ignore */ } }
+  };
+  if (about) return <AboutUs onBack={() => setAbout(false)} onClose={close} />;
   return (
     <div className="overlay" onClick={close}>
       <div className="modal small settings-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={t('settings.title')}>
         <h3>{t('settings.title')}</h3>
         <button className="mclose" onClick={close} aria-label={t('settings.close')}>✕</button>
         <div className="mscroll">
-        <div className="seg" role="group" aria-label={t('menu.lang')}>
-          <button className={settings.lang === 'fa' ? 'on' : ''} onClick={() => setS({ lang: 'fa' })} lang="fa">فارسی</button>
-          <button className={settings.lang === 'en' ? 'on' : ''} onClick={() => setS({ lang: 'en' })} lang="en">English</button>
+          <button className="btn primary wide" onClick={() => useStore.setState({ showSettings: false, showHelp: true })}><Icon id="quests" size={24} />{t('menu.how')}</button>
+          <div className="setrow">
+            <span className="tr-ico" aria-hidden="true"><Icon id="language" size={26} /></span>
+            <div className="seg" role="group" aria-label={t('menu.lang')}>
+              <button className={settings.lang === 'fa' ? 'on' : ''} onClick={() => setS({ lang: 'fa' })} lang="fa">فارسی</button>
+              <button className={settings.lang === 'en' ? 'on' : ''} onClick={() => setS({ lang: 'en' })} lang="en">English</button>
+            </div>
+          </div>
+          <div className="setgroup">
+            <Slider icon="sound-on" label={t('set.sound')} value={settings.soundVol} onChange={(v) => setS({ soundVol: v, sound: true })} onRelease={() => sfx.place()} />
+            <Slider icon="tip" label={t('set.music')} value={settings.musicVol} onChange={(v) => setS({ musicVol: v, sound: true })} />
+            <Toggle icon="turns" label={t('set.vibration')} on={settings.vibration} onChange={(v) => { setS({ vibration: v }); if (v) setTimeout(() => vibrate(40)); }} />
+            <Toggle icon="calendar" label={t('set.notifications')} on={settings.notifications} onChange={notify} />
+            <Toggle icon="motion" label={t('menu.reduce')} on={settings.reduceMotion} onChange={(v) => setS({ reduceMotion: v })} />
+          </div>
+          <button className="btn wide" onClick={() => setAbout(true)}><Icon id="achievement" size={22} />{t('set.about')}</button>
+          <details className="setmore">
+            <summary>{t('acct.title')} · {t('settings.server')}</summary>
+            <div className="acctbox">
+              {account
+                ? <>
+                    <div className="acctline"><b>{account.linked ? t('acct.linkedGoogle') : t('acct.guest')}</b><span className="num small" dir="ltr" data-latin>{account.friendCode}</span></div>
+                    {!account.linked && <button className="btn" disabled={!canLinkGoogle()} onClick={() => needServer('off.what.google', () => linkGoogle(() => confirm(t('acct.switchConfirm'))))}>{t('acct.linkGoogle')}</button>}
+                    {!account.linked && !canLinkGoogle() && <span className="muted small">{t('acct.googleUnavailable')}</span>}
+                  </>
+                : <span className="muted small">{t('acct.needServer')}</span>}
+            </div>
+            <div className="serverbox">
+              <span className="muted small">{t('settings.server')}</span>
+              <input dir="ltr" value={srv} placeholder={t('menu.serverHint')} onChange={(e) => setSrv(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && save()} />
+              <div className={'sstatus ' + (online ? 'on' : 'off')}><i className={'dot ' + (online ? 'on' : 'off')} />{status}</div>
+              <button className="btn" onClick={save}>{t('menu.serverSave')}</button>
+            </div>
+          </details>
+          <div className="setver num" dir="ltr" data-latin>v{__APP_VERSION__}</div>
         </div>
-        <Toggle icon={settings.sound ? 'sound-on' : 'sound-off'} label={t('menu.sound')} on={settings.sound} onChange={(v) => setS({ sound: v })} />
-        <Toggle icon="motion" label={t('menu.reduce')} on={settings.reduceMotion} onChange={(v) => setS({ reduceMotion: v })} />
-        <div className="acctbox">
-          <span className="muted small">{t('acct.title')}</span>
-          {account
-            ? <>
-                <div className="acctline"><b>{account.linked ? t('acct.linkedGoogle') : t('acct.guest')}</b><span className="num small" dir="ltr" data-latin>{account.friendCode}</span></div>
-                {!account.linked && <button className="btn" disabled={!canLinkGoogle()} onClick={() => needServer('off.what.google', () => linkGoogle(() => confirm(t('acct.switchConfirm'))))}>{t('acct.linkGoogle')}</button>}
-                {!account.linked && !canLinkGoogle() && <span className="muted small">{t('acct.googleUnavailable')}</span>}
-              </>
-            : <span className="muted small">{t('acct.needServer')}</span>}
+      </div>
+    </div>
+  );
+}
+
+/** About us: the studio, the game and the credits. */
+function AboutUs({ onBack, onClose }: { onBack: () => void; onClose: () => void }) {
+  const t = useT();
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal small about-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={t('set.about')}>
+        <h3>{t('set.about')}</h3>
+        <button className="mclose" onClick={onClose} aria-label={t('settings.close')}>✕</button>
+        <div className="mscroll">
+          <img className="about-logo" src={`${import.meta.env.BASE_URL}brand/studio-logo.png`} alt="Jolly Panda Studio" />
+          <p>{t('about.text')}</p>
+          <dl className="about-credits">
+            <dt>{t('about.game')}</dt><dd>Jolly Panda Studio</dd>
+            <dt>{t('about.sound')}</dt><dd dir="ltr">The Complete UI Sound Effects Library · CelerisLab</dd>
+            <dt>{t('about.version')}</dt><dd className="num" dir="ltr" data-latin>v{__APP_VERSION__}</dd>
+          </dl>
         </div>
-        <div className="serverbox">
-          <span className="muted small">{t('settings.server')}</span>
-          <input dir="ltr" value={srv} placeholder={t('menu.serverHint')} onChange={(e) => setSrv(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && save()} />
-          <div className={'sstatus ' + (online ? 'on' : 'off')}><i className={'dot ' + (online ? 'on' : 'off')} />{status}</div>
-          <button className="btn" onClick={save}>{t('menu.serverSave')}</button>
-        </div>
-        </div>
+        <button className="btn" onClick={onBack}>{t('mm.back')}</button>
       </div>
     </div>
   );
