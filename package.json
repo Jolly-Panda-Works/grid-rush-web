@@ -19,6 +19,6 @@
     "build:web": "npm run build -w client"
   },
   "devDependencies": {
-    "concurrently": "^9.0.1"
+    "concurrently": "^10.0.6"
   }
 }
