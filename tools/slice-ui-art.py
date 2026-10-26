@@ -169,8 +169,8 @@ for name, file in (('splash-bg', 'splash-background.webp'),):
     if os.path.exists(os.path.join(SRC, file)):
         save(Image.open(os.path.join(SRC, file)).convert('RGB'), f'screens/{name}.webp', 82)
 
-# Persian logotype: «نقش‌نبرد», the game's Persian name
-for lang, file in (('en', 'wordmark-en.png'), ('fa', 'wordmark-naqsh-nabard-fa.png')):
+# Persian logotype: «نقش‌آرا», the game's Persian name
+for lang, file in (('en', 'wordmark-en.png'), ('fa', 'wordmark-naqsh-ara-fa.webp')):
     w = Image.open(os.path.join(SRC, file)).convert('RGBA')
     w = w.crop(w.getchannel('A').point(lambda v: 255 if v > 24 else 0).getbbox())
     w = w.resize((1000, round(w.height * 1000 / w.width)), Image.LANCZOS)
