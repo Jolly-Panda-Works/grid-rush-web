@@ -247,9 +247,9 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
     const c = Math.floor(lp.x + BOARD_SIZE / 2), r = Math.floor(BOARD_SIZE / 2 - lp.y);
     return r >= 0 && c >= 0 && r < BOARD_SIZE && c < BOARD_SIZE ? [r, c] : null;
   };
-  // Touch: tap the ghost = turn it around that cell; drag = move it (the grabbed cell stays under the finger);
-  // tap elsewhere = move it there; the floating ✓ places it. Mouse: the ghost follows the pointer, click places,
-  // the wheel or a right-click turns it.
+  // Touch: tap the ghost = place it; drag = move it (the grabbed cell stays under the finger); tap elsewhere = move it
+  // there; the strip of shapes above it turns it. Mouse: the ghost follows the pointer, click places, the wheel or a
+  // right-click turns it.
   const gesture = useRef<{ cell: [number, number]; onGhost: boolean; moved: boolean; off: [number, number] } | null>(null);
   const onGhost = (cell: [number, number]) => !!preview?.abs.some(([r, c]) => r === cell[0] && c === cell[1]);
   const canTurn = mine && game.phase === 'playing' && sel.offer !== null;
@@ -286,7 +286,7 @@ export function BoardView({ seat, x, y, scale }: { seat: Seat; x: number; y: num
     gesture.current = null;
     if (!gs || e.pointerType === 'mouse') return;
     e.stopPropagation();
-    if (!gs.moved && gs.onGhost && canTurn) rotate(gs.cell);
+    if (!gs.moved && gs.onGhost && mine) confirmPlacement();
   };
   const onWheel = (e: ThreeEvent<WheelEvent>) => {
     if (!interactive || !canTurn) return;

@@ -3,13 +3,13 @@ import { cellsKey, transformCells } from '../../../shared/src';
 import { confirmPlacement } from '../actions';
 import { Icon } from '../art';
 import { useT } from '../i18n';
-import { flipHorizontal, resetSel, rotate, setOrientation, useStore } from '../store';
+import { setOrientation, useStore } from '../store';
 import { dragApi } from '../three/dragApi';
 import { distinctOrientations, fitsSomewhere, inBounds, previewFor } from '../three/placement';
 import { TileShape } from './TileShape';
 
-/** Floating controls right next to the tile ghost on my board: place it, rotate, flip, cancel, and a strip with every
- *  way the tile can face (tap one to use it; shapes that fit nowhere on the board are dimmed). */
+/** Floating controls right next to the tile ghost on my board: the Place button and a strip with every way the tile
+ *  can face (tap one to use it; shapes that fit nowhere on the board are dimmed). */
 export function PlaceBar() {
   const t = useT();
   const g = useStore((s) => s.game);
@@ -46,9 +46,6 @@ export function PlaceBar() {
     <div ref={box} className={'placebar' + (flipDown ? ' down' : '')} style={{ left, top: at.y }} onPointerDown={(e) => e.stopPropagation()}>
       <div className="pbrow">
         <button className="pb ok" disabled={!pv.valid} onClick={confirmPlacement} aria-label={t('place.ok')}><Icon id="confirm" size={20} /><span>{t('place.ok')}</span></button>
-        {!reward && <button className="pb" onClick={() => rotate()} aria-label={t('offer.rotate')} title={t('offer.rotate')}><Icon id="rotate-right" size={24} /></button>}
-        {!reward && <button className="pb" onClick={() => flipHorizontal()} aria-label={t('offer.flip')} title={t('offer.flip')}><Icon id="flip" size={24} /></button>}
-        {!reward && <button className="pb" onClick={resetSel} aria-label={t('offer.cancel')} title={t('offer.cancel')}><Icon id="close" size={22} /></button>}
       </div>
       {showStrip && tile && (
         <div className="pbstrip" role="radiogroup" aria-label={t('place.shapes')}>

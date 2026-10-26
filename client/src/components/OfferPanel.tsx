@@ -4,7 +4,8 @@ import { Forecast, advanceSteps, useForecast } from '../forecast';
 import { iconUrl } from '../three/icons';
 import { useT, tr } from '../i18n';
 import { send } from '../net';
-import { applyFit, pickOffer, pushToast, resetSel, rotate, selectOffer, setSel, useStore } from '../store';
+import { confirmPlacement } from '../actions';
+import { applyFit, pickOffer, pushToast, resetSel, selectOffer, setSel, useStore } from '../store';
 import { dragApi } from '../three/dragApi';
 import { bestFit, previewFor } from '../three/placement';
 import { CoinIcon, TileShape, TimeIcon } from './TileShape';
@@ -69,8 +70,8 @@ export function OfferPanel() {
   const advSteps = advanceSteps(g, mySeat);
   const advEnds = me.pos + advSteps >= TRACK_LENGTH;
   const setAdv = (on: boolean) => { if (useStore.getState().advPreview !== on) useStore.setState({ advPreview: on }); };
-  // tap a card = take it (it appears on your board); tap it again = rotate it
-  const select = (i: number) => { sfx.select(); if (sel.offer === i) rotate(); else selectOffer(i); };
+  // tap a card = take it (it appears on your board); tap it again = place it where it is shown
+  const select = (i: number) => { if (sel.offer === i) { confirmPlacement(); return; } sfx.select(); selectOffer(i); };
   const orient = useStore((s) => s.orient);
   const n = g.offer.length;
 
@@ -89,7 +90,7 @@ export function OfferPanel() {
               className={'gcard' + (picked ? ' sel' : '') + (locked ? ' locked' : blocked ? ' dis' : '') + (oppMove?.t === 'buy' && oppMove.offer === i ? ' intent' : '')}
               style={{ '--rot': `${fan * 7}deg`, '--drop': `${Math.abs(fan) * 8}px` } as React.CSSProperties} disabled={locked || blocked}
               onPointerDown={(e) => startDrag(e, i)} onClick={() => { if (!suppressClick.current) select(i); }}
-              title={locked ? '' : !afford ? t('offer.noCoins') : !fits ? t('offer.noRoom') : picked ? t('offer.tapRotate') : t('offer.select', { n: i + 1 })}>
+              title={locked ? '' : !afford ? t('offer.noCoins') : !fits ? t('offer.noRoom') : picked ? t('offer.tapPlace') : t('offer.select', { n: i + 1 })}>
               <CardFace tile={tile} rot={picked ? sel.rot : orient[tile.uid]?.rot ?? 0} flip={picked ? sel.flip : orient[tile.uid]?.flip ?? false} short={!afford} />
               {!locked && blocked && <span className="stamp" dir="auto">{!afford ? t('offer.short', { n: tile.coinCost - me.coins }) : t('offer.room')}</span>}
               {picked && <span className="rothint">⟳</span>}
