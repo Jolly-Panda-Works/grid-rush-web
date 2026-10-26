@@ -14,7 +14,7 @@ import { sfx } from '../audio';
 
 const DRAG_THRESHOLD = 8;
 
-/** My side of the table, card-game style: my portrait and gems, the hand of tile cards (fanned),
+/** My side of the table, card-game style: my portrait and gems, the hand of tile cards (side by side, straight),
  *  the draw pile (next tile) and the Advance medallion. On the opponent's turn the hand is simply locked. */
 export function OfferPanel() {
   const t = useT();
@@ -73,7 +73,6 @@ export function OfferPanel() {
   // tap a card = take it (it appears on your board); tap it again = place it where it is shown
   const select = (i: number) => { if (sel.offer === i) { confirmPlacement(); return; } sfx.select(); selectOffer(i); };
   const orient = useStore((s) => s.orient);
-  const n = g.offer.length;
 
   return (
     <footer className={'dock' + (locked ? ' locked' : '')} aria-disabled={locked}>
@@ -84,11 +83,10 @@ export function OfferPanel() {
           const fits = canPlaceAny(me.board, tile.cells);
           const blocked = !afford || !fits;
           const picked = sel.offer === i && !locked;
-          const fan = (i - (n - 1) / 2); // -1, 0, 1
           return (
             <button key={tile.uid}
               className={'gcard' + (picked ? ' sel' : '') + (locked ? ' locked' : blocked ? ' dis' : '') + (oppMove?.t === 'buy' && oppMove.offer === i ? ' intent' : '')}
-              style={{ '--rot': `${fan * 7}deg`, '--drop': `${Math.abs(fan) * 8}px` } as React.CSSProperties} disabled={locked || blocked}
+              disabled={locked || blocked}
               onPointerDown={(e) => startDrag(e, i)} onClick={() => { if (!suppressClick.current) select(i); }}
               title={locked ? '' : !afford ? t('offer.noCoins') : !fits ? t('offer.noRoom') : picked ? t('offer.tapPlace') : t('offer.select', { n: i + 1 })}>
               <CardFace tile={tile} rot={picked ? sel.rot : orient[tile.uid]?.rot ?? 0} flip={picked ? sel.flip : orient[tile.uid]?.flip ?? false} short={!afford} />

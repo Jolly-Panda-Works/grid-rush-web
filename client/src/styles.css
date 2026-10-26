@@ -1379,3 +1379,5 @@ html[dir='rtl'] .lb-fill { clip-path: inset(0 0 0 calc((1 - var(--p)) * 100%) ro
 .ld-logo { z-index: 2; top: 3%; }
 .ld-logo .logo-img { max-height: 11vh; }
 .ld-logo .tagline { text-shadow: 0 2px 4px rgba(0,0,0,.85); }
+/* the hand: cards stand straight, side by side */
+.gcard:not(.rewardcard) { margin: 0 4px; }
