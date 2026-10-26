@@ -3,7 +3,8 @@ import { Logo } from '../components/Logo';
 import { Medal } from '../components/Medal';
 import { levelProgress } from '../../../shared/src';
 import { useT } from '../i18n';
-import { startSearch } from '../net';
+import { startSearch, startTutorial } from '../net';
+import { tutorialDone } from '../tutorial';
 import { profileLevel } from '../profile';
 import { needServer, useStore } from '../store';
 
@@ -13,6 +14,7 @@ export default function MenuScreen() {
   const t = useT();
   const profile = useStore((s) => s.profile);
   const online = useStore((s) => s.serverOnline);
+  const firstTime = !tutorialDone();
   const lp = levelProgress(profile.xp);
   return (
     <main className="screen menu lobby">
@@ -31,7 +33,8 @@ export default function MenuScreen() {
       </div>
 
       <div className="playtiles">
-        <button className="btn primary playtile" onClick={() => startSearch(true)}>
+        {firstTime && <div className="coach-hint">{t('tut.play.hint')}</div>}
+        <button className={'btn primary playtile' + (firstTime ? ' tut-glow' : '')} onClick={() => (firstTime ? startTutorial() : startSearch(true))}>
           <span className="pt-ico" aria-hidden="true"><Icon id="play" size={40} /></span>
           <span className="pt-txt"><b>{t('menu.bot')}</b><small>{t('menu.botSub')}</small></span>
         </button>

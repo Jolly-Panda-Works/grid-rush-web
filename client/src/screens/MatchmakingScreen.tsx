@@ -32,7 +32,7 @@ export default function MatchmakingScreen() {
           <div className="vcard opp">
             <Medal seat={(1 - mySeat) as 0 | 1} size={64} level={opp.level} avatar={avatarFor(opp.name)} />
             <div className="vtext">
-              <h3>{opp.name}{opp.isBot && <span className="tag bot">{t('mm.botTag', { tier: t('tier.' + opp.botTier) })}</span>}</h3>
+              <h3>{opp.name}</h3>
               <div className="muted num">{t('hud.lv', { n: opp.level })} · {opp.rating}</div>
             </div>
           </div>

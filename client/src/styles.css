@@ -1409,3 +1409,31 @@ html[dir='rtl'] .trow.slider input[type=range]::-webkit-slider-runnable-track { 
 .about-modal p { color: var(--ink); line-height: 1.8; margin: 0 0 10px; }
 .about-credits { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; text-align: start; margin: 0; font-size: 13px; color: var(--ink); }
 .about-credits dt { font-weight: 800; color: var(--ink-muted); } .about-credits dd { margin: 0; }
+
+/* ---- tutorial coach ---- */
+.coach { position: absolute; left: 8px; right: 8px; top: 36%; z-index: 40; display: flex; justify-content: center; pointer-events: none; }
+.coach-card { pointer-events: auto; display: flex; gap: 10px; align-items: flex-start; max-width: 420px; padding: 12px 14px; border-radius: 16px; color: var(--ink);
+  background: radial-gradient(ellipse at 50% 0%, #FFFBEF, #F3E5BE 75%); border: 2.5px solid #E8B730; box-shadow: 0 0 0 2px #5c3d00, 0 14px 30px rgba(0,0,20,.6);
+  animation: a-pop .4s cubic-bezier(.2,1.5,.4,1) both; }
+.coach.s-wait { top: 40%; } .coach.s-wait .coach-card { opacity: .92; }
+.coach.s-done { top: 30%; }
+.coach-ico { flex: none; filter: drop-shadow(0 2px 3px rgba(0,0,20,.4)); animation: a-float 2.6s ease-in-out infinite; }
+.coach-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.coach-body b { font: 800 16px var(--head); }
+.coach-body p { margin: 0; font-size: 13.5px; line-height: 1.7; }
+.coach-body .btn { align-self: flex-start; margin-top: 4px; }
+.coach-body .row { justify-content: flex-start; gap: 8px; }
+.coach-step { font-size: 11px; font-weight: 800; color: #0b6b8a; }
+/* the coach sits above the board while a tile is being placed, so it never covers the place bar */
+body[data-tut='buy'] .coach, body[data-tut='rotate'] .coach, body[data-tut='reward'] .coach { top: 8px; }
+/* what the step is about glows; the rest of the hand steps back */
+@keyframes tut-glow { 50% { box-shadow: 0 0 0 3px #FFE07A, 0 0 26px 6px rgba(255,211,77,.9); } }
+body[data-tut='buy'] .hand .gcard:first-child, body[data-tut='rotate'] .hand .gcard:first-child { animation: tut-glow 1.2s ease-in-out infinite; z-index: 4; }
+body[data-tut='buy'] .hand .gcard:not(:first-child), body[data-tut='rotate'] .hand .gcard:not(:first-child),
+body[data-tut='advance'] .hand .gcard { filter: grayscale(.7) brightness(.75); }
+body[data-tut='rotate'] .pbstrip { animation: tut-glow 1.2s ease-in-out infinite; border-radius: 12px; }
+body[data-tut='advance'] .medal { animation: tut-glow 1.2s ease-in-out infinite; border-radius: 50%; }
+body[data-tut='coins'] .placebar { visibility: hidden; }
+.coach-hint { align-self: center; margin-bottom: 6px; padding: 6px 14px; border-radius: 14px; color: var(--ink); font-weight: 800; font-size: 13px;
+  background: #FFF6DE; border: 2px solid #E8B730; box-shadow: 0 6px 14px rgba(0,0,20,.4); animation: a-float 2.4s ease-in-out infinite; }
+.btn.tut-glow { animation: tut-glow 1.3s ease-in-out infinite; }

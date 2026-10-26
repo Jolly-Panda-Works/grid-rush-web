@@ -12,6 +12,7 @@ import { resign, send } from '../net';
 import { flipHorizontal, flipVertical, resetSel, rotate, selectOffer, useStore } from '../store';
 import { confirmPlacement } from '../actions';
 import { PlaceBar } from '../components/PlaceBar';
+import { TutorialCoach } from '../components/TutorialCoach';
 
 const GameCanvas = lazy(() => import('../three/GameCanvas'));
 void TRACK_LENGTH;
@@ -59,6 +60,7 @@ export default function GameScreen() {
         <Popup />
         <PlayerPanels />
         <GameMenu />
+        <TutorialCoach />
         {conn === 'reconnecting' && <div className="overlay soft"><div className="modal small">{t('game.reconnecting')}</div></div>}
         {game.phase === 'finished' && <div className="overlay soft"><div className="modal small">{t('game.over')}</div></div>}
       </section>

@@ -91,7 +91,6 @@ export function OfferPanel() {
               title={locked ? '' : !afford ? t('offer.noCoins') : !fits ? t('offer.noRoom') : picked ? t('offer.tapPlace') : t('offer.select', { n: i + 1 })}>
               <CardFace tile={tile} rot={picked ? sel.rot : orient[tile.uid]?.rot ?? 0} flip={picked ? sel.flip : orient[tile.uid]?.flip ?? false} short={!afford} />
               {!locked && blocked && <span className="stamp" dir="auto">{!afford ? t('offer.short', { n: tile.coinCost - me.coins }) : t('offer.room')}</span>}
-              {picked && <span className="rothint">⟳</span>}
             </button>
           );
         })}

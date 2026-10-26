@@ -55,6 +55,8 @@ interface Store {
   showSettings: boolean;
   /** "this needs the server" warning: what was asked for (an i18n key), and whether to go back to the menu after */
   serverNotice: { what: string; back?: boolean } | null;
+  /** the first-launch tutorial game is running (coinsSeen = the treasure explanation was read) */
+  tutorial: { coinsSeen: boolean } | null;
   confirmResign: boolean;
   result: ResultInfo | null;
 }
@@ -89,6 +91,7 @@ export const useStore = create<Store>(() => ({
   showHelp: false,
   showSettings: false,
   serverNotice: null,
+  tutorial: null,
   confirmResign: false,
   result: null,
 }));

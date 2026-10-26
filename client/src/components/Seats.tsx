@@ -113,7 +113,6 @@ function PlayerPanel({ seat }: { seat: Seat }) {
       <div className="ppbody">
         <span className="ppname">
           <span className="n">{seat === mySeat ? t('you') : p.name}</span>
-          {seat !== mySeat && p.isBot && <span className="botdot" title={t('bot')}><Icon id="bot" size={18} /></span>}
           {!p.connected && <span className="tag warn">{t('offline')}</span>}
         </span>
         <SeatStats seat={seat} compact />

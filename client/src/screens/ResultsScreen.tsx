@@ -101,7 +101,7 @@ export default function ResultsScreen() {
           return (
             <div key={seat} className={'scorecard ' + (done && r.winner === seat ? 'winner' : '')}>
               {done && r.winner === seat && <Icon id="crown" size={40} className="wincrown" />}
-              <div className="pname"><PlayerGlyph seat={seat} /> <b>{p.name}</b>{seat === mySeat && <span className="tag">{t('you')}</span>}{p.isBot && <span className="tag bot">{t('bot')}</span>}</div>
+              <div className="pname"><PlayerGlyph seat={seat} /> <b>{p.name}</b>{seat === mySeat && <span className="tag">{t('you')}</span>}</div>
               <BoardArt tiles={p.tiles} size={150} marked={new Set(empties[seat].slice(0, emptyCounted(seat)))} />
             </div>
           );

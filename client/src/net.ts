@@ -51,18 +51,23 @@ let gotFirst = false;
 let local: LocalSession | null = null;   // offline game running inside the app
 let mine = { treasures: 0, treasureCoins: 0, rewards: 0 }; // my counts in the current game (for stats / achievements)
 
-export async function startSearch(solo: boolean) {
+/** The scripted first-launch tutorial: a bot game where every move is planned (see tutorial.ts). */
+export function startTutorial() {
+  void startSearch(true, true);
+}
+
+export async function startSearch(solo: boolean, tutorial = false) {
   const my = ++token;
   leaveRoom();
   leaving = false; finalized = false; lastEventId = 0; gotFirst = false; mine = { treasures: 0, treasureCoins: 0, rewards: 0 };
   const st = useStore.getState();
   useStore.setState({
     screen: 'matchmaking', game: null, result: null, connection: 'ok', popups: [], fx: [], pendingFx: {}, drag: null, orient: {}, rotAnim: null,
-    match: { status: 'connecting', solo, waitMs: 0, startedAt: Date.now() },
+    match: { status: 'connecting', solo, waitMs: 0, startedAt: Date.now() }, tutorial: tutorial ? { coinsSeen: false } : null,
   });
   resetSel();
   // Playing against a bot never needs the server: it runs on this device.
-  if (solo) return startLocal(my, false);
+  if (solo) return startLocal(my, false, tutorial);
   if (!getWsUrl()) return startLocal(my, true);
   try {
     client = new Client(getWsUrl());
@@ -79,7 +84,7 @@ export async function startSearch(solo: boolean) {
 }
 
 /** Offline bot game. `fallback` = the player asked for an online match but no server could be reached. */
-function startLocal(my: number, fallback: boolean) {
+function startLocal(my: number, fallback: boolean, tutorial = false) {
   const st = useStore.getState();
   const session = new LocalSession({
     human: { name: st.profile.name, isBot: false, level: profileLevel(st.profile), rating: st.profile.rating },
@@ -87,6 +92,10 @@ function startLocal(my: number, fallback: boolean) {
     deliver: (g) => onState(g, null),
     onError: (m) => { pushToast(trErr(m), 'bad'); sfx.bad(); },
     onIntent: (seat, action) => useStore.setState({ oppIntent: { seat, action } }),
+    tutorial: tutorial ? {
+      coinsSeen: () => !!useStore.getState().tutorial?.coinsSeen,
+      onBlocked: (key) => { pushToast(tr(key), 'warn'); sfx.bad(); },
+    } : undefined,
   });
   local = session;
   onState(session.snapshot(), null);
@@ -202,6 +211,7 @@ function onState(g: GameState, turnLeft: number | null) {
 
 function finalize(g: GameState) {
   finalized = true;
+  if (useStore.getState().tutorial) { backToMenu(); return; } // leaving the tutorial early: no result, no stats
   const st = useStore.getState();
   const me = st.mySeat;
   const won = g.result!.winner === me;
@@ -245,7 +255,7 @@ export function leaveRoom() {
   room = null;
 }
 export function cancelSearch() { token++; leaveRoom(); useStore.setState({ screen: 'menu', match: { status: 'idle', solo: false, waitMs: 0, startedAt: 0 } }); }
-export function backToMenu() { token++; leaveRoom(); useStore.setState({ screen: 'menu', game: null, result: null, confirmResign: false, match: { status: 'idle', solo: false, waitMs: 0, startedAt: 0 } }); resetSel(); }
+export function backToMenu() { token++; leaveRoom(); useStore.setState({ screen: 'menu', game: null, result: null, confirmResign: false, tutorial: null, match: { status: 'idle', solo: false, waitMs: 0, startedAt: 0 } }); resetSel(); }
 export function resign() { if (local) local.resign(); else room?.send('resign'); useStore.setState({ confirmResign: false }); }
 
 export const send = {
