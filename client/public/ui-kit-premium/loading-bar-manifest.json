@@ -1,0 +1,29 @@
+{
+  "source": "loading-bar-layers.png",
+  "layers": {
+    "border": [
+      35,
+      140,
+      1700,
+      220
+    ],
+    "background": [
+      130,
+      405,
+      1510,
+      180
+    ],
+    "fill": [
+      130,
+      625,
+      1510,
+      180
+    ]
+  },
+  "files": [
+    "loading-bar-border.svg",
+    "loading-bar-background.svg",
+    "loading-bar-fill.svg"
+  ],
+  "note": "Self-contained SVG viewports embed original raster artwork without changing pixels. Layer widths differ: fit background/fill into the frame opening; reveal fill with a clipping mask."
+}

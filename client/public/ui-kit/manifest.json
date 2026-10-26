@@ -1,0 +1,1990 @@
+[
+  {
+    "name": "eight-point-star-1",
+    "path": "tiles/eight-point-star-1.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "eight-point-star-2",
+    "path": "tiles/eight-point-star-2.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "girih-knot-1",
+    "path": "tiles/girih-knot-1.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "girih-knot-2",
+    "path": "tiles/girih-knot-2.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "khatai-flower-1",
+    "path": "tiles/khatai-flower-1.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "khatai-flower-2",
+    "path": "tiles/khatai-flower-2.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "eslimi-scroll-1",
+    "path": "tiles/eslimi-scroll-1.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "eslimi-scroll-2",
+    "path": "tiles/eslimi-scroll-2.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "cypress-1",
+    "path": "tiles/cypress-1.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "cypress-2",
+    "path": "tiles/cypress-2.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "pomegranate-1",
+    "path": "tiles/pomegranate-1.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "pomegranate-2",
+    "path": "tiles/pomegranate-2.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "shamseh-sun-1",
+    "path": "tiles/shamseh-sun-1.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "shamseh-sun-2",
+    "path": "tiles/shamseh-sun-2.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "interlaced-hexagons-1",
+    "path": "tiles/interlaced-hexagons-1.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "interlaced-hexagons-2",
+    "path": "tiles/interlaced-hexagons-2.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "lattice-1",
+    "path": "tiles/lattice-1.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "lattice-2",
+    "path": "tiles/lattice-2.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "medallion-1",
+    "path": "tiles/medallion-1.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "medallion-2",
+    "path": "tiles/medallion-2.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "bird-and-vine-1",
+    "path": "tiles/bird-and-vine-1.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "bird-and-vine-2",
+    "path": "tiles/bird-and-vine-2.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "chevron-1",
+    "path": "tiles/chevron-1.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "chevron-2",
+    "path": "tiles/chevron-2.svg",
+    "width": 256,
+    "height": 256,
+    "category": "tiles"
+  },
+  {
+    "name": "tiles-4x6",
+    "path": "sheets/tiles-4x6.svg",
+    "width": 1024,
+    "height": 1536,
+    "category": "sheets"
+  },
+  {
+    "name": "play",
+    "path": "icons/play.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "bot",
+    "path": "icons/bot.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "online",
+    "path": "icons/online.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "friends",
+    "path": "icons/friends.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "add-friend",
+    "path": "icons/add-friend.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "trophy",
+    "path": "icons/trophy.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "profile",
+    "path": "icons/profile.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "museum",
+    "path": "icons/museum.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "shop",
+    "path": "icons/shop.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "settings",
+    "path": "icons/settings.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "help",
+    "path": "icons/help.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "sound-on",
+    "path": "icons/sound-on.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "sound-off",
+    "path": "icons/sound-off.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "language",
+    "path": "icons/language.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "back",
+    "path": "icons/back.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "close",
+    "path": "icons/close.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "rotate-left",
+    "path": "icons/rotate-left.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "rotate-right",
+    "path": "icons/rotate-right.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "flip",
+    "path": "icons/flip.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "confirm",
+    "path": "icons/confirm.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "cancel",
+    "path": "icons/cancel.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "coin",
+    "path": "icons/coin.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "hourglass",
+    "path": "icons/hourglass.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "treasure-jar",
+    "path": "icons/treasure-jar.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "gift",
+    "path": "icons/gift.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "star",
+    "path": "icons/star.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "crown",
+    "path": "icons/crown.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "lock",
+    "path": "icons/lock.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "share",
+    "path": "icons/share.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "copy",
+    "path": "icons/copy.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "heart",
+    "path": "icons/heart.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "calendar",
+    "path": "icons/calendar.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "quests",
+    "path": "icons/quests.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "ad-free",
+    "path": "icons/ad-free.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "back-rtl",
+    "path": "icons/back-rtl.svg",
+    "width": 56,
+    "height": 56,
+    "category": "icons"
+  },
+  {
+    "name": "primary-normal",
+    "path": "buttons/primary-normal.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "primary-pressed",
+    "path": "buttons/primary-pressed.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "primary-disabled",
+    "path": "buttons/primary-disabled.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "primary-loading",
+    "path": "buttons/primary-loading.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "secondary-normal",
+    "path": "buttons/secondary-normal.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "secondary-pressed",
+    "path": "buttons/secondary-pressed.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "secondary-disabled",
+    "path": "buttons/secondary-disabled.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "secondary-loading",
+    "path": "buttons/secondary-loading.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "danger-normal",
+    "path": "buttons/danger-normal.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "danger-pressed",
+    "path": "buttons/danger-pressed.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "danger-disabled",
+    "path": "buttons/danger-disabled.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "danger-loading",
+    "path": "buttons/danger-loading.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "ghost-normal",
+    "path": "buttons/ghost-normal.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "ghost-pressed",
+    "path": "buttons/ghost-pressed.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "ghost-disabled",
+    "path": "buttons/ghost-disabled.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "ghost-loading",
+    "path": "buttons/ghost-loading.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "icon-normal",
+    "path": "buttons/icon-normal.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "icon-pressed",
+    "path": "buttons/icon-pressed.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "icon-disabled",
+    "path": "buttons/icon-disabled.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "icon-loading",
+    "path": "buttons/icon-loading.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "cta-normal",
+    "path": "buttons/cta-normal.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "cta-pressed",
+    "path": "buttons/cta-pressed.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "cta-disabled",
+    "path": "buttons/cta-disabled.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "cta-loading",
+    "path": "buttons/cta-loading.svg",
+    "width": 240,
+    "height": 64,
+    "category": "buttons"
+  },
+  {
+    "name": "L-normal",
+    "path": "pieces/L-normal.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "L-selected",
+    "path": "pieces/L-selected.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "L-invalid",
+    "path": "pieces/L-invalid.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "T-normal",
+    "path": "pieces/T-normal.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "T-selected",
+    "path": "pieces/T-selected.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "T-invalid",
+    "path": "pieces/T-invalid.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "S-normal",
+    "path": "pieces/S-normal.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "S-selected",
+    "path": "pieces/S-selected.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "S-invalid",
+    "path": "pieces/S-invalid.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "line-normal",
+    "path": "pieces/line-normal.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "line-selected",
+    "path": "pieces/line-selected.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "line-invalid",
+    "path": "pieces/line-invalid.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "plus-normal",
+    "path": "pieces/plus-normal.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "plus-selected",
+    "path": "pieces/plus-selected.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "plus-invalid",
+    "path": "pieces/plus-invalid.svg",
+    "width": 256,
+    "height": 210,
+    "category": "pieces"
+  },
+  {
+    "name": "board-empty",
+    "path": "boards/board-empty.svg",
+    "width": 324,
+    "height": 324,
+    "category": "boards"
+  },
+  {
+    "name": "board-preview",
+    "path": "boards/board-preview.svg",
+    "width": 324,
+    "height": 324,
+    "category": "boards"
+  },
+  {
+    "name": "board-valid",
+    "path": "boards/board-valid.svg",
+    "width": 324,
+    "height": 324,
+    "category": "boards"
+  },
+  {
+    "name": "board-invalid",
+    "path": "boards/board-invalid.svg",
+    "width": 324,
+    "height": 324,
+    "category": "boards"
+  },
+  {
+    "name": "board-completed",
+    "path": "boards/board-completed.svg",
+    "width": 324,
+    "height": 324,
+    "category": "boards"
+  },
+  {
+    "name": "board-example",
+    "path": "boards/board-example.svg",
+    "width": 324,
+    "height": 324,
+    "category": "boards"
+  },
+  {
+    "name": "track-54",
+    "path": "track/track-54.svg",
+    "width": 1084,
+    "height": 36,
+    "category": "track"
+  },
+  {
+    "name": "pawn-azure-normal",
+    "path": "track/pawn-azure-normal.svg",
+    "width": 64,
+    "height": 64,
+    "category": "track"
+  },
+  {
+    "name": "pawn-azure-active",
+    "path": "track/pawn-azure-active.svg",
+    "width": 64,
+    "height": 64,
+    "category": "track"
+  },
+  {
+    "name": "pawn-coral-normal",
+    "path": "track/pawn-coral-normal.svg",
+    "width": 64,
+    "height": 64,
+    "category": "track"
+  },
+  {
+    "name": "pawn-coral-active",
+    "path": "track/pawn-coral-active.svg",
+    "width": 64,
+    "height": 64,
+    "category": "track"
+  },
+  {
+    "name": "modal",
+    "path": "panels/modal.svg",
+    "width": 340,
+    "height": 300,
+    "category": "panels"
+  },
+  {
+    "name": "modal-small",
+    "path": "panels/modal-small.svg",
+    "width": 300,
+    "height": 180,
+    "category": "panels"
+  },
+  {
+    "name": "bottom-sheet",
+    "path": "panels/bottom-sheet.svg",
+    "width": 390,
+    "height": 350,
+    "category": "panels"
+  },
+  {
+    "name": "card-normal",
+    "path": "panels/card-normal.svg",
+    "width": 156,
+    "height": 216,
+    "category": "panels"
+  },
+  {
+    "name": "card-back",
+    "path": "panels/card-back.svg",
+    "width": 156,
+    "height": 216,
+    "category": "panels"
+  },
+  {
+    "name": "card-reward",
+    "path": "panels/card-reward.svg",
+    "width": 156,
+    "height": 216,
+    "category": "panels"
+  },
+  {
+    "name": "ribbon-header",
+    "path": "panels/ribbon-header.svg",
+    "width": 320,
+    "height": 72,
+    "category": "panels"
+  },
+  {
+    "name": "ribbon-victory",
+    "path": "panels/ribbon-victory.svg",
+    "width": 320,
+    "height": 72,
+    "category": "panels"
+  },
+  {
+    "name": "ribbon-defeat",
+    "path": "panels/ribbon-defeat.svg",
+    "width": 320,
+    "height": 72,
+    "category": "panels"
+  },
+  {
+    "name": "input-normal",
+    "path": "controls/input-normal.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "input-focus",
+    "path": "controls/input-focus.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "input-pressed",
+    "path": "controls/input-pressed.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "input-disabled",
+    "path": "controls/input-disabled.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "toggle-normal",
+    "path": "controls/toggle-normal.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "toggle-focus",
+    "path": "controls/toggle-focus.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "toggle-pressed",
+    "path": "controls/toggle-pressed.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "toggle-disabled",
+    "path": "controls/toggle-disabled.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "segmented-normal",
+    "path": "controls/segmented-normal.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "segmented-focus",
+    "path": "controls/segmented-focus.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "segmented-pressed",
+    "path": "controls/segmented-pressed.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "segmented-disabled",
+    "path": "controls/segmented-disabled.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "tabs-normal",
+    "path": "controls/tabs-normal.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "tabs-focus",
+    "path": "controls/tabs-focus.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "tabs-pressed",
+    "path": "controls/tabs-pressed.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "tabs-disabled",
+    "path": "controls/tabs-disabled.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "slider-normal",
+    "path": "controls/slider-normal.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "slider-focus",
+    "path": "controls/slider-focus.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "slider-pressed",
+    "path": "controls/slider-pressed.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "slider-disabled",
+    "path": "controls/slider-disabled.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "checkbox-normal",
+    "path": "controls/checkbox-normal.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "checkbox-focus",
+    "path": "controls/checkbox-focus.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "checkbox-pressed",
+    "path": "controls/checkbox-pressed.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "checkbox-disabled",
+    "path": "controls/checkbox-disabled.svg",
+    "width": 300,
+    "height": 58,
+    "category": "controls"
+  },
+  {
+    "name": "avatar-1-normal",
+    "path": "avatars/avatar-1-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-1-online",
+    "path": "avatars/avatar-1-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-2-normal",
+    "path": "avatars/avatar-2-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-2-online",
+    "path": "avatars/avatar-2-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-3-normal",
+    "path": "avatars/avatar-3-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-3-online",
+    "path": "avatars/avatar-3-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-4-normal",
+    "path": "avatars/avatar-4-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-4-online",
+    "path": "avatars/avatar-4-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-5-normal",
+    "path": "avatars/avatar-5-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-5-online",
+    "path": "avatars/avatar-5-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-6-normal",
+    "path": "avatars/avatar-6-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-6-online",
+    "path": "avatars/avatar-6-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-7-normal",
+    "path": "avatars/avatar-7-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-7-online",
+    "path": "avatars/avatar-7-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-8-normal",
+    "path": "avatars/avatar-8-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-8-online",
+    "path": "avatars/avatar-8-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-9-normal",
+    "path": "avatars/avatar-9-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-9-online",
+    "path": "avatars/avatar-9-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-10-normal",
+    "path": "avatars/avatar-10-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-10-online",
+    "path": "avatars/avatar-10-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-11-normal",
+    "path": "avatars/avatar-11-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-11-online",
+    "path": "avatars/avatar-11-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-12-normal",
+    "path": "avatars/avatar-12-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-12-online",
+    "path": "avatars/avatar-12-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-13-normal",
+    "path": "avatars/avatar-13-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-13-online",
+    "path": "avatars/avatar-13-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-14-normal",
+    "path": "avatars/avatar-14-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-14-online",
+    "path": "avatars/avatar-14-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-15-normal",
+    "path": "avatars/avatar-15-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-15-online",
+    "path": "avatars/avatar-15-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-16-normal",
+    "path": "avatars/avatar-16-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-16-online",
+    "path": "avatars/avatar-16-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-17-normal",
+    "path": "avatars/avatar-17-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-17-online",
+    "path": "avatars/avatar-17-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-18-normal",
+    "path": "avatars/avatar-18-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-18-online",
+    "path": "avatars/avatar-18-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-19-normal",
+    "path": "avatars/avatar-19-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-19-online",
+    "path": "avatars/avatar-19-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-20-normal",
+    "path": "avatars/avatar-20-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-20-online",
+    "path": "avatars/avatar-20-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-21-normal",
+    "path": "avatars/avatar-21-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-21-online",
+    "path": "avatars/avatar-21-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-22-normal",
+    "path": "avatars/avatar-22-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-22-online",
+    "path": "avatars/avatar-22-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-23-normal",
+    "path": "avatars/avatar-23-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-23-online",
+    "path": "avatars/avatar-23-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-24-normal",
+    "path": "avatars/avatar-24-normal.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "avatar-24-online",
+    "path": "avatars/avatar-24-online.svg",
+    "width": 96,
+    "height": 100,
+    "category": "avatars"
+  },
+  {
+    "name": "first-win-locked",
+    "path": "achievements/first-win-locked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "first-win-unlocked",
+    "path": "achievements/first-win-unlocked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "10-wins-locked",
+    "path": "achievements/10-wins-locked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "10-wins-unlocked",
+    "path": "achievements/10-wins-unlocked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "50-wins-locked",
+    "path": "achievements/50-wins-locked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "50-wins-unlocked",
+    "path": "achievements/50-wins-unlocked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "25-games-locked",
+    "path": "achievements/25-games-locked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "25-games-unlocked",
+    "path": "achievements/25-games-unlocked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "streak-3-locked",
+    "path": "achievements/streak-3-locked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "streak-3-unlocked",
+    "path": "achievements/streak-3-unlocked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "7x7-locked",
+    "path": "achievements/7x7-locked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "7x7-unlocked",
+    "path": "achievements/7x7-unlocked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "full-board-locked",
+    "path": "achievements/full-board-locked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "full-board-unlocked",
+    "path": "achievements/full-board-unlocked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "high-score-locked",
+    "path": "achievements/high-score-locked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "high-score-unlocked",
+    "path": "achievements/high-score-unlocked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "rich-locked",
+    "path": "achievements/rich-locked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "rich-unlocked",
+    "path": "achievements/rich-unlocked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "treasures-locked",
+    "path": "achievements/treasures-locked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "treasures-unlocked",
+    "path": "achievements/treasures-unlocked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "100-tiles-locked",
+    "path": "achievements/100-tiles-locked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "100-tiles-unlocked",
+    "path": "achievements/100-tiles-unlocked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "master-bot-locked",
+    "path": "achievements/master-bot-locked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "master-bot-unlocked",
+    "path": "achievements/master-bot-unlocked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "museum-locked",
+    "path": "achievements/museum-locked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "museum-unlocked",
+    "path": "achievements/museum-unlocked.svg",
+    "width": 96,
+    "height": 104,
+    "category": "achievements"
+  },
+  {
+    "name": "xp",
+    "path": "stats/xp.svg",
+    "width": 300,
+    "height": 44,
+    "category": "stats"
+  },
+  {
+    "name": "timer",
+    "path": "stats/timer.svg",
+    "width": 64,
+    "height": 64,
+    "category": "stats"
+  },
+  {
+    "name": "coin-counter",
+    "path": "stats/coin-counter.svg",
+    "width": 152,
+    "height": 54,
+    "category": "stats"
+  },
+  {
+    "name": "firouzeh",
+    "path": "stats/firouzeh.svg",
+    "width": 64,
+    "height": 64,
+    "category": "stats"
+  },
+  {
+    "name": "rating",
+    "path": "stats/rating.svg",
+    "width": 152,
+    "height": 54,
+    "category": "stats"
+  },
+  {
+    "name": "level-up",
+    "path": "stats/level-up.svg",
+    "width": 96,
+    "height": 96,
+    "category": "stats"
+  },
+  {
+    "name": "toast-success",
+    "path": "feedback/toast-success.svg",
+    "width": 320,
+    "height": 58,
+    "category": "feedback"
+  },
+  {
+    "name": "toast-warning",
+    "path": "feedback/toast-warning.svg",
+    "width": 320,
+    "height": 58,
+    "category": "feedback"
+  },
+  {
+    "name": "toast-error",
+    "path": "feedback/toast-error.svg",
+    "width": 320,
+    "height": 58,
+    "category": "feedback"
+  },
+  {
+    "name": "tooltip",
+    "path": "feedback/tooltip.svg",
+    "width": 240,
+    "height": 90,
+    "category": "feedback"
+  },
+  {
+    "name": "floating-coins",
+    "path": "feedback/floating-coins.svg",
+    "width": 96,
+    "height": 64,
+    "category": "feedback"
+  },
+  {
+    "name": "spinner",
+    "path": "feedback/spinner.svg",
+    "width": 64,
+    "height": 64,
+    "category": "feedback"
+  },
+  {
+    "name": "turn-frame-azure",
+    "path": "feedback/turn-frame-azure.svg",
+    "width": 320,
+    "height": 100,
+    "category": "feedback"
+  },
+  {
+    "name": "turn-frame-coral",
+    "path": "feedback/turn-frame-coral.svg",
+    "width": 320,
+    "height": 100,
+    "category": "feedback"
+  },
+  {
+    "name": "empty-state",
+    "path": "feedback/empty-state.svg",
+    "width": 256,
+    "height": 256,
+    "category": "feedback"
+  },
+  {
+    "name": "particles-8x8",
+    "path": "sheets/particles-8x8.svg",
+    "width": 1024,
+    "height": 1024,
+    "category": "sheets"
+  },
+  {
+    "name": "girih-background",
+    "path": "backgrounds/girih-background.svg",
+    "width": 390,
+    "height": 844,
+    "category": "backgrounds"
+  },
+  {
+    "name": "design-system",
+    "path": "system/design-system.svg",
+    "width": 780,
+    "height": 1080,
+    "category": "system"
+  },
+  {
+    "name": "ornament-divider",
+    "path": "panels/ornament-divider.svg",
+    "width": 320,
+    "height": 24,
+    "category": "panels"
+  },
+  {
+    "name": "avatar-picker",
+    "path": "panels/avatar-picker.svg",
+    "width": 390,
+    "height": 440,
+    "category": "panels"
+  },
+  {
+    "name": "museum-detail",
+    "path": "panels/museum-detail.svg",
+    "width": 390,
+    "height": 550,
+    "category": "panels"
+  },
+  {
+    "name": "card-owned",
+    "path": "panels/card-owned.svg",
+    "width": 156,
+    "height": 216,
+    "category": "panels"
+  },
+  {
+    "name": "card-equipped",
+    "path": "panels/card-equipped.svg",
+    "width": 156,
+    "height": 216,
+    "category": "panels"
+  },
+  {
+    "name": "leave-confirm",
+    "path": "panels/leave-confirm.svg",
+    "width": 340,
+    "height": 240,
+    "category": "panels"
+  },
+  {
+    "name": "timer-low",
+    "path": "stats/timer-low.svg",
+    "width": 64,
+    "height": 64,
+    "category": "stats"
+  },
+  {
+    "name": "splash-en",
+    "path": "screens/splash-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "splash-fa",
+    "path": "screens/splash-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "loading-en",
+    "path": "screens/loading-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "loading-fa",
+    "path": "screens/loading-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "menu-en",
+    "path": "screens/menu-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "menu-fa",
+    "path": "screens/menu-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "matchmaking-en",
+    "path": "screens/matchmaking-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "matchmaking-fa",
+    "path": "screens/matchmaking-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "game-en",
+    "path": "screens/game-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "game-fa",
+    "path": "screens/game-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "reward-en",
+    "path": "screens/reward-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "reward-fa",
+    "path": "screens/reward-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "victory-en",
+    "path": "screens/victory-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "victory-fa",
+    "path": "screens/victory-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "defeat-en",
+    "path": "screens/defeat-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "defeat-fa",
+    "path": "screens/defeat-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "profile-en",
+    "path": "screens/profile-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "profile-fa",
+    "path": "screens/profile-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "leaderboard-en",
+    "path": "screens/leaderboard-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "leaderboard-fa",
+    "path": "screens/leaderboard-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "friends-en",
+    "path": "screens/friends-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "friends-fa",
+    "path": "screens/friends-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "museum-en",
+    "path": "screens/museum-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "museum-fa",
+    "path": "screens/museum-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "shop-en",
+    "path": "screens/shop-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "shop-fa",
+    "path": "screens/shop-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "daily-en",
+    "path": "screens/daily-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "daily-fa",
+    "path": "screens/daily-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "quests-en",
+    "path": "screens/quests-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "quests-fa",
+    "path": "screens/quests-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "settings-en",
+    "path": "screens/settings-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "settings-fa",
+    "path": "screens/settings-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "tutorial-en",
+    "path": "screens/tutorial-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "tutorial-fa",
+    "path": "screens/tutorial-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "pause-en",
+    "path": "screens/pause-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "pause-fa",
+    "path": "screens/pause-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "update-en",
+    "path": "screens/update-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "update-fa",
+    "path": "screens/update-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "offline-en",
+    "path": "screens/offline-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "offline-fa",
+    "path": "screens/offline-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "empty-en",
+    "path": "screens/empty-en.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  },
+  {
+    "name": "empty-fa",
+    "path": "screens/empty-fa.svg",
+    "width": 390,
+    "height": 844,
+    "category": "screens"
+  }
+]

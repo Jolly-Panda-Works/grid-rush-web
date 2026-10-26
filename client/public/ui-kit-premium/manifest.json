@@ -1,0 +1,1160 @@
+{
+  "version": 2,
+  "note": "Raster atlases. Rectangles are manually inspected display regions, in source pixels; do not assume generated layouts use uniform cells.",
+  "atlases": {
+    "icons-atlas.png": [
+      1254,
+      1254
+    ],
+    "museum-gallery.png": [
+      1254,
+      1254
+    ],
+    "tiles-atlas.png": [
+      1024,
+      1536
+    ],
+    "avatars-atlas.png": [
+      1024,
+      1536
+    ],
+    "frames-atlas-v2.png": [
+      1086,
+      1448
+    ],
+    "wordmark-naqsh-nabard-fa.png": [
+      1983,
+      793
+    ],
+    "wordmark-en.png": [
+      2172,
+      724
+    ],
+    "splash-icon-no-text.png": [
+      851,
+      1847
+    ],
+    "loading-palace-background.png": [
+      852,
+      1846
+    ],
+    "persian-characters-unframed.png": [
+      793,
+      1983
+    ],
+    "background-tile-minimal.png": [
+      1254,
+      1254
+    ],
+    "loading-bar-layers.png": [
+      1774,
+      887
+    ]
+  },
+  "assets": [
+    {
+      "id": "treasure",
+      "label": "گنجینه",
+      "file": "icons-atlas.png",
+      "box": [
+        0,
+        0,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "firouzeh",
+      "label": "فیروزه",
+      "file": "icons-atlas.png",
+      "box": [
+        313.5,
+        0,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "coins",
+      "label": "سکه",
+      "file": "icons-atlas.png",
+      "box": [
+        627,
+        0,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "hourglass",
+      "label": "ساعت شنی",
+      "file": "icons-atlas.png",
+      "box": [
+        940.5,
+        0,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "achievement",
+      "label": "شمسه دستاورد",
+      "file": "icons-atlas.png",
+      "box": [
+        0,
+        313.5,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "crown",
+      "label": "تاج",
+      "file": "icons-atlas.png",
+      "box": [
+        313.5,
+        313.5,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "lock",
+      "label": "قفل",
+      "file": "icons-atlas.png",
+      "box": [
+        627,
+        313.5,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "gift",
+      "label": "هدیه",
+      "file": "icons-atlas.png",
+      "box": [
+        940.5,
+        313.5,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "museum",
+      "label": "موزه",
+      "file": "museum-gallery.png",
+      "box": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "trophy",
+      "label": "جام",
+      "file": "icons-atlas.png",
+      "box": [
+        313.5,
+        627,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "quests",
+      "label": "طومار ماموریت",
+      "file": "icons-atlas.png",
+      "box": [
+        627,
+        627,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "calendar",
+      "label": "تقویم روزانه",
+      "file": "icons-atlas.png",
+      "box": [
+        940.5,
+        627,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "pawn-azure",
+      "label": "مهره آبی",
+      "file": "icons-atlas.png",
+      "box": [
+        0,
+        940.5,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "pawn-coral",
+      "label": "مهره مرجانی",
+      "file": "icons-atlas.png",
+      "box": [
+        313.5,
+        940.5,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "settings",
+      "label": "تنظیمات",
+      "file": "icons-atlas.png",
+      "box": [
+        627,
+        940.5,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "heart",
+      "label": "پسندیدن",
+      "file": "icons-atlas.png",
+      "box": [
+        940.5,
+        940.5,
+        313.5,
+        313.5
+      ],
+      "category": "icons"
+    },
+    {
+      "id": "tile-1-1",
+      "label": "شمسه هشت‌پر · لاجورد",
+      "file": "tiles-atlas.png",
+      "box": [
+        20,
+        20,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-1-2",
+      "label": "شمسه هشت‌پر · کرم",
+      "file": "tiles-atlas.png",
+      "box": [
+        270,
+        20,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-2-1",
+      "label": "گره‌چینی · لاجورد",
+      "file": "tiles-atlas.png",
+      "box": [
+        520,
+        20,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-2-2",
+      "label": "گره‌چینی · کرم",
+      "file": "tiles-atlas.png",
+      "box": [
+        770,
+        20,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-3-1",
+      "label": "گل ختایی · لاجورد",
+      "file": "tiles-atlas.png",
+      "box": [
+        20,
+        257,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-3-2",
+      "label": "گل ختایی · کرم",
+      "file": "tiles-atlas.png",
+      "box": [
+        270,
+        257,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-4-1",
+      "label": "اسلیمی · لاجورد",
+      "file": "tiles-atlas.png",
+      "box": [
+        520,
+        257,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-4-2",
+      "label": "اسلیمی · کرم",
+      "file": "tiles-atlas.png",
+      "box": [
+        770,
+        257,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-5-1",
+      "label": "سرو · لاجورد",
+      "file": "tiles-atlas.png",
+      "box": [
+        20,
+        494,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-5-2",
+      "label": "سرو · کرم",
+      "file": "tiles-atlas.png",
+      "box": [
+        270,
+        494,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-6-1",
+      "label": "انار · لاجورد",
+      "file": "tiles-atlas.png",
+      "box": [
+        520,
+        494,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-6-2",
+      "label": "انار · کرم",
+      "file": "tiles-atlas.png",
+      "box": [
+        770,
+        494,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-7-1",
+      "label": "شمسه خورشیدی · لاجورد",
+      "file": "tiles-atlas.png",
+      "box": [
+        20,
+        731,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-7-2",
+      "label": "شمسه خورشیدی · کرم",
+      "file": "tiles-atlas.png",
+      "box": [
+        270,
+        731,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-8-1",
+      "label": "شش‌ضلعی درهم · لاجورد",
+      "file": "tiles-atlas.png",
+      "box": [
+        520,
+        731,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-8-2",
+      "label": "شش‌ضلعی درهم · کرم",
+      "file": "tiles-atlas.png",
+      "box": [
+        770,
+        731,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-9-1",
+      "label": "شبکه لوزی · لاجورد",
+      "file": "tiles-atlas.png",
+      "box": [
+        20,
+        968,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-9-2",
+      "label": "شبکه لوزی · کرم",
+      "file": "tiles-atlas.png",
+      "box": [
+        270,
+        968,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-10-1",
+      "label": "ترنج · لاجورد",
+      "file": "tiles-atlas.png",
+      "box": [
+        520,
+        968,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-10-2",
+      "label": "ترنج · کرم",
+      "file": "tiles-atlas.png",
+      "box": [
+        770,
+        968,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-11-1",
+      "label": "مرغ و گل · لاجورد",
+      "file": "tiles-atlas.png",
+      "box": [
+        20,
+        1205,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-11-2",
+      "label": "مرغ و گل · کرم",
+      "file": "tiles-atlas.png",
+      "box": [
+        270,
+        1205,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-12-1",
+      "label": "زیگزاگ گلدار · لاجورد",
+      "file": "tiles-atlas.png",
+      "box": [
+        520,
+        1205,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "tile-12-2",
+      "label": "زیگزاگ گلدار · کرم",
+      "file": "tiles-atlas.png",
+      "box": [
+        770,
+        1205,
+        236,
+        232
+      ],
+      "category": "tiles"
+    },
+    {
+      "id": "avatar-1",
+      "label": "شمسه فیروزه",
+      "file": "avatars-atlas.png",
+      "box": [
+        0,
+        0,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-2",
+      "label": "ختایی زمرد",
+      "file": "avatars-atlas.png",
+      "box": [
+        256,
+        0,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-3",
+      "label": "انار یاقوت",
+      "file": "avatars-atlas.png",
+      "box": [
+        512,
+        0,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-4",
+      "label": "سرو زرین",
+      "file": "avatars-atlas.png",
+      "box": [
+        768,
+        0,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-5",
+      "label": "مرغ آبی",
+      "file": "avatars-atlas.png",
+      "box": [
+        0,
+        247,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-6",
+      "label": "بلبل عاج",
+      "file": "avatars-atlas.png",
+      "box": [
+        256,
+        247,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-7",
+      "label": "گره زرین",
+      "file": "avatars-atlas.png",
+      "box": [
+        512,
+        247,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-8",
+      "label": "رز لاجورد",
+      "file": "avatars-atlas.png",
+      "box": [
+        768,
+        247,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-9",
+      "label": "پیچک زمرد",
+      "file": "avatars-atlas.png",
+      "box": [
+        0,
+        494,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-10",
+      "label": "هندسه فیروزه",
+      "file": "avatars-atlas.png",
+      "box": [
+        256,
+        494,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-11",
+      "label": "لاله سرخ",
+      "file": "avatars-atlas.png",
+      "box": [
+        512,
+        494,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-12",
+      "label": "آفتابگردان",
+      "file": "avatars-atlas.png",
+      "box": [
+        768,
+        494,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-13",
+      "label": "پر طاووس",
+      "file": "avatars-atlas.png",
+      "box": [
+        0,
+        741,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-14",
+      "label": "نیلوفر عاج",
+      "file": "avatars-atlas.png",
+      "box": [
+        256,
+        741,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-15",
+      "label": "ستاره زمرد",
+      "file": "avatars-atlas.png",
+      "box": [
+        512,
+        741,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-16",
+      "label": "ترنج هندسی",
+      "file": "avatars-atlas.png",
+      "box": [
+        768,
+        741,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-17",
+      "label": "گلدان ختایی",
+      "file": "avatars-atlas.png",
+      "box": [
+        0,
+        988,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-18",
+      "label": "گنبد فیروزه",
+      "file": "avatars-atlas.png",
+      "box": [
+        256,
+        988,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-19",
+      "label": "غنچه سرخ",
+      "file": "avatars-atlas.png",
+      "box": [
+        512,
+        988,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-20",
+      "label": "ستاره‌های پیوسته",
+      "file": "avatars-atlas.png",
+      "box": [
+        768,
+        988,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-21",
+      "label": "شیر زرین",
+      "file": "avatars-atlas.png",
+      "box": [
+        0,
+        1235,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-22",
+      "label": "پروانه",
+      "file": "avatars-atlas.png",
+      "box": [
+        256,
+        1235,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-23",
+      "label": "باغ ایرانی",
+      "file": "avatars-atlas.png",
+      "box": [
+        512,
+        1235,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "avatar-24",
+      "label": "گل شاه‌عباسی",
+      "file": "avatars-atlas.png",
+      "box": [
+        768,
+        1235,
+        256,
+        247
+      ],
+      "category": "avatars"
+    },
+    {
+      "id": "primary",
+      "label": "دکمه اصلی",
+      "file": "frames-atlas-v2.png",
+      "box": [
+        0,
+        238,
+        375,
+        165
+      ],
+      "category": "frames"
+    },
+    {
+      "id": "secondary",
+      "label": "دکمه ثانویه",
+      "file": "frames-atlas-v2.png",
+      "box": [
+        375,
+        245,
+        337,
+        145
+      ],
+      "category": "frames"
+    },
+    {
+      "id": "danger",
+      "label": "دکمه خطر",
+      "file": "frames-atlas-v2.png",
+      "box": [
+        720,
+        245,
+        366,
+        145
+      ],
+      "category": "frames"
+    },
+    {
+      "id": "modal",
+      "label": "پنل دیالوگ",
+      "file": "frames-atlas-v2.png",
+      "box": [
+        0,
+        400,
+        377,
+        355
+      ],
+      "category": "frames"
+    },
+    {
+      "id": "hero",
+      "label": "قاب طاق ایرانی",
+      "file": "frames-atlas-v2.png",
+      "box": [
+        394,
+        395,
+        310,
+        370
+      ],
+      "category": "frames"
+    },
+    {
+      "id": "offer",
+      "label": "قاب کارت پیشنهاد",
+      "file": "frames-atlas-v2.png",
+      "box": [
+        735,
+        395,
+        340,
+        370
+      ],
+      "category": "frames"
+    },
+    {
+      "id": "victory",
+      "label": "روبان پیروزی",
+      "file": "frames-atlas-v2.png",
+      "box": [
+        0,
+        765,
+        376,
+        190
+      ],
+      "category": "frames"
+    },
+    {
+      "id": "ribbon",
+      "label": "روبان عنوان",
+      "file": "frames-atlas-v2.png",
+      "box": [
+        375,
+        765,
+        350,
+        190
+      ],
+      "category": "frames"
+    },
+    {
+      "id": "defeat",
+      "label": "روبان شکست",
+      "file": "frames-atlas-v2.png",
+      "box": [
+        726,
+        765,
+        360,
+        190
+      ],
+      "category": "frames"
+    },
+    {
+      "id": "avatar-frame",
+      "label": "قاب آواتار",
+      "file": "frames-atlas-v2.png",
+      "box": [
+        16,
+        953,
+        325,
+        325
+      ],
+      "category": "frames"
+    },
+    {
+      "id": "xp",
+      "label": "نوار تجربه",
+      "file": "frames-atlas-v2.png",
+      "box": [
+        339,
+        1060,
+        422,
+        135
+      ],
+      "category": "frames"
+    },
+    {
+      "id": "board-frame",
+      "label": "قاب صفحه بازی",
+      "file": "frames-atlas-v2.png",
+      "box": [
+        760,
+        953,
+        310,
+        315
+      ],
+      "category": "frames"
+    },
+    {
+      "id": "wordmark-fa",
+      "label": "لوگوتایپ فارسی · نقش‌نبرد",
+      "file": "wordmark-naqsh-nabard-fa.png",
+      "box": [
+        0,
+        0,
+        1983,
+        793
+      ],
+      "category": "logos"
+    },
+    {
+      "id": "wordmark-en",
+      "label": "English · GRID RUSH",
+      "file": "wordmark-en.png",
+      "box": [
+        0,
+        0,
+        2172,
+        724
+      ],
+      "category": "logos"
+    },
+    {
+      "id": "splash",
+      "label": "صفحه آغاز · Splash",
+      "file": "splash-icon-no-text.png",
+      "box": [
+        0,
+        0,
+        851,
+        1847
+      ],
+      "category": "screens"
+    },
+    {
+      "id": "loading",
+      "label": "صفحه بارگذاری · Loading",
+      "file": "loading-palace-background.png",
+      "box": [
+        0,
+        0,
+        852,
+        1846
+      ],
+      "category": "screens"
+    },
+    {
+      "id": "character-1",
+      "label": "رستم",
+      "file": "persian-characters-unframed.png",
+      "box": [
+        0,
+        0,
+        396.5,
+        396.6
+      ],
+      "category": "characters"
+    },
+    {
+      "id": "character-2",
+      "label": "سهراب",
+      "file": "persian-characters-unframed.png",
+      "box": [
+        396.5,
+        0,
+        396.5,
+        396.6
+      ],
+      "category": "characters"
+    },
+    {
+      "id": "character-3",
+      "label": "آرش",
+      "file": "persian-characters-unframed.png",
+      "box": [
+        0,
+        396.6,
+        396.5,
+        396.6
+      ],
+      "category": "characters"
+    },
+    {
+      "id": "character-4",
+      "label": "سیاوش",
+      "file": "persian-characters-unframed.png",
+      "box": [
+        396.5,
+        396.6,
+        396.5,
+        396.6
+      ],
+      "category": "characters"
+    },
+    {
+      "id": "character-5",
+      "label": "زال",
+      "file": "persian-characters-unframed.png",
+      "box": [
+        0,
+        793.2,
+        396.5,
+        396.6
+      ],
+      "category": "characters"
+    },
+    {
+      "id": "character-6",
+      "label": "تهمینه",
+      "file": "persian-characters-unframed.png",
+      "box": [
+        396.5,
+        793.2,
+        396.5,
+        396.6
+      ],
+      "category": "characters"
+    },
+    {
+      "id": "character-7",
+      "label": "گردآفرید",
+      "file": "persian-characters-unframed.png",
+      "box": [
+        0,
+        1189.8000000000002,
+        396.5,
+        396.6
+      ],
+      "category": "characters"
+    },
+    {
+      "id": "character-8",
+      "label": "رودابه",
+      "file": "persian-characters-unframed.png",
+      "box": [
+        396.5,
+        1189.8000000000002,
+        396.5,
+        396.6
+      ],
+      "category": "characters"
+    },
+    {
+      "id": "character-9",
+      "label": "شهرزاد",
+      "file": "persian-characters-unframed.png",
+      "box": [
+        0,
+        1586.4,
+        396.5,
+        396.6
+      ],
+      "category": "characters"
+    },
+    {
+      "id": "character-10",
+      "label": "فردوسی",
+      "file": "persian-characters-unframed.png",
+      "box": [
+        396.5,
+        1586.4,
+        396.5,
+        396.6
+      ],
+      "category": "characters"
+    },
+    {
+      "id": "minimal-background",
+      "label": "تایل پس‌زمینه بسیار ساده",
+      "file": "background-tile-minimal.png",
+      "box": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "category": "extras"
+    },
+    {
+      "id": "loading-layers",
+      "label": "قاب، زمینه و پرشدگی نوار",
+      "file": "loading-bar-layers.png",
+      "box": [
+        0,
+        0,
+        1774,
+        887
+      ],
+      "category": "extras"
+    }
+  ]
+}

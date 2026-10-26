@@ -1,0 +1,313 @@
+{
+  "source": "docs/icons-needed.md",
+  "tool": "built-in image_gen",
+  "order": "row-major, left to right",
+  "note": "Original generated sheets; not sliced. Cells are 313.5 px wide, so use consistent rounded boundaries if slicing into integer pixel rectangles.",
+  "sheets": [
+    {
+      "file": "achievements-atlas.png",
+      "width": 1254,
+      "height": 1254,
+      "columns": 4,
+      "rows": 4,
+      "cellWidth": 313.5,
+      "cellHeight": 313.5,
+      "emptyCells": [],
+      "icons": [
+        {
+          "id": "ach-first_win",
+          "cell": 1,
+          "row": 1,
+          "column": 1
+        },
+        {
+          "id": "ach-wins_10",
+          "cell": 2,
+          "row": 1,
+          "column": 2
+        },
+        {
+          "id": "ach-wins_50",
+          "cell": 3,
+          "row": 1,
+          "column": 3
+        },
+        {
+          "id": "ach-games_25",
+          "cell": 4,
+          "row": 1,
+          "column": 4
+        },
+        {
+          "id": "ach-streak_3",
+          "cell": 5,
+          "row": 2,
+          "column": 1
+        },
+        {
+          "id": "ach-bonus7",
+          "cell": 6,
+          "row": 2,
+          "column": 2
+        },
+        {
+          "id": "ach-full_board",
+          "cell": 7,
+          "row": 2,
+          "column": 3
+        },
+        {
+          "id": "ach-score_15",
+          "cell": 8,
+          "row": 2,
+          "column": 4
+        },
+        {
+          "id": "ach-rich",
+          "cell": 9,
+          "row": 3,
+          "column": 1
+        },
+        {
+          "id": "ach-treasure_5",
+          "cell": 10,
+          "row": 3,
+          "column": 2
+        },
+        {
+          "id": "ach-tiles_100",
+          "cell": 11,
+          "row": 3,
+          "column": 3
+        },
+        {
+          "id": "ach-beat_master",
+          "cell": 12,
+          "row": 3,
+          "column": 4
+        },
+        {
+          "id": "ach-museum",
+          "cell": 13,
+          "row": 4,
+          "column": 1
+        },
+        {
+          "id": "rank-gold",
+          "cell": 14,
+          "row": 4,
+          "column": 2
+        },
+        {
+          "id": "rank-silver",
+          "cell": 15,
+          "row": 4,
+          "column": 3
+        },
+        {
+          "id": "rank-bronze",
+          "cell": 16,
+          "row": 4,
+          "column": 4
+        }
+      ]
+    },
+    {
+      "file": "ui-icons-atlas.png",
+      "width": 1254,
+      "height": 1254,
+      "columns": 4,
+      "rows": 4,
+      "cellWidth": 313.5,
+      "cellHeight": 313.5,
+      "emptyCells": [],
+      "icons": [
+        {
+          "id": "play",
+          "cell": 1,
+          "row": 1,
+          "column": 1
+        },
+        {
+          "id": "match",
+          "cell": 2,
+          "row": 1,
+          "column": 2
+        },
+        {
+          "id": "friends",
+          "cell": 3,
+          "row": 1,
+          "column": 3
+        },
+        {
+          "id": "add-friend",
+          "cell": 4,
+          "row": 1,
+          "column": 4
+        },
+        {
+          "id": "menu",
+          "cell": 5,
+          "row": 2,
+          "column": 1
+        },
+        {
+          "id": "sound-on",
+          "cell": 6,
+          "row": 2,
+          "column": 2
+        },
+        {
+          "id": "sound-off",
+          "cell": 7,
+          "row": 2,
+          "column": 3
+        },
+        {
+          "id": "motion",
+          "cell": 8,
+          "row": 2,
+          "column": 4
+        },
+        {
+          "id": "resign",
+          "cell": 9,
+          "row": 3,
+          "column": 1
+        },
+        {
+          "id": "close",
+          "cell": 10,
+          "row": 3,
+          "column": 2
+        },
+        {
+          "id": "confirm",
+          "cell": 11,
+          "row": 3,
+          "column": 3
+        },
+        {
+          "id": "edit",
+          "cell": 12,
+          "row": 3,
+          "column": 4
+        },
+        {
+          "id": "copy",
+          "cell": 13,
+          "row": 4,
+          "column": 1
+        },
+        {
+          "id": "back",
+          "cell": 14,
+          "row": 4,
+          "column": 2
+        },
+        {
+          "id": "language",
+          "cell": 15,
+          "row": 4,
+          "column": 3
+        },
+        {
+          "id": "tip",
+          "cell": 16,
+          "row": 4,
+          "column": 4
+        }
+      ]
+    },
+    {
+      "file": "game-icons-atlas.png",
+      "width": 1254,
+      "height": 1254,
+      "columns": 4,
+      "rows": 4,
+      "cellWidth": 313.5,
+      "cellHeight": 313.5,
+      "emptyCells": [
+        13,
+        14,
+        15,
+        16
+      ],
+      "icons": [
+        {
+          "id": "buy-tile",
+          "cell": 1,
+          "row": 1,
+          "column": 1
+        },
+        {
+          "id": "advance",
+          "cell": 2,
+          "row": 1,
+          "column": 2
+        },
+        {
+          "id": "turns",
+          "cell": 3,
+          "row": 1,
+          "column": 3
+        },
+        {
+          "id": "finish",
+          "cell": 4,
+          "row": 1,
+          "column": 4
+        },
+        {
+          "id": "scales",
+          "cell": 5,
+          "row": 2,
+          "column": 1
+        },
+        {
+          "id": "rotate-left",
+          "cell": 6,
+          "row": 2,
+          "column": 2
+        },
+        {
+          "id": "rotate-right",
+          "cell": 7,
+          "row": 2,
+          "column": 3
+        },
+        {
+          "id": "flip",
+          "cell": 8,
+          "row": 2,
+          "column": 4
+        },
+        {
+          "id": "bot",
+          "cell": 9,
+          "row": 3,
+          "column": 1
+        },
+        {
+          "id": "heart-empty",
+          "cell": 10,
+          "row": 3,
+          "column": 2
+        },
+        {
+          "id": "empty-cell",
+          "cell": 11,
+          "row": 3,
+          "column": 3
+        },
+        {
+          "id": "engraved-coin",
+          "cell": 12,
+          "row": 3,
+          "column": 4
+        }
+      ]
+    }
+  ]
+}

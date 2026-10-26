@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نقش‌نبرد · پیش‌نمایش پس‌زمینه تکرارشونده</title>
+<style>
+@font-face{font-family:Vazirmatn;src:url('../ui-kit/fonts/vazirmatn.woff2')}
+*{box-sizing:border-box}body{margin:0;background:#001E67;color:#FFF6DE;font:16px Vazirmatn,sans-serif}
+header{padding:24px;background:#001E67;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+h1{font-size:20px;margin:0}a{color:#0AB6CB}label{display:flex;gap:12px;align-items:center}
+main{min-height:calc(100vh - 100px);background-image:url('./background-tile-minimal.png');background-repeat:repeat;background-size:320px 320px;display:grid;place-items:center;padding:32px}
+article{max-width:440px;text-align:center;padding:32px;background:#001e67ed;border:2px solid #E3A71A;border-radius:20px;box-shadow:0 10px 28px #001e6761}
+article img{width:100%;height:auto}p{line-height:1.9}
+</style>
+<header><h1>پس‌زمینه ساده نقش‌نبرد</h1><label>اندازه کاشی <input id="size" type="range" min="128" max="640" step="32" value="320"><output id="value">320px</output></label><a href="background-tile-minimal.png">فایل PNG اصلی</a></header>
+<main id="repeat"><article><img src="wordmark-naqsh-nabard-fa.png" alt="نقش‌نبرد"><p>نمایش تکرار افقی و عمودی کاشی در پشت رابط بازی</p></article></main>
+<script>document.querySelector('#size').addEventListener('input',e=>{const size=e.target.value+'px';document.querySelector('#repeat').style.backgroundSize=size+' '+size;document.querySelector('#value').value=size})</script>
+</html>

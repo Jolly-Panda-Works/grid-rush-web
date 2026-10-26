@@ -1,0 +1,4 @@
+{
+  "tool": "built-in image_gen",
+  "gameHeartCorrection": "Precisely edit ONLY icon in ROW THREE, COLUMN TWO of this 4x4 sprite atlas (the empty-heart icon, overall cell 10). It must be a SIMPLE EMPTY GOLD OUTLINE HEART: preserve its heart silhouette and approximate size, but remove ALL blue enamel, ivory flowers, colored gems and ornamental inlays from the heart's rim. Its rim must be plain polished gold metal, with a clean open fully transparent hole inside. No decorative gemstone at the bottom point. Keep every OTHER icon, its placement, size, color and rendering completely unchanged. Keep the entire fourth row fully transparent empty, keep the full square 4x4 canvas size, preserve transparent background and layout. Do not add text or border."
+}

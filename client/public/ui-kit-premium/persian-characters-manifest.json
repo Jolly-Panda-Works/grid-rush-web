@@ -1,0 +1,71 @@
+{
+  "file": "persian-characters-unframed.png",
+  "columns": 2,
+  "rows": 5,
+  "transparent": true,
+  "framed": false,
+  "order": "left-to-right, top-to-bottom",
+  "characters": [
+    {
+      "name": "رستم",
+      "cell": 1,
+      "row": 1,
+      "column": 1
+    },
+    {
+      "name": "سهراب",
+      "cell": 2,
+      "row": 1,
+      "column": 2
+    },
+    {
+      "name": "آرش",
+      "cell": 3,
+      "row": 2,
+      "column": 1
+    },
+    {
+      "name": "سیاوش",
+      "cell": 4,
+      "row": 2,
+      "column": 2
+    },
+    {
+      "name": "زال",
+      "cell": 5,
+      "row": 3,
+      "column": 1
+    },
+    {
+      "name": "تهمینه",
+      "cell": 6,
+      "row": 3,
+      "column": 2
+    },
+    {
+      "name": "گردآفرید",
+      "cell": 7,
+      "row": 4,
+      "column": 1
+    },
+    {
+      "name": "رودابه",
+      "cell": 8,
+      "row": 4,
+      "column": 2
+    },
+    {
+      "name": "شهرزاد",
+      "cell": 9,
+      "row": 5,
+      "column": 1
+    },
+    {
+      "name": "فردوسی",
+      "cell": 10,
+      "row": 5,
+      "column": 2
+    }
+  ],
+  "note": "Original generated atlas; character depictions are artistic interpretations."
+}
