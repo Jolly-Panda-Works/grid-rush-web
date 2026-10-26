@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { Action, GameState, Seat } from '../../shared/src';
 import type { UpdateInfo } from './update';
-import type { Account } from './account';
+import type { Account, OtherProfile } from './account';
 import { Profile, Settings, loadProfile, loadSettings } from './profile';
 import { bestFit, hoverKeeping, placedCells } from './three/placement';
 import { tr } from './i18n';
@@ -57,6 +57,10 @@ interface Store {
   serverNotice: { what: string; back?: boolean } | null;
   /** the first-launch tutorial game is running (coinsSeen = the treasure explanation was read) */
   tutorial: { coinsSeen: boolean } | null;
+  /** a sign-in found another profile: waiting for the player to confirm the switch */
+  accountSwitch: { other: OtherProfile | null; resolve: (yes: boolean) => void } | null;
+  /** the email sign-in dialog ('save' = link to this profile, 'signin' = played before on another phone) */
+  emailLogin: 'save' | 'signin' | null;
   confirmResign: boolean;
   result: ResultInfo | null;
 }
@@ -92,6 +96,8 @@ export const useStore = create<Store>(() => ({
   showSettings: false,
   serverNotice: null,
   tutorial: null,
+  accountSwitch: null,
+  emailLogin: null,
   confirmResign: false,
   result: null,
 }));

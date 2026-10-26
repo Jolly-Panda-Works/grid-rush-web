@@ -15,6 +15,7 @@ export default function MenuScreen() {
   const profile = useStore((s) => s.profile);
   const online = useStore((s) => s.serverOnline);
   const firstTime = !tutorialDone();
+  const account = useStore((s) => s.account);
   const lp = levelProgress(profile.xp);
   return (
     <main className="screen menu lobby">
@@ -42,6 +43,9 @@ export default function MenuScreen() {
           <span className="pt-ico" aria-hidden="true"><Icon id="match" size={40} /></span>
           <span className="pt-txt"><b>{t('menu.find')}</b><small><i className={'dot ' + (online ? 'on' : 'off')} />{online ? t('menu.findOn') : t('menu.findOff')}</small></span>
         </button>
+        {online && account && !account.linked && profileLevel(profile) < 3 && (
+          <button className="linkbtn" onClick={() => useStore.setState({ emailLogin: 'signin' })}>{t('acct.playedBefore')}</button>
+        )}
       </div>
 
       <nav className="navtiles">

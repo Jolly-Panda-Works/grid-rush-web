@@ -1,17 +1,22 @@
 import { tr } from './i18n';
 import { getHttpUrl } from './net';
-import { Profile, emptyStats, saveProfile } from './profile';
+import { playerId } from './museum';
+import { Profile, defaultProfile, emptyStats, saveProfile } from './profile';
 import { pushToast, useStore } from './store';
 
 /**
  * The player's server account. Everyone is signed in as a guest automatically (a token kept on the device) as soon
- * as the game server is reachable; a Google Play Games account can be linked so the profile follows the player.
+ * as the game server is reachable; an email (one-time codes) and / or a Google Play Games account can be linked so
+ * the profile follows the player to another phone (docs/accounts.md).
  * The device keeps playing offline; progress is synced whenever the server is reachable.
  */
 const TOKEN_KEY = 'gridrush.token.v1';
 const PLAY_GAMES_CLIENT_ID = import.meta.env.VITE_PLAY_GAMES_CLIENT_ID || '';
 
-export interface Account { id: string; friendCode: string; linked: boolean; rating: number; ratedGames: number }
+export interface Logins { email?: string; google: boolean }
+export interface Account { id: string; friendCode: string; linked: boolean; logins: Logins; rating: number; ratedGames: number }
+/** The profile a sign-in would switch to (shown in the confirmation). */
+export interface OtherProfile { name: string; level: number; rating: number }
 interface ServerUser extends Account { name: string; avatar: number; xp: number; wins: number; losses: number; stats: Profile['stats']; ach: Record<string, number> }
 
 const getToken = () => { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } };
@@ -44,7 +49,7 @@ function adopt(u: ServerUser, preferServer: boolean) {
     ? { ...p, name: u.name, avatar: u.avatar, xp: u.xp, wins: u.wins, losses: u.losses, stats: { ...emptyStats(), ...u.stats }, ach: { ...p.ach, ...u.ach }, rating: u.rating }
     : { ...p, rating: u.rating, ach: { ...u.ach, ...p.ach } };
   saveProfile(next);
-  useStore.setState({ profile: next, account: { id: u.id, friendCode: u.friendCode, linked: u.linked, rating: u.rating, ratedGames: u.ratedGames } });
+  useStore.setState({ profile: next, account: { id: u.id, friendCode: u.friendCode, linked: u.linked, logins: u.logins ?? { google: u.linked }, rating: u.rating, ratedGames: u.ratedGames } });
 }
 
 /** At launch: create the guest account the first time, otherwise reconcile with the server. */
@@ -82,19 +87,78 @@ const playGames = (): PlayGamesPlugin | null =>
   ((window as unknown as { Capacitor?: { Plugins?: Record<string, unknown> } }).Capacitor?.Plugins?.PlayGamesAuth as PlayGamesPlugin | undefined) ?? null;
 export const canLinkGoogle = () => !!playGames() && !!PLAY_GAMES_CLIENT_ID;
 
+/** Ask the player before switching to another profile; resolved by the confirmation dialog. */
+function askSwitch(other: OtherProfile | undefined): Promise<boolean> {
+  return new Promise((resolve) => useStore.setState({ accountSwitch: { other: other ?? null, resolve } }));
+}
+/** A sign-in answered "this belongs to another profile": switch to it if the player agrees. */
+async function maybeSwitch(d: { switched: boolean; token?: string; user: ServerUser; other?: OtherProfile }): Promise<boolean> {
+  if (d.switched && d.token) {
+    if (!(await askSwitch(d.other))) return false;
+    setToken(d.token);
+    adopt(d.user, true);
+    return true;
+  }
+  adopt(d.user, false);
+  return true;
+}
+
 /** Link Google Play Games. If that Google account already has a profile, switch to it (after asking). */
-export async function linkGoogle(confirmSwitch: () => boolean): Promise<void> {
+export async function linkGoogle(): Promise<void> {
   const plugin = playGames();
   if (!plugin || !PLAY_GAMES_CLIENT_ID) { pushToast(tr('acct.googleUnavailable'), 'warn'); return; }
   let code = '';
   try { code = (await plugin.serverAuthCode({ clientId: PLAY_GAMES_CLIENT_ID })).code; } catch { pushToast(tr('acct.googleFailed'), 'bad'); return; }
-  const r = await api<{ switched: boolean; token?: string; user: ServerUser; error?: string }>('/auth/google', { method: 'POST', body: { code } });
+  const r = await api<{ switched: boolean; token?: string; user: ServerUser; other?: OtherProfile; error?: string }>('/auth/google', { method: 'POST', body: { code } });
   if (!r) { pushToast(tr('museum.offline'), 'warn'); return; }
   if (!r.ok) { pushToast(r.status === 501 ? tr('acct.googleNotConfigured') : tr('acct.googleFailed'), 'bad'); return; }
-  if (r.data.switched && r.data.token) {
-    if (!confirmSwitch()) return;
-    setToken(r.data.token);
-    adopt(r.data.user, true);
-  } else adopt(r.data.user, false);
-  pushToast(tr('acct.linked'), 'good');
+  if (await maybeSwitch(r.data)) pushToast(tr('acct.linked'), 'good');
+}
+
+/** Email sign-in, step 1: send a one-time code. */
+export async function startEmailLogin(email: string): Promise<{ ok: true; resendIn: number } | { ok: false; error: 'offline' | 'bad' | 'rate' | 'send' }> {
+  const r = await api<{ resendIn?: number }>('/auth/email/start', { method: 'POST', body: { email, lang: useStore.getState().settings.lang } });
+  if (!r) return { ok: false, error: 'offline' };
+  if (r.ok) return { ok: true, resendIn: r.data.resendIn ?? 60 };
+  return { ok: false, error: r.status === 400 ? 'bad' : r.status === 429 ? 'rate' : 'send' };
+}
+/** Email sign-in, step 2: the code. Links the email, or switches to the profile it belongs to (after asking). */
+export async function verifyEmailLogin(email: string, code: string): Promise<{ ok: boolean; error?: 'offline' | 'wrong' | 'expired'; triesLeft?: number; switched?: boolean }> {
+  const r = await api<{ switched: boolean; token?: string; user: ServerUser; other?: OtherProfile; error?: string; triesLeft?: number }>(
+    '/auth/email/verify', { method: 'POST', body: { email, code } });
+  if (!r) return { ok: false, error: 'offline' };
+  if (!r.ok) return { ok: false, error: r.data.error === 'wrong code' && (r.data.triesLeft ?? 0) > 0 ? 'wrong' : 'expired', triesLeft: r.data.triesLeft };
+  const was = useStore.getState().account?.id;
+  if (!(await maybeSwitch(r.data))) return { ok: true, switched: false };
+  return { ok: true, switched: useStore.getState().account?.id !== was };
+}
+
+async function unlink(path: string) {
+  const r = await api<{ user: ServerUser }>(path, { method: 'DELETE' });
+  if (r?.ok) adopt(r.data.user, false); else pushToast(tr('acct.needServer'), 'warn');
+}
+export const unlinkEmail = () => unlink('/auth/email');
+export const unlinkGoogle = () => unlink('/auth/google');
+
+/** Start over as a fresh guest on this device (after signing out or deleting the account). */
+async function freshGuest() {
+  try { localStorage.removeItem(TOKEN_KEY); } catch { /* ignore */ }
+  const p = { ...defaultProfile(), avatar: useStore.getState().profile.avatar };
+  saveProfile(p);
+  useStore.setState({ profile: p, account: null });
+  await bootstrapAccount();
+}
+/** Sign out of this profile (only offered when it can be got back: an email or Google is linked). */
+export async function logout(): Promise<boolean> {
+  const r = await api('/auth/logout', { method: 'POST' });
+  if (!r?.ok) { pushToast(tr('acct.needServer'), 'warn'); return false; }
+  await freshGuest();
+  return true;
+}
+/** Delete the account on the server for good (stores require this), then start over as a guest. */
+export async function deleteAccount(): Promise<boolean> {
+  const r = await api('/me', { method: 'DELETE', body: { confirm: 'DELETE', pid: playerId() } });
+  if (!r?.ok) { pushToast(tr('acct.needServer'), 'warn'); return false; }
+  await freshGuest();
+  return true;
 }

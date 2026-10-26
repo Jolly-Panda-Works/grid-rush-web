@@ -12,7 +12,7 @@ const LATIN_RE = /[0-9]/g;
 const HAS_LATIN = /[0-9]/;
 const FA_RE = /[۰-۹]/g;
 export const toFaDigits = (s: string) => s.replace(LATIN_RE, (d) => FA[+d]);
-const toLatinDigits = (s: string) => s.replace(FA_RE, (d) => String(FA.indexOf(d)));
+export const toLatinDigits = (s: string) => s.replace(FA_RE, (d) => String(FA.indexOf(d)));
 
 /** For text drawn outside the DOM (canvas textures): Persian digits when the UI is Persian. */
 export const localDigits = (s: string) => (useStore.getState().settings.lang === 'fa' ? toFaDigits(s) : s);

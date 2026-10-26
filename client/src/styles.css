@@ -1437,3 +1437,18 @@ body[data-tut='coins'] .placebar { visibility: hidden; }
 .coach-hint { align-self: center; margin-bottom: 6px; padding: 6px 14px; border-radius: 14px; color: var(--ink); font-weight: 800; font-size: 13px;
   background: #FFF6DE; border: 2px solid #E8B730; box-shadow: 0 6px 14px rgba(0,0,20,.4); animation: a-float 2.4s ease-in-out infinite; }
 .btn.tut-glow { animation: tut-glow 1.3s ease-in-out infinite; }
+
+/* ---- account ---- */
+.set-h { margin: 6px 0 0; font: 800 14px var(--head); color: var(--ink-muted); }
+.acct-status { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--ink); line-height: 1.5; }
+.acct-danger { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; margin-top: 4px; }
+.acct-danger .btn { flex: 1; }
+.dlg-text { margin: 0 0 8px; color: var(--ink); line-height: 1.7; }
+.dlg-input { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 12px; border: 2px solid #E8B730; background: #fff; color: var(--ink); font: 700 16px var(--font); }
+.dlg-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(10,182,203,.45); }
+.dlg-input.code { text-align: center; font: 800 28px var(--head); letter-spacing: .35em; }
+.dlg-err { margin: 8px 0 0; color: var(--terra); font-weight: 800; font-size: 13px; }
+.email-modal .mscroll { display: flex; flex-direction: column; gap: 6px; }
+.email-modal .mscroll .btn { align-self: center; }
+.linkbtn { align-self: center; margin-top: 2px; padding: 4px 10px; border: 0; background: none; color: #FFE07A; font: 700 13px var(--font); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.modal > .mscroll > * { flex-shrink: 0; } /* a long body scrolls; its buttons never get squashed */

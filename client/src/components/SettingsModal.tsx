@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useT } from '../i18n';
-import { getWsUrl, normalizeServer, pingServer, setServerUrl, startTutorial } from '../net';
-import { needServer, useStore } from '../store';
-import { bootstrapAccount, canLinkGoogle, linkGoogle } from '../account';
+import { startTutorial } from '../net';
+import { useStore } from '../store';
+import { AccountSection } from './AccountUI';
 import { Icon, IconId } from '../art';
 import { sfx, vibrate } from '../audio';
 
@@ -32,18 +32,13 @@ function Slider({ value, onChange, onRelease, label, icon }: { value: number; on
 }
 
 /** Settings, laid out like a game's options panel: how to play and language on top, then sound and music sliders,
- *  vibration / notifications / reduce motion, about us and the version; the account and server sit at the end. */
+ *  vibration / notifications / reduce motion, about us, the account and the version. */
 export function SettingsModal() {
   const t = useT();
   const settings = useStore((s) => s.settings);
-  const online = useStore((s) => s.serverOnline);
-  const account = useStore((s) => s.account);
-  const [srv, setSrv] = useState(getWsUrl());
   const [about, setAbout] = useState(false);
   const close = () => useStore.setState({ showSettings: false });
   const setS = (patch: Partial<typeof settings>) => useStore.setState({ settings: { ...settings, ...patch } });
-  const save = async () => { setServerUrl(srv); setSrv(normalizeServer(srv)); const ok = await pingServer(); useStore.setState({ serverOnline: ok }); if (ok) void bootstrapAccount(); };
-  const status = !getWsUrl() ? t('settings.none') : online ? t('settings.on') : t('settings.off');
   const notify = async (on: boolean) => {
     setS({ notifications: on });
     if (on && typeof Notification !== 'undefined' && Notification.permission === 'default') { try { await Notification.requestPermission(); } catch { /* ignore */ } }
@@ -72,24 +67,8 @@ export function SettingsModal() {
             <Toggle icon="motion" label={t('menu.reduce')} on={settings.reduceMotion} onChange={(v) => setS({ reduceMotion: v })} />
           </div>
           <button className="btn wide" onClick={() => setAbout(true)}><Icon id="achievement" size={22} />{t('set.about')}</button>
-          <details className="setmore">
-            <summary>{t('acct.title')} · {t('settings.server')}</summary>
-            <div className="acctbox">
-              {account
-                ? <>
-                    <div className="acctline"><b>{account.linked ? t('acct.linkedGoogle') : t('acct.guest')}</b><span className="num small" dir="ltr" data-latin>{account.friendCode}</span></div>
-                    {!account.linked && <button className="btn" disabled={!canLinkGoogle()} onClick={() => needServer('off.what.google', () => linkGoogle(() => confirm(t('acct.switchConfirm'))))}>{t('acct.linkGoogle')}</button>}
-                    {!account.linked && !canLinkGoogle() && <span className="muted small">{t('acct.googleUnavailable')}</span>}
-                  </>
-                : <span className="muted small">{t('acct.needServer')}</span>}
-            </div>
-            <div className="serverbox">
-              <span className="muted small">{t('settings.server')}</span>
-              <input dir="ltr" value={srv} placeholder={t('menu.serverHint')} onChange={(e) => setSrv(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && save()} />
-              <div className={'sstatus ' + (online ? 'on' : 'off')}><i className={'dot ' + (online ? 'on' : 'off')} />{status}</div>
-              <button className="btn" onClick={save}>{t('menu.serverSave')}</button>
-            </div>
-          </details>
+          <h4 className="set-h">{t('acct.title')}</h4>
+          <AccountSection />
           <div className="setver num" dir="ltr" data-latin>v{__APP_VERSION__}</div>
         </div>
       </div>

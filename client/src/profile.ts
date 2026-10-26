@@ -38,6 +38,10 @@ export function loadProfile(): Profile {
       };
     }
   } catch { /* ignore */ }
+  return defaultProfile();
+}
+/** A brand-new profile (first launch, or after signing out). */
+export function defaultProfile(): Profile {
   return { name: 'Player' + Math.floor(100 + Math.random() * 900), xp: 0, rating: DEFAULT_RATING, wins: 0, losses: 0, avatar: 24 + Math.floor(Math.random() * 10), stats: emptyStats(), ach: {} };
 }
 export function saveProfile(p: Profile) { try { localStorage.setItem(PK, JSON.stringify(p)); } catch { /* ignore */ } }

@@ -16,6 +16,7 @@ import { RotateOverlay } from './components/RotateOverlay';
 import { SettingsModal } from './components/SettingsModal';
 import { UpdatePrompt } from './components/UpdatePrompt';
 import { ServerNotice } from './components/ServerNotice';
+import { AccountSwitchDialog, EmailLoginDialog, SaveReminder } from './components/AccountUI';
 import { checkForUpdate } from './update';
 
 export default function App() {
@@ -47,6 +48,9 @@ export default function App() {
       {settingsOpen && <SettingsModal />}
       <UpdatePrompt />
       <ServerNotice />
+      <EmailLoginDialog />
+      <AccountSwitchDialog />
+      <SaveReminder />
       <RotateOverlay />
     </>
   );
