@@ -4,7 +4,7 @@ import {
   BOARD_SIZE, COIN_SCORE_DIVISOR, EMPTY_CELL_PENALTY, REWARD_POSITIONS, SPECIAL_7X7_BONUS, STARTING_COINS, TRACK_LENGTH, TREASURE_POSITIONS,
   GameState, TileDef, applyAction, applyAdvance, applyBuy, applyReward, botTierFor, chooseAction, cellIdx, createGame, emptyCount,
   eloDelta, finishGame, levelFromXp, legalActions, scoreOf, transformCells, orientations, cellsKey,
-  LEVELS, RELIC_UID, STONE, STORY, applySoloAction, createSoloGame, goalsDone, replaySolo, solveLevel, starsOf, trackLen,
+  LEVELS, RELIC_UID, STONE, STORY, applySoloAction, createSoloGame, daysLeft, goalsDone, replaySolo, solveLevel, starsOf, trackLen,
 } from '../../shared/src';
 import type { LevelDef } from '../../shared/src';
 
@@ -136,15 +136,22 @@ test('there is always at least one legal action (Advance)', () => {
 });
 console.log('story levels');
 const lvl = (over: Partial<LevelDef>): LevelDef => ({
-  id: 20, seed: 5, trackLength: 30, pacerStep: 2, startingCoins: 5, treasures: [], rewards: [], goals: [{ type: 'fill_count', n: 4 }], stars: [10, 20], ...over,
+  id: 20, seed: 5, days: 30, startingShards: 5, paydays: [], giftDays: [], goals: [{ type: 'fill_count', n: 4 }], stars: [10, 20], ...over,
 });
-test('the pacer moves its step until it is ahead, and takes the oldest offer away', () => {
-  const s = createSoloGame(lvl({}));
-  const second = s.offer[1].uid;
-  assert.equal(s.current, 0);
-  assert.equal(applySoloAction(s, { t: 'advance' }), null);
-  assert.equal(s.players[0].pos, 1); assert.equal(s.players[1].pos, 2); assert.equal(s.current, 0, 'the turn is back at once');
-  assert.equal(s.offer[0].uid, second, 'the offers moved up');
+test('work takes 1-5 days of the deadline and pays a shard a day; the turn never changes hands', () => {
+  const s = createSoloGame(lvl({ paydays: [4] }));
+  const shards = s.players[0].coins;
+  assert.notEqual(applySoloAction(s, { t: 'advance' }), null, 'no opponent to pass');
+  assert.notEqual(applySoloAction(s, { t: 'work', days: 6 }), null);
+  assert.equal(applySoloAction(s, { t: 'work', days: 3 }), null);
+  assert.equal(s.players[0].pos, 3); assert.equal(s.players[0].coins, shards + 3); assert.equal(s.current, 0);
+  assert.equal(daysLeft(s), 27);
+  assert.equal(applySoloAction(s, { t: 'work', days: 2 }), null);
+  assert.ok(s.events.some((e) => e.k === 'treasure'), 'passing day 4 is a payday');
+});
+test('when no offer fits anywhere, the oldest offers are replaced', () => {
+  const s = createSoloGame(lvl({ cells: { stone: Array.from({ length: 81 }, (_, i) => [Math.floor(i / 9), i % 9] as [number, number]).filter(([r, c]) => !(r === 4 && c < 2)) } }));
+  assert.ok(s.offer.some((t) => t.cells.length <= 2), 'a tile that fits the 2-cell gap came in');
 });
 test('stones take no tile and are neither empty nor filled; prefilled cells are old tiles', () => {
   const s = createSoloGame(lvl({ cells: { stone: [[0, 0]], filled: [[8, 8], [8, 7], [0, 8]] } }));
@@ -164,7 +171,7 @@ test('gold pays one coin, once (not again after the chisel)', () => {
   assert.equal(s.players[0].board[cellIdx(4, 4)], 0, 'the chisel freed the cells');
   assert.notEqual(applySoloAction(s, { t: 'chisel', uid: 500 }), null, 'no chisel left');
 });
-test('goals done -> finish wins and turns the track left into coins; the track end without goals loses', () => {
+test('goals done -> finish wins and turns the days left into coins; the deadline without goals loses', () => {
   const s = createSoloGame(lvl({}));
   assert.notEqual(applySoloAction(s, { t: 'finish' }), null);
   s.offer[0] = { uid: 500, shape: 'o4', cells: [[0, 0], [0, 1], [1, 0], [1, 1]], timeCost: 2, coinCost: 0, engraved: 0 };
@@ -172,11 +179,11 @@ test('goals done -> finish wins and turns the track left into coins; the track e
   assert.ok(goalsDone(s));
   assert.equal(applySoloAction(s, { t: 'finish' }), null);
   assert.equal(s.solo!.outcome, 'won'); assert.equal(s.solo!.early, 30 - 2); assert.ok(starsOf(s) >= 1);
-  const l = createSoloGame(lvl({ trackLength: 6 }));
-  while (!l.solo!.outcome) assert.equal(applySoloAction(l, { t: 'advance' }), null);
+  const l = createSoloGame(lvl({ days: 6 }));
+  while (!l.solo!.outcome) assert.equal(applySoloAction(l, { t: 'work', days: 5 }), null);
   assert.equal(l.solo!.outcome, 'lost'); assert.equal(starsOf(l), 0);
   assert.equal(applySoloAction(l, { t: 'continue' }), null, 'a continue reopens the level');
-  assert.equal(trackLen(l), 6 + STORY.CONTINUE_CELLS); assert.equal(l.phase, 'playing');
+  assert.equal(trackLen(l), 6 + STORY.CONTINUE_DAYS); assert.equal(l.phase, 'playing');
 });
 test('a level replays to the same result (the server check)', () => {
   const lv = LEVELS[0];

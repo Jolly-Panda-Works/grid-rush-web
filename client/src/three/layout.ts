@@ -2,6 +2,8 @@ import { TRACK_LENGTH } from '../../../shared/src';
 
 export interface TrackLayout {
   len: number;                   // last track index (the PvP track or a story level's own)
+  calendar: boolean;             // desktop: days in rows of 9 (a calendar), read in the language's direction
+  rtl: boolean;
   x: number; y: number;          // desktop: centre of the first line; phone: centre of the visible window
   cell: number;                  // cell size
   vertical: boolean;             // (legacy two-column phone track, unused)
@@ -23,19 +25,22 @@ export interface Layout {
 /** The opponent's board is intentionally smaller than the player's own board.
  *  Phones (portrait): opponent board on top, a zoomed scrolling strip of the time track in the middle, my board below.
  *  Desktop (landscape): boards side by side, the whole time track below. */
-export function computeLayout(aspect: number, len: number = TRACK_LENGTH, solo = false): Layout {
+export function computeLayout(aspect: number, len: number = TRACK_LENGTH, solo = false, rtl = false): Layout {
+  if (solo) return soloLayout(aspect, len);
   const n = len + 1;
   if (aspect >= 1.1) {
-    const lineLen = Math.ceil(n / 3), lines = 3;
-    const cell = Math.min(0.8, 16 / lineLen), across = cell * 1.12, y = -6.3;
+    // the calendar: day 1..len in rows of 9 (day 0, the start, sits just before day 1)
+    const lineLen = 9, lines = Math.ceil(len / 9);
+    const cell = 0.74, across = cell * 1.08, y = -6.1;
+    const bottom = y - (lines - 1) * across - cell / 2 - 0.45;
     return {
-      landscape: true, w: 18.8, h: 13.9, cx: 0, cy: -1.75,
+      landscape: true, w: 18.8, h: 6.0 - bottom, cx: 0, cy: (6.0 + bottom) / 2,
       my: { x: -3.75, y: 0, scale: 1 }, opp: { x: 5.7, y: 0.4, scale: 0.6 },
       // a story level has no opponent board: the goals take its place
       info: solo ? { x0: 5.7 - 3.12, x1: 5.7 + 3.12, y0: -5.55, y1: 0.4 + 3.12 } : { x0: 5.7 - 3.12, x1: 5.7 + 3.12, y0: -5.55, y1: 0.4 - 3.12 - 0.25 },
       track: {
-        len, x: 0, y, cell, vertical: false, window: 0, lineLen, lines, step: cell, across,
-        plate: { x: 0, y: y - ((lines - 1) * across) / 2, w: lineLen * cell + 0.75, h: (lines - 1) * across + cell + 0.65 },
+        len, calendar: true, rtl, x: 0, y, cell, vertical: false, window: 0, lineLen, lines, step: cell * 1.06, across,
+        plate: { x: 0, y: y - ((lines - 1) * across) / 2, w: (lineLen + 1) * cell * 1.06 + 0.5, h: (lines - 1) * across + cell + 0.65 },
       },
     };
   }
@@ -54,9 +59,29 @@ export function computeLayout(aspect: number, len: number = TRACK_LENGTH, solo =
     my: { x: 0, y: 0, scale: 1 }, opp: { x: 5.6 - 5.2 * oppScale - 0.15, y: oy, scale: oppScale },
     info: { x0: -5.5, x1: solo ? 5.5 : 5.6 - 2 * 5.2 * oppScale - 0.45, y0: oy - 5.2 * oppScale, y1: oy + 5.2 * oppScale },
     track: {
-      len, x: tx, y: ty, cell, vertical: false, window: win, lineLen: n, lines: 1, step, across: 0,
+      len, calendar: false, rtl, x: tx, y: ty, cell, vertical: false, window: win, lineLen: n, lines: 1, step, across: 0,
       plate: { x: tx, y: ty, w: plateW, h: plateH },
     },
+  };
+}
+
+/** A story level: my board and, in place of the opponent's board and the time track, the goals panel (with the day
+ *  counter). The track layout is still filled in (nothing draws it). */
+function soloLayout(aspect: number, len: number): Layout {
+  const track: TrackLayout = { len, calendar: false, rtl: false, x: 0, y: 0, cell: 0.8, vertical: false, window: 0, lineLen: len + 1, lines: 1, step: 0.8, across: 0, plate: { x: 0, y: 0, w: 0, h: 0 } };
+  if (aspect >= 1.1) {
+    return {
+      landscape: true, w: 18.8, h: 11.4, cx: 0, cy: 0,
+      my: { x: -3.75, y: 0, scale: 1 }, opp: { x: 5.7, y: 0, scale: 0.6 },
+      info: { x0: 5.7 - 3.12, x1: 5.7 + 3.12, y0: -5.2, y1: 5.2 }, track,
+    };
+  }
+  const MENU_ROOM = 1.35, infoH = 3.9;
+  const y0 = 5.2 + 0.35, y1 = y0 + infoH, bottom = -5.2;
+  return {
+    landscape: false, w: 11.2, h: y1 - bottom + 0.5, cx: 0, cy: (y1 + bottom) / 2,
+    my: { x: 0, y: 0, scale: 1 }, opp: { x: 0, y: y1, scale: 0.45 },
+    info: { x0: -5.5, x1: 5.5 - MENU_ROOM, y0, y1 }, track,
   };
 }
 
@@ -64,6 +89,12 @@ export function computeLayout(aspect: number, len: number = TRACK_LENGTH, solo =
 export function trackCoord(l: Layout, i: number, scroll = 0): [number, number] {
   const t = l.track;
   if (t.window) return [t.x + (i - scroll) * t.step, t.y];
+  if (t.calendar) {
+    const row = i === 0 ? 0 : Math.floor((i - 1) / t.lineLen);
+    const col = i === 0 ? -1 : (i - 1) % t.lineLen;
+    const x = (col - (t.lineLen - 2) / 2) * t.step; // (col -1 = the start, so the grid with it is centred)
+    return [t.x + (t.rtl ? -x : x), t.y - row * t.across];
+  }
   if (t.vertical) {
     const line = Math.floor(i / t.lineLen);
     let idx = i % t.lineLen;

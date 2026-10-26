@@ -12,6 +12,7 @@ import { flipHorizontal, flipVertical, resetSel, rotate, selectOffer, useStore }
 import { confirmPlacement } from '../actions';
 import { PlaceBar } from '../components/PlaceBar';
 import { GoalsPanel, LevelCoach, LevelEnd } from '../components/StoryUI';
+import { CalendarButton, TurnLine } from '../components/Calendar';
 
 const GameCanvas = lazy(() => import('../three/GameCanvas'));
 
@@ -57,6 +58,8 @@ export default function GameScreen() {
         <RewardCardFx />
         <Popup />
         {game.solo ? <GoalsPanel /> : <PlayerPanels />}
+        {!game.solo && <CalendarButton />}
+        {!game.solo && <TurnLine />}
         <GameMenu />
         {game.solo && <LevelCoach />}
         {game.solo && <LevelEnd />}

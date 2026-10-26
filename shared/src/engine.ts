@@ -181,13 +181,14 @@ function resolve(s: GameState, seat: Seat) {
 }
 
 /* ---------- actions ---------- */
-export function applyAdvance(s: GameState, seat: Seat): string | null {
+/** `days`: story levels only ("work" for a chosen number of days); PvP always passes the opponent by one. */
+export function applyAdvance(s: GameState, seat: Seat, days?: number): string | null {
   if (s.phase !== 'playing') return 'Not in action phase';
   if (s.current !== seat) return 'Not your turn';
   const me = s.players[seat];
   // RULE v0.4: Advance = move to exactly one cell ahead of the opponent (target = opponent position + 1).
   // On the mover's turn me.pos <= opp.pos always holds, so steps >= 1 and the mover always passes the opponent.
-  const steps = Math.max(1, s.players[other(seat)].pos + 1 - me.pos);
+  const steps = days ?? Math.max(1, s.players[other(seat)].pos + 1 - me.pos);
   const moved = moveTo(s, seat, steps);
   const coins = moved * ADVANCE_COIN_RATE; // coins for cells actually moved (clamped at track end)
   me.coins += coins;

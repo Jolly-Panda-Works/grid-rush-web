@@ -17,6 +17,7 @@ export interface Forecast {
 /** RULE v0.4: Advance jumps to exactly (opponent position + 1), clamped at the finish. */
 export function advanceSteps(g: GameState, seat: Seat): number {
   const me = g.players[seat], opp = g.players[1 - seat];
+  if (g.solo) return Math.min(trackLen(g) - me.pos, useStore.getState().workDays); // a level: the days the player picked
   return Math.min(trackLen(g) - me.pos, Math.max(1, opp.pos + 1 - me.pos));
 }
 

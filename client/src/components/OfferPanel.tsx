@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { TileDef, canPlaceAny, trackLen, transformCells } from '../../../shared/src';
+import { STORY, TileDef, canPlaceAny, daysLeft, trackLen, transformCells } from '../../../shared/src';
 import { Forecast, advanceSteps, useForecast } from '../forecast';
 import { iconUrl } from '../three/icons';
 import { useT, tr } from '../i18n';
@@ -75,7 +75,7 @@ export function OfferPanel() {
   const orient = useStore((s) => s.orient);
 
   return (
-    <footer className={'dock' + (locked ? ' locked' : '')} aria-disabled={locked}>
+    <footer className={'dock' + (locked ? ' locked' : '') + (g.solo && g.solo.level < STORY.SHOW_SHARDS ? ' noshards' : '') + (g.solo && g.solo.level < STORY.SHOW_DAYS ? ' nodays' : '')} aria-disabled={locked}>
       <div className={'hand' + (placing ? ' holding' : '')}>
         {placing && <div className="gcard rewardcard inhand sel" aria-label={t('reward.title')}><RewardCardFace count={g.pendingRewards} /></div>}
         {g.offer.map((tile, i) => {
@@ -104,7 +104,8 @@ export function OfferPanel() {
             <span className="pile-l">{t('offer.next')}</span>
           </div>
         )}
-        {/* finger down / mouse over = preview the jump on the track; releasing on the medallion confirms it */}
+        {g.solo ? (g.solo.level >= STORY.SHOW_DAYS && <WorkControl locked={locked} setAdv={setAdv} />) : (
+        /* finger down / mouse over = preview the jump on the track; releasing on the medallion confirms it */
         <button className={'medal' + (advEnds && !locked ? ' danger' : '') + (oppMove?.t === 'advance' ? ' intent' : '')} disabled={locked}
           onPointerEnter={(e) => { if (e.pointerType === 'mouse' && sel.offer === null) setAdv(true); }}
           onPointerDown={() => { if (sel.offer !== null) resetSel(); setAdv(true); }}
@@ -113,9 +114,34 @@ export function OfferPanel() {
           aria-label={`${t('offer.advance')} +${advSteps}`}>
           <span className="medal-in"><span className="hourglass">⧗</span><span className="mgain num"><CoinIcon size={13} />+{advSteps}</span></span>
           <span className="medal-l">{t('offer.advance')}</span>
-        </button>
+        </button>)}
       </div>
     </footer>
+  );
+}
+
+/** A story level: work for 1-5 days (− / +), one shard a day; the preview shows where it lands. */
+function WorkControl({ locked, setAdv }: { locked: boolean; setAdv: (on: boolean) => void }) {
+  const t = useT();
+  const g = useStore((s) => s.game)!;
+  const want = useStore((s) => s.workDays);
+  const max = Math.max(1, Math.min(STORY.WORK_MAX, daysLeft(g)));
+  const d = Math.min(want, max);
+  const set = (n: number) => { sfx.click(); useStore.setState({ workDays: Math.max(1, Math.min(max, n)) }); };
+  return (
+    <div className="workctl">
+      <button className="wstep" disabled={locked || d >= max} onClick={() => set(d + 1)} aria-label="+">+</button>
+      <button className={'medal' + (d >= daysLeft(g) && !locked ? ' danger' : '')} disabled={locked}
+        onPointerEnter={(e) => { if (e.pointerType === 'mouse') setAdv(true); }}
+        onPointerDown={() => { resetSel(); setAdv(true); }}
+        onPointerLeave={() => setAdv(false)} onPointerCancel={() => setAdv(false)}
+        onClick={() => { setAdv(false); sfx.advance(); resetSel(); send.solo({ t: 'work', days: d }); }}
+        aria-label={`${t('offer.advance')} ${t('offer.advCells', { n: d })}`}>
+        <span className="medal-in"><span className="mdays num">{t('offer.advCells', { n: d })}</span><span className="mgain num"><CoinIcon size={13} />+{d}</span></span>
+        <span className="medal-l">{t('offer.advance')}</span>
+      </button>
+      <button className="wstep" disabled={locked || d <= 1} onClick={() => set(d - 1)} aria-label="−">−</button>
+    </div>
   );
 }
 
@@ -161,11 +187,13 @@ export function TurnScroll() {
 function Outcome({ fc, oppName, mine, lead }: { fc: Forecast; oppName: string; mine: boolean; lead?: string }) {
   const t = useT();
   const solo = !!useStore((s) => s.game?.solo);
-  const next = mine ? (fc.passes ? (solo ? t('out.pacer') : t('out.pass', { name: oppName })) : t('out.keep')) : (fc.passes ? t('out.yourNext') : t('out.oppAgain', { name: oppName }));
+  // (a story level has no turns: only what the move costs and collects)
+  const next = solo ? null : mine ? (fc.passes ? t('out.pass', { name: oppName }) : t('out.keep')) : (fc.passes ? t('out.yourNext') : t('out.oppAgain', { name: oppName }));
   return (
     <span className="outcome">
       {lead && <span className="olead">{lead}</span>}
-      <span className={'ochip ' + (fc.passes ? 'pass' : 'keep')}>{next}</span>
+      {next && <span className={'ochip ' + (fc.passes ? 'pass' : 'keep')}>{next}</span>}
+      {solo && <span className="ochip keep num">{t('out.toDay', { n: fc.to })}</span>}
       {fc.advanceCoins > 0 && <span className="ochip gain num"><CoinIcon size={13} /> {t('out.coins', { c: fc.advanceCoins })}</span>}
       {fc.treasures.length > 0 && <span className="ochip gain num"><img src={iconUrl('chest')} alt="" /> {t('out.tre', { c: fc.treasureCoins })}</span>}
       {fc.rewards.length > 0 && <span className="ochip reward">{t('out.reward')}</span>}

@@ -85,6 +85,8 @@ interface Store {
   toolMode: 'chisel' | 'brush' | null;
   /** after level 10: the bottom bar's new buttons are introduced one by one */
   unlockTour: 'battle' | 'museum' | null;
+  /** story levels: the days the next "work" takes (1-5) */
+  workDays: number;
 }
 
 export const useStore = create<Store>(() => ({
@@ -129,6 +131,7 @@ export const useStore = create<Store>(() => ({
   coach: null,
   toolMode: null,
   unlockTour: null,
+  workDays: 3,
 }));
 
 /** Show story dialog lines; `then` runs after the last one (or when skipped). */

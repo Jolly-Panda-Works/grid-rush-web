@@ -8,4 +8,6 @@ export const dragApi: {
   cellToScreen: ((r: number, c: number) => { x: number; y: number }) | null;
   /** on-screen rectangle (px, relative to the 3D canvas) reserved for the player panels */
   infoRect: (() => { left: number; top: number; width: number; height: number; stacked: boolean }) | null;
-} = { pick: null, cellPx: null, cellToScreen: null, infoRect: null };
+  /** on-screen rectangle of the days (strip = the phone's one-week window) */
+  trackRect: (() => { left: number; top: number; width: number; height: number; strip: boolean }) | null;
+} = { pick: null, cellPx: null, cellToScreen: null, infoRect: null, trackRect: null };

@@ -1521,7 +1521,7 @@ html[dir='rtl'] .trow.slider input[type=range]::-webkit-slider-runnable-track { 
 /* over the goals panel while the note is about the board / track / tools; under it while it is about the goals */
 .lcoach.at-dock, .lcoach.at-advance { bottom: 8px; }
 .lcoach.at-board, .lcoach.at-region, .lcoach.at-mid, .lcoach.at-tools { top: 66px; }
-.lcoach.at-goals, .lcoach.at-track { top: 44%; }
+.lcoach.at-goals, .lcoach.at-track, .lcoach.at-days { top: 44%; }
 
 /* restoration: the layered 2D scene */
 .restorescreen { justify-content: flex-start; padding: max(10px, env(safe-area-inset-top)) 0 0; gap: 8px; overflow: hidden; }
@@ -1565,3 +1565,36 @@ html.reduce-motion .mapnode.next, html.reduce-motion .finishbtn, html.reduce-mot
 .email-modal .mscroll .btn { align-self: center; }
 .linkbtn { align-self: center; margin-top: 2px; padding: 4px 10px; border: 0; background: none; color: #FFE07A; font: 700 13px var(--font); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
 .modal > .mscroll > * { flex-shrink: 0; } /* a long body scrolls; its buttons never get squashed */
+
+/* ---- days (docs/days-and-shards.md): the work control and the day counter of a story level ---- */
+.workctl { position: relative; display: flex; }
+/* − and + sit on the medallion's top corners, so the control is no wider than the PvP one */
+.wstep { position: absolute; top: -6px; z-index: 2; width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 2px solid #E8B730; color: #fff; font: 800 18px var(--head); line-height: 1;
+  background: linear-gradient(180deg, #3d82d4, #1F3C88); box-shadow: var(--glaze-hi), 0 2px 0 #5c3d00; }
+.wstep:disabled { opacity: .4; }
+.wstep:first-child { inset-inline-start: -8px; } .wstep:last-child { inset-inline-end: -8px; }
+.medal .mdays { display: block; font: 800 12px var(--head); color: #3a2200; }
+.dock.noshards .cgem.coin, .dock.nodays .cgem.time { visibility: hidden; }
+.gp-days { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 3px 6px; border-radius: 10px; background: rgba(255,255,255,.08); }
+.gp-left { display: inline-flex; align-items: center; gap: 4px; font: 700 12px var(--head); color: #cfe0ff; margin-inline-end: auto; }
+.gp-left b { font: 800 22px var(--head); color: #FFE07A; line-height: 1; }
+.gp-days.low .gp-left b { color: #FF9A8A; }
+.gp-ev { font: 700 11px var(--head); padding: 1px 7px; border-radius: 8px; border: 1px solid rgba(232,183,48,.6); }
+.gp-ev.pay { background: rgba(245,197,49,.18); color: #FFE07A; } .gp-ev.gift { background: rgba(39,182,122,.22); color: #9CF0C6; }
+
+/* ---- PvP calendar (docs/days-and-shards.md) ---- */
+.calbtn { position: absolute; z-index: 5; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+.calmodal { max-width: 520px; }
+.calgrid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; direction: inherit; }
+.calday { position: relative; aspect-ratio: 1; border-radius: 7px; background: #F6EBCB; border: 1.5px solid #D9C48A; display: flex; align-items: center; justify-content: center; overflow: visible; }
+.calday.u1 { background: color-mix(in srgb, #F6EBCB 68%, var(--p0)); } .calday.u2 { background: color-mix(in srgb, #F6EBCB 68%, var(--p1)); } .calday.u3 { background: color-mix(in srgb, #F6EBCB 68%, #9B7FE0); }
+.calday.last { border-color: #7A4BA8; }
+.cdn { position: absolute; top: 1px; inset-inline-start: 3px; font: 700 9px var(--head); color: rgba(19,34,79,.7); }
+.cdev { display: inline-flex; flex-direction: column; align-items: center; } .cdev img { width: 22px; height: 22px; }
+.cdev b { font: 800 9px var(--head); color: #7a4a00; line-height: 1; }
+.calface { position: absolute; inset: 10%; border-radius: 50%; background-size: cover; background-position: top; border: 2.5px solid var(--p0); box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+.calface.p1 { border-color: var(--p1); inset: 22% 4% 4% 22%; }
+.calstart { display: flex; align-items: center; gap: 6px; margin-top: 8px; } .calstart .calface { position: relative; inset: auto; width: 26px; height: 26px; display: inline-block; }
+.turnline { position: absolute; z-index: 4; bottom: 6px; left: 50%; translate: -50% 0; max-width: calc(100% - 16px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 3px 10px; border-radius: 10px; font: 700 11.5px var(--head); line-height: 1.5; color: #cfe0ff; background: rgba(11,29,85,.7); border: 1px solid rgba(232,183,48,.55); text-align: center; }
+.turnline.mine { color: #FFE07A; border-color: #E8B730; }
+@media (min-aspect-ratio: 11/10) { .turnline { bottom: auto; top: 10px; } }

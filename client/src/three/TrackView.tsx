@@ -31,12 +31,16 @@ const TrackCell = memo(function TrackCell({ i, layout, mark, hit, who, slot }: {
   const treasure = useStore((s) => treasuresOf(s.game!).includes(i));
   const len = layout.track.len;
   const finish = i === len;
+  // days already used: tinted in the colour of the player(s) who used them, so the gap shows at a glance
+  const used = useStore((s) => (i > 0 && s.game!.players[0].pos >= i ? 1 : 0) | (i > 0 && s.game!.players[1].pos >= i ? 2 : 0));
   const base = useMemo(() => {
     if (finish) return '#E9DDF0';
     if (treasure) return '#FFE08A';
     if (reward) return '#BDEBD2';
-    return NORMAL.clone().lerp(END_TINT, (i / len) * 0.9).getStyle();
-  }, [i, len, finish, treasure, reward]);
+    const c = NORMAL.clone().lerp(END_TINT, (i / len) * 0.9);
+    if (used) c.lerp(new THREE.Color(used === 3 ? '#B9A6E8' : PLAYER_COLORS[used === 1 ? 0 : 1]), 0.32);
+    return c.getStyle();
+  }, [i, len, finish, treasure, reward, used]);
   // Treasure = chest, reward = 1x1 tile, finish = checkered flag; numbers on every cell (desktop) or every 5th (phone).
   const big = layout.track.vertical || layout.track.window > 0;
   const tex = useMemo(() => cellTexture(finish ? 'flag' : treasure ? 'chest' : reward ? 'reward' : null, i, big ? 'five' : 'all'), [i, finish, treasure, reward, big]);
@@ -63,22 +67,7 @@ const TrackCell = memo(function TrackCell({ i, layout, mark, hit, who, slot }: {
   );
 });
 
-/** The pacer of a story level: a bronze hourglass (seen from above, so a flat silhouette with a little depth). */
-const HOURGLASS = new Map<number, THREE.ExtrudeGeometry>();
-function hourglassGeo(cell: number) {
-  let g = HOURGLASS.get(cell);
-  if (g) return g;
-  const w = cell * 0.24, h = cell * 0.3, s = cell * 0.05;
-  const sh = new THREE.Shape();
-  sh.moveTo(-w, h); sh.lineTo(w, h); sh.lineTo(s, 0); sh.lineTo(w, -h); sh.lineTo(-w, -h); sh.lineTo(-s, 0); sh.closePath();
-  g = new THREE.ExtrudeGeometry(sh, { depth: 0.3, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 1 });
-  g.translate(0, 0, -0.15);
-  HOURGLASS.set(cell, g);
-  return g;
-}
-
-function MarkerMesh({ seat, cell, ghost = false, pacer = false }: { seat: Seat; cell: number; ghost?: boolean; pacer?: boolean }) {
-  if (pacer) return <mesh geometry={hourglassGeo(cell)}><meshStandardMaterial color="#B07A3A" metalness={0.5} roughness={0.35} emissive="#4a2a00" emissiveIntensity={0.3} /></mesh>;
+function MarkerMesh({ seat, cell, ghost = false }: { seat: Seat; cell: number; ghost?: boolean }) {
   const color = PLAYER_COLORS[seat];
   const mat = <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.25} transparent={ghost} opacity={ghost ? 0.5 : 1} depthWrite={!ghost} />;
   return seat === 0
@@ -136,8 +125,7 @@ function Marker({ seat, layout }: { seat: Seat; layout: Layout }) {
     const pulse = active && !s.settings.reduceMotion ? 1 + 0.12 * Math.sin(st.clock.elapsedTime * 5) : 1;
     ref.current.scale.setScalar(pulse * (active ? 1.12 : 0.95));
   });
-  const pacer = useStore((s) => !!s.game?.solo) && seat === 1;
-  return <group ref={ref}><MarkerMesh seat={seat} cell={cell} pacer={pacer} /></group>;
+  return <group ref={ref}><MarkerMesh seat={seat} cell={cell} /></group>;
 }
 
 /** Semi-transparent copy of a marker where the previewed (or announced) action would put it. */
@@ -203,6 +191,11 @@ export function TrackView({ layout }: { layout: Layout }) {
         g.visible = a > 0.01;
         if (!g.visible) continue;
         const [x, y] = trackCoord(layout, i, view.scroll);
+        g.position.set(x, y, 0);
+      } else if (!g.visible) {
+        // (back from the phone window, e.g. the screen was turned: every day is shown again, in its own place)
+        g.visible = true;
+        const [x, y] = trackCoord(layout, i);
         g.position.set(x, y, 0);
       }
       let k = 1;

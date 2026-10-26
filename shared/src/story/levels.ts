@@ -1,5 +1,6 @@
 // The first restoration space (the tile museum): 30 levels. 1-10 are the tutorial, one new thing each;
 // 11-30 introduce the tools and climb in a saw-tooth (a hard level every few). docs/story-mode.md has the plan.
+// Levels 1-3 hide the deadline (STORY.SHOW_DAYS), so they get a long one; level 1 also hides the shards.
 // Boards are drawn as 9 rows: '.' empty, '#' prefilled old tile, 'c' crack, 's' stone, 'g' gold.
 // Regions are drawn the same way ('X' = part of the frame), always on the full 9x9 board.
 import type { Cell } from '../types';
@@ -7,11 +8,10 @@ import type { Goal, LevelDef, ToolCounts } from './solo';
 
 interface Draft {
   seed: number;
-  track: number;
-  pacer: number;
-  coins: number;
-  treasures?: number[];
-  rewards?: number[];
+  days: number;
+  shards: number;
+  paydays?: number[];
+  gifts?: number[];
   board?: string[];
   region?: string[];
   goals: Goal[];
@@ -29,8 +29,8 @@ function level(id: number, d: Draft): LevelDef {
     if (k) cells[k].push([r, c] as Cell);
   }));
   return {
-    id, seed: d.seed, trackLength: d.track, pacerStep: d.pacer, startingCoins: d.coins,
-    treasures: d.treasures ?? [], rewards: d.rewards ?? [], cells,
+    id, seed: d.seed, days: d.days, startingShards: d.shards,
+    paydays: d.paydays ?? [], giftDays: d.gifts ?? [], cells,
     region: d.region, regionOrigin: d.region ? [0, 0] : undefined,
     goals: d.goals, stars: d.stars, hard: d.hard, teach: d.teach, freeTools: d.free,
   };
@@ -40,10 +40,10 @@ const EMPTY = ['.........', '.........', '.........', '.........', '.........', 
 
 export const LEVELS: LevelDef[] = [
   // 1. buy a tile and place it
-  level(1, { seed: 1101, track: 30, pacer: 2, coins: 20, goals: [{ type: 'fill_count', n: 20 }], stars: [35, 43], teach: 'place' }),
+  level(1, { seed: 1101, days: 200, shards: 60, goals: [{ type: 'fill_count', n: 20 }], stars: [54, 65], teach: 'place' }),
   // 2. an old, half-finished tile panel: fill the gaps
   level(2, {
-    seed: 1202, track: 30, pacer: 2, coins: 10, rewards: [6, 12, 18], teach: 'filled',
+    seed: 1202, days: 200, shards: 30, gifts: [6, 12, 18], teach: 'filled',
     board: [
       '#########',
       '##....###',
@@ -55,11 +55,11 @@ export const LEVELS: LevelDef[] = [
       '#########',
       '#########',
     ],
-    goals: [{ type: 'fill_board' }], stars: [28, 32],
+    goals: [{ type: 'fill_board' }], stars: [40, 45],
   }),
   // 3. the gate frame: only this part matters
   level(3, {
-    seed: 1303, track: 34, pacer: 2, coins: 12, teach: 'region',
+    seed: 1303, days: 200, shards: 40, teach: 'region',
     region: [
       '.........',
       '..XXXXX..',
@@ -71,16 +71,16 @@ export const LEVELS: LevelDef[] = [
       '.........',
       '.........',
     ],
-    goals: [{ type: 'fill_region' }], stars: [50, 61],
+    goals: [{ type: 'fill_region' }], stars: [59, 72],
   }),
-  // 4. tiles cost coins: Advance when you are short
+  // 4. days, and work when you are short of shards
   level(4, {
-    seed: 1404, track: 34, pacer: 3, coins: 4, teach: 'advance',
-    goals: [{ type: 'fill_count', n: 12 }, { type: 'min_coins', n: 10 }], stars: [24, 30],
+    seed: 1404, days: 26, shards: 4, teach: 'work',
+    goals: [{ type: 'fill_count', n: 12 }, { type: 'min_shards', n: 10 }], stars: [25, 31],
   }),
   // 5. cracked tiles at the museum door
   level(5, {
-    seed: 1505, track: 30, pacer: 2, coins: 10, teach: 'crack',
+    seed: 1505, days: 22, shards: 10, teach: 'crack',
     board: [
       '.........',
       '.c.....c.',
@@ -92,11 +92,11 @@ export const LEVELS: LevelDef[] = [
       '.c.....c.',
       '.........',
     ],
-    goals: [{ type: 'cover_cracks' }], stars: [28, 35],
+    goals: [{ type: 'cover_cracks' }], stars: [32, 39],
   }),
-  // 6. treasures on the time track
+  // 6. paydays
   level(6, {
-    seed: 1606, track: 30, pacer: 2, coins: 6, treasures: [6, 14, 22, 30], teach: 'treasure',
+    seed: 1606, days: 22, shards: 6, paydays: [6, 14, 22, 30], teach: 'payday',
     region: [
       '.........',
       '.........',
@@ -108,11 +108,11 @@ export const LEVELS: LevelDef[] = [
       '.........',
       '.........',
     ],
-    goals: [{ type: 'fill_region' }, { type: 'min_score', n: 24 }], stars: [34, 42],
+    goals: [{ type: 'fill_region' }, { type: 'min_score', n: 24 }], stars: [32, 39],
   }),
   // 7. stones: work around them
   level(7, {
-    seed: 1707, track: 30, pacer: 2, coins: 10, rewards: [6, 12, 18, 24], teach: 'stone',
+    seed: 1707, days: 26, shards: 10, gifts: [5, 10, 15, 20, 25, 30], teach: 'stone',
     board: [
       'sssssssss',
       'ssss.ssss',
@@ -124,11 +124,11 @@ export const LEVELS: LevelDef[] = [
       'ssss.ssss',
       'sssssssss',
     ],
-    goals: [{ type: 'fill_board' }], stars: [31, 35],
+    goals: [{ type: 'fill_board' }], stars: [30, 34],
   }),
-  // 8. 1x1 gift tiles
+  // 8. gift days and the 1x1 tile
   level(8, {
-    seed: 1808, track: 40, pacer: 2, coins: 8, rewards: [5, 10, 15, 20], teach: 'reward',
+    seed: 1808, days: 24, shards: 8, gifts: [5, 10, 15, 20], teach: 'gift',
     board: [
       '####.####',
       '#...##..#',
@@ -140,11 +140,11 @@ export const LEVELS: LevelDef[] = [
       '##...####',
       '########.',
     ],
-    goals: [{ type: 'max_empty', max: 2 }], stars: [43, 48],
+    goals: [{ type: 'max_empty', max: 2 }], stars: [35, 39],
   }),
-  // 9. gold cells pay a coin
+  // 9. gold cells pay a shard
   level(9, {
-    seed: 1909, track: 34, pacer: 2, coins: 6, teach: 'gold',
+    seed: 1909, days: 22, shards: 6, teach: 'gold',
     board: [
       '.........',
       '.g.....g.',
@@ -156,11 +156,11 @@ export const LEVELS: LevelDef[] = [
       '.g.....g.',
       '.........',
     ],
-    goals: [{ type: 'cover_cracks' }, { type: 'min_coins', n: 10 }], stars: [24, 30],
+    goals: [{ type: 'cover_cracks' }, { type: 'min_shards', n: 10 }], stars: [26, 32],
   }),
   // 10. the 7x7 square: the end of the tutorial
   level(10, {
-    seed: 2010, track: 36, pacer: 2, coins: 8, rewards: [10, 20, 30], teach: 'bonus7',
+    seed: 2010, days: 36, shards: 8, gifts: [10, 20, 30], teach: 'bonus7',
     board: [
       '.........',
       '.##...##.',
@@ -183,11 +183,11 @@ export const LEVELS: LevelDef[] = [
       '.XXXXXXX.',
       '.........',
     ],
-    goals: [{ type: 'bonus7' }], stars: [55, 66],
+    goals: [{ type: 'bonus7' }], stars: [47, 57],
   }),
-  // 11. the chisel (and the coin bag before the level)
+  // 11. the chisel (and the shard bag before the level)
   level(11, {
-    seed: 2111, track: 62, pacer: 2, coins: 8, rewards: [12], teach: 'chisel', free: { chisel: 1 },
+    seed: 2111, days: 34, shards: 8, gifts: [12], teach: 'chisel', free: { chisel: 1 },
     board: [
       '#########',
       '#.......#',
@@ -199,11 +199,11 @@ export const LEVELS: LevelDef[] = [
       '#########',
       '#########',
     ],
-    goals: [{ type: 'max_empty', max: 3 }], stars: [57, 63],
+    goals: [{ type: 'max_empty', max: 3 }], stars: [39, 43],
   }),
   // 12. the wheel: new offers
   level(12, {
-    seed: 2212, track: 40, pacer: 2, coins: 8, treasures: [8, 20], rewards: [14], teach: 'wheel', free: { wheel: 1 },
+    seed: 2212, days: 42, shards: 8, paydays: [8, 20], gifts: [14], teach: 'wheel', free: { wheel: 1 },
     board: [
       '.........',
       '.c..#..c.',
@@ -215,11 +215,11 @@ export const LEVELS: LevelDef[] = [
       '.c..#..c.',
       '.........',
     ],
-    goals: [{ type: 'cover_cracks' }, { type: 'max_empty', max: 12 }], stars: [61, 68],
+    goals: [{ type: 'cover_cracks' }, { type: 'max_empty', max: 12 }], stars: [62, 69],
   }),
   // 13. the brush: a free 1x1 anywhere
   level(13, {
-    seed: 2313, track: 40, pacer: 2, coins: 8, treasures: [10, 22], teach: 'brush', free: { brush: 1 },
+    seed: 2313, days: 58, shards: 8, paydays: [10, 22], teach: 'brush', free: { brush: 1 },
     board: [
       '#.#.#.#.#',
       '.........',
@@ -242,11 +242,11 @@ export const LEVELS: LevelDef[] = [
       '.........',
       '.X.X.X.X.',
     ],
-    goals: [{ type: 'fill_region' }, { type: 'fill_count', n: 30 }], stars: [66, 80],
+    goals: [{ type: 'fill_region' }, { type: 'fill_count', n: 30 }], stars: [80, 96],
   }),
   // 14. hard: tight time, a full frame and few empties
   level(14, {
-    seed: 9137, track: 26, pacer: 2, coins: 5, treasures: [6, 14, 22, 30], rewards: [10, 26], hard: 1,
+    seed: 9137, days: 32, shards: 5, paydays: [6, 14, 22, 30], gifts: [10, 26], hard: 1,
     board: [
       '##......s',
       '###......',
@@ -269,10 +269,10 @@ export const LEVELS: LevelDef[] = [
       '.........',
       '.........',
     ],
-    goals: [{ type: 'fill_region' }, { type: 'cover_cracks' }, { type: 'max_empty', max: 30 }], stars: [51, 57],
+    goals: [{ type: 'fill_region' }, { type: 'cover_cracks' }, { type: 'max_empty', max: 30 }], stars: [61, 68],
   }),
   level(15, {
-    seed: 3115, track: 60, pacer: 2, coins: 8, treasures: [8, 18, 28], rewards: [12, 24],
+    seed: 3115, days: 40, shards: 8, paydays: [8, 18, 28], gifts: [12, 24],
     board: [
       '.........',
       '.sssssss.',
@@ -284,10 +284,10 @@ export const LEVELS: LevelDef[] = [
       '.sssssss.',
       '.........',
     ],
-    goals: [{ type: 'fill_count', n: 40 }, { type: 'max_empty', max: 14 }], stars: [67, 74],
+    goals: [{ type: 'fill_count', n: 40 }, { type: 'max_empty', max: 14 }], stars: [62, 69],
   }),
   level(16, {
-    seed: 3216, track: 40, pacer: 2, coins: 7, treasures: [7, 17, 27], rewards: [12],
+    seed: 3216, days: 44, shards: 7, paydays: [7, 17, 27], gifts: [12],
     region: [
       '....X....',
       '...XXX...',
@@ -299,10 +299,10 @@ export const LEVELS: LevelDef[] = [
       '...XXX...',
       '....X....',
     ],
-    goals: [{ type: 'fill_region' }], stars: [62, 74],
+    goals: [{ type: 'fill_region' }], stars: [61, 73],
   }),
   level(17, {
-    seed: 3317, track: 50, pacer: 2, coins: 8, treasures: [8, 18], rewards: [6, 12, 18, 24],
+    seed: 3317, days: 34, shards: 8, paydays: [8, 18], gifts: [6, 12, 18, 24],
     board: [
       '###...###',
       '##.....##',
@@ -314,10 +314,10 @@ export const LEVELS: LevelDef[] = [
       '##.....##',
       '###...###',
     ],
-    goals: [{ type: 'max_empty', max: 4 }], stars: [61, 68],
+    goals: [{ type: 'max_empty', max: 4 }], stars: [51, 57],
   }),
   level(18, {
-    seed: 3418, track: 30, pacer: 2, coins: 6, treasures: [6, 14, 22, 30], rewards: [18],
+    seed: 3418, days: 26, shards: 6, paydays: [6, 14, 22, 30], gifts: [18],
     board: [
       'g.......g',
       '.c.....c.',
@@ -329,11 +329,11 @@ export const LEVELS: LevelDef[] = [
       '.c.....c.',
       'g.......g',
     ],
-    goals: [{ type: 'cover_cracks' }, { type: 'min_coins', n: 12 }], stars: [43, 53],
+    goals: [{ type: 'cover_cracks' }, { type: 'min_shards', n: 12 }], stars: [39, 47],
   }),
   // 19. hard
   level(19, {
-    seed: 3519, track: 38, pacer: 2, coins: 5, treasures: [8, 16, 24], rewards: [12, 20], hard: 1,
+    seed: 3519, days: 54, shards: 5, paydays: [8, 16, 24], gifts: [12, 20], hard: 1,
     board: [
       '#########',
       '#.......#',
@@ -345,10 +345,10 @@ export const LEVELS: LevelDef[] = [
       '#.......#',
       '#########',
     ],
-    goals: [{ type: 'cover_cracks' }, { type: 'max_empty', max: 4 }], stars: [44, 49],
+    goals: [{ type: 'cover_cracks' }, { type: 'max_empty', max: 4 }], stars: [57, 63],
   }),
   level(20, {
-    seed: 3620, track: 32, pacer: 3, coins: 6, treasures: [6, 15, 24, 32], rewards: [10, 20],
+    seed: 3620, days: 32, shards: 6, paydays: [6, 15, 24, 32], gifts: [10, 20],
     region: [
       'XXXXXXXXX',
       'X.......X',
@@ -360,10 +360,10 @@ export const LEVELS: LevelDef[] = [
       'X.......X',
       'XXXXXXXXX',
     ],
-    goals: [{ type: 'fill_region' }, { type: 'min_score', n: 44 }], stars: [56, 67],
+    goals: [{ type: 'fill_region' }, { type: 'min_score', n: 44 }], stars: [74, 89],
   }),
   level(21, {
-    seed: 3721, track: 38, pacer: 2, coins: 8, treasures: [10, 20], rewards: [8, 14, 20, 26],
+    seed: 3721, days: 48, shards: 8, paydays: [10, 20], gifts: [8, 14, 20, 26],
     board: [
       's.......s',
       '.........',
@@ -375,10 +375,10 @@ export const LEVELS: LevelDef[] = [
       '.........',
       's.......s',
     ],
-    goals: [{ type: 'max_empty', max: 6 }], stars: [66, 73],
+    goals: [{ type: 'max_empty', max: 6 }], stars: [62, 69],
   }),
   level(22, {
-    seed: 3822, track: 42, pacer: 2, coins: 6, treasures: [6, 14, 22, 30], rewards: [12, 24],
+    seed: 3822, days: 48, shards: 6, paydays: [6, 14, 22, 30], gifts: [8, 16, 24, 32, 40],
     board: [
       '.........',
       '..c...c..',
@@ -390,10 +390,10 @@ export const LEVELS: LevelDef[] = [
       '..c...c..',
       '.........',
     ],
-    goals: [{ type: 'cover_cracks' }, { type: 'bonus7' }], stars: [91, 108],
+    goals: [{ type: 'cover_cracks' }, { type: 'bonus7' }], stars: [86, 103],
   }),
   level(23, {
-    seed: 3923, track: 38, pacer: 2, coins: 7, treasures: [8, 18, 26], rewards: [12],
+    seed: 3923, days: 34, shards: 7, paydays: [8, 18, 26], gifts: [12],
     board: [
       '#.......#',
       '.#.....#.',
@@ -405,11 +405,11 @@ export const LEVELS: LevelDef[] = [
       '.#.....#.',
       '#.......#',
     ],
-    goals: [{ type: 'max_empty', max: 10 }, { type: 'min_coins', n: 8 }], stars: [70, 78],
+    goals: [{ type: 'max_empty', max: 10 }, { type: 'min_shards', n: 8 }], stars: [68, 76],
   }),
   // 24. hard
   level(24, {
-    seed: 4024, track: 58, pacer: 2, coins: 5, treasures: [8, 16, 24], rewards: [6, 14, 22], hard: 1,
+    seed: 4024, days: 34, shards: 5, paydays: [8, 16, 24], gifts: [6, 14, 22], hard: 1,
     board: [
       'ss.....ss',
       's.c...c.s',
@@ -421,10 +421,10 @@ export const LEVELS: LevelDef[] = [
       's.c...c.s',
       'ss.....ss',
     ],
-    goals: [{ type: 'cover_cracks' }, { type: 'max_empty', max: 12 }], stars: [73, 81],
+    goals: [{ type: 'cover_cracks' }, { type: 'max_empty', max: 12 }], stars: [63, 70],
   }),
   level(25, {
-    seed: 4125, track: 42, pacer: 2, coins: 8, treasures: [8, 16, 24], rewards: [12, 22],
+    seed: 4125, days: 40, shards: 8, paydays: [8, 16, 24], gifts: [12, 22],
     region: [
       '.........',
       '.XX...XX.',
@@ -436,10 +436,10 @@ export const LEVELS: LevelDef[] = [
       '.XX...XX.',
       '.........',
     ],
-    goals: [{ type: 'fill_region' }, { type: 'max_empty', max: 20 }], stars: [67, 74],
+    goals: [{ type: 'fill_region' }, { type: 'max_empty', max: 20 }], stars: [66, 73],
   }),
   level(26, {
-    seed: 4226, track: 48, pacer: 3, coins: 6, treasures: [6, 14, 22, 30], rewards: [8, 16, 24, 30],
+    seed: 4226, days: 46, shards: 6, paydays: [6, 14, 22, 30], gifts: [8, 16, 24, 30],
     board: [
       '.........',
       '.g.....g.',
@@ -451,10 +451,10 @@ export const LEVELS: LevelDef[] = [
       '.g.....g.',
       '........s',
     ],
-    goals: [{ type: 'bonus7' }, { type: 'min_coins', n: 6 }], stars: [88, 105],
+    goals: [{ type: 'bonus7' }, { type: 'min_shards', n: 6 }], stars: [85, 101],
   }),
   level(27, {
-    seed: 4327, track: 62, pacer: 2, coins: 7, treasures: [7, 15, 23], rewards: [5, 10, 15, 20],
+    seed: 4327, days: 28, shards: 7, paydays: [7, 15, 23], gifts: [5, 10, 15, 20],
     board: [
       '#########',
       '#...#...#',
@@ -466,10 +466,10 @@ export const LEVELS: LevelDef[] = [
       '#...#...#',
       '#########',
     ],
-    goals: [{ type: 'max_empty', max: 4 }], stars: [63, 70],
+    goals: [{ type: 'max_empty', max: 4 }], stars: [37, 41],
   }),
   level(28, {
-    seed: 4428, track: 40, pacer: 2, coins: 6, treasures: [6, 14, 22, 30], rewards: [10, 18, 26],
+    seed: 4428, days: 36, shards: 6, paydays: [6, 14, 22, 30], gifts: [10, 18, 26],
     board: [
       'c.......c',
       '.........',
@@ -492,11 +492,11 @@ export const LEVELS: LevelDef[] = [
       '.........',
       '.........',
     ],
-    goals: [{ type: 'fill_region' }, { type: 'cover_cracks' }, { type: 'max_empty', max: 16 }], stars: [87, 96],
+    goals: [{ type: 'fill_region' }, { type: 'cover_cracks' }, { type: 'max_empty', max: 16 }], stars: [91, 101],
   }),
   // 29. very hard
   level(29, {
-    seed: 4529, track: 46, pacer: 2, coins: 5, treasures: [8, 16, 24], rewards: [6, 14, 22], hard: 2,
+    seed: 4529, days: 40, shards: 5, paydays: [8, 16, 24], gifts: [6, 14, 22], hard: 2,
     board: [
       '#.......#',
       '.........',
@@ -508,11 +508,11 @@ export const LEVELS: LevelDef[] = [
       '.........',
       '#.......#',
     ],
-    goals: [{ type: 'cover_cracks' }, { type: 'bonus7' }, { type: 'max_empty', max: 8 }], stars: [82, 91],
+    goals: [{ type: 'cover_cracks' }, { type: 'bonus7' }, { type: 'max_empty', max: 8 }], stars: [81, 89],
   }),
   // 30. the opening party: an easy one
   level(30, {
-    seed: 4630, track: 28, pacer: 2, coins: 12, treasures: [6, 14, 22, 30], rewards: [10, 20],
+    seed: 4630, days: 24, shards: 12, paydays: [6, 14, 22, 30], gifts: [10, 20],
     board: EMPTY.map((r, i) => (i === 4 ? '....g....' : r)),
     region: [
       '.........',
@@ -525,7 +525,7 @@ export const LEVELS: LevelDef[] = [
       '.........',
       '.........',
     ],
-    goals: [{ type: 'fill_region' }], stars: [47, 57],
+    goals: [{ type: 'fill_region' }], stars: [43, 53],
   }),
 ];
 

@@ -4,7 +4,6 @@ import {
 } from '../../shared/src';
 import type { LevelDef, SoloAction } from '../../shared/src';
 import type { Attempt } from './story';
-import { tr } from './i18n';
 
 /**
  * Offline game: the shared rules engine and the bot run right inside the app, so playing against a bot
@@ -87,7 +86,7 @@ export class LocalSession {
   }
 }
 
-/** A story level: one board against the pacer, played on the device. Every action is kept, in order: at the end the
+/** A story level: one board and a deadline in days, played on the device. Every action is kept, in order: at the end the
  *  list goes to the server, which replays it. */
 export class LevelSession {
   game: GameState;
@@ -97,7 +96,6 @@ export class LevelSession {
 
   constructor(readonly level: LevelDef, readonly attempt: Attempt, name: string, private deliver: (g: GameState) => void, private onError: (msg: string) => void) {
     this.game = createSoloGame(level, { name, tools: attempt.tools, coinBag: attempt.coinBag });
-    this.game.players[1].name = tr('story.pacer'); // (display only: the replay does not look at names)
   }
 
   snapshot(): GameState { return JSON.parse(JSON.stringify(this.game)); }

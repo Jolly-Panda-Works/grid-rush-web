@@ -36,7 +36,7 @@ no watermark. Fictional place, not a real monument.
 |---|---|---|
 | `cells/stone.webp` | سنگ (روی آن کاشی نمی‌رود) | a rough grey-brown stone block seen from directly above, chipped edges, a little moss in one corner |
 | `cells/crack.webp` | کاشی ترک‌خورده (باید پوشانده شود) | an old cream glazed tile seen from above with a dark branching crack across it and a few chipped flakes |
-| `cells/gold.webp` | خانه‌ی طلایی (پوشاندنش ۱ سکه می‌دهد) | a cream plaster square with a round gold-leaf inlay in the middle, faint shine |
+| `cells/gold.webp` | خانه‌ی طلایی (پوشاندنش ۱ خرده‌کاشی می‌دهد) | a cream plaster square with a round gold-leaf inlay in the middle, faint shine |
 
 ## ۳. آیکون‌ها (۱۶ فایل)
 
@@ -48,7 +48,7 @@ no watermark. Fictional place, not a real monument.
 | `icons/chisel.webp` | ابزار اسکنه | a tiler's steel chisel with a walnut handle and a gold ferrule |
 | `icons/wheel.webp` | ابزار چرخ | a turquoise enamel spinning wheel / disc with gold spokes, three tiny tiles on its rim |
 | `icons/brush.webp` | ابزار قلم‌مو | a calligrapher's brush with a turquoise-dipped tip and a lapis handle |
-| `icons/coinbag.webp` | پاوراپ کیسه‌ی سکه | a lapis velvet pouch tied with gold cord, gold coins peeking out |
+| `icons/coinbag.webp` | پاوراپ کیسه‌ی خرده‌کاشی | a lapis velvet pouch tied with gold cord, glazed tile shards peeking out |
 | `icons/star.webp` | ستاره‌ی مرحله (پر) | a faceted gold five-point star with a turquoise centre gem |
 | `icons/star-empty.webp` | ستاره‌ی مرحله (خالی) | the same star as a dark empty socket of tarnished bronze |
 | `icons/life.webp` | جان | a red enamel heart framed in gold filigree |
@@ -59,7 +59,7 @@ no watermark. Fictional place, not a real monument.
 | `icons/bonus7.webp` | چالش «مربع ۷×۷» | a big square tile panel with a dashed gold border |
 | `icons/max_empty.webp` | چالش «حداکثر N خانه‌ی خالی» | a tile panel with one empty cell marked by a small red outline |
 | `icons/min_score.webp` | چالش «دست‌کم N امتیاز» | a turquoise enamel shamseh medal with gold rays |
-| `icons/min_coins.webp` | چالش «با N سکه تمام کن» | a neat stack of gold coins on a lapis tile |
+| `icons/min_shards.webp` | چالش «با N خرده‌کاشی تمام کن» | a neat little pile of glazed tile shards on a lapis tile |
 
 ## ۴. پس‌زمینه‌ی نقشه‌ی مرحله‌ها (۱ فایل)
 
@@ -97,6 +97,17 @@ no watermark. Fictional place, not a real monument.
 
 `museum/door-0-thumb.webp`، `door-1-thumb.webp`، `door-2-thumb.webp`، `portal-0-thumb.webp` تا `portal-2-thumb.webp`، `lamps-0-thumb.webp` تا `lamps-2-thumb.webp`، `pool-0-thumb.webp` تا `pool-2-thumb.webp`.
 
+## ۶. روز و خرده‌کاشی (۱ فایل، به‌اضافه‌ی ۱ اختیاری)
+
+این دو در `client/public/art/icons/` می‌روند (کنار آیکون‌های فعلی بازی)، با همان سبک و اندازه‌ی ۲۵۶×۲۵۶. سند واژه‌ها: [days-and-shards.md](days-and-shards.md).
+
+| فایل | کجا | پرامپت |
+|---|---|---|
+| `art/icons/shard.webp` | **خرده‌کاشی**، پول داخل مسابقه و مرحله (روی کارت کاشی، پنل بازیکن، نتیجه). نباید شبیه سکه باشد | three small broken pieces of glazed tile (turquoise, lapis, cream with a gold rim), lying together like a little pile of shards |
+| `art/icons/treasure.webp` (اختیاری، جایگزین فعلی) | **روز مزد** روی تقویم | a small cloth wage bag tied with a gold cord, a few tile shards peeking out |
+
+برای «روز» آیکون تقویم فعلی بازی (`calendar`) و برای «روز هدیه» آیکون هدیه‌ی فعلی (`gift`) استفاده می‌شود.
+
 ## جمع
 
 | دسته | تعداد |
@@ -107,7 +118,8 @@ no watermark. Fictional place, not a real monument.
 | پس‌زمینه‌ی نقشه | ۱ |
 | صحنه‌ی موزه (پایه + لایه‌ها) | ۱۹ |
 | بندانگشتی طرح‌ها | ۱۲ |
-| **جمع** | **۵۷** |
+| روز و خرده‌کاشی | ۱ (+۱ اختیاری) |
+| **جمع** | **۵۸** |
 
 ## بعداً (هنوز در بازی نیست)
 

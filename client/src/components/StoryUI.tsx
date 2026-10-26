@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  STORY, TOOL_IDS, TOOL_INTRO, continuePrice, goalProgress, goalsDone, levelById, soloScore, trackLen,
+  STORY, TOOL_IDS, TOOL_INTRO, continuePrice, daysLeft, engravedTotal, goalProgress, goalsDone, levelById, rewardsOf, soloScore, treasuresOf,
 } from '../../../shared/src';
 import type { Goal, GoalProgress, ToolId } from '../../../shared/src';
 import { Icon } from '../art';
@@ -11,7 +11,7 @@ import { backToMap, send, startSearch } from '../net';
 import { needServer, pushToast, useStore } from '../store';
 import { livesNow, shop } from '../story';
 import { dragApi } from '../three/dragApi';
-import { CoinIcon } from './TileShape';
+import { CoinIcon, TimeIcon } from './TileShape';
 import { CoinDelta } from './Seats';
 
 const BASE = `${import.meta.env.BASE_URL}story/`;
@@ -34,7 +34,7 @@ const FALLBACK: Record<StoryIconId, JSX.Element> = {
   bonus7: <g><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="#F5C531" strokeWidth="2" strokeDasharray="3 2" /><text x="12" y="16" fontSize="9" textAnchor="middle" fill="#F5C531" fontWeight="800">7×7</text></g>,
   max_empty: <g><rect x="3" y="3" width="18" height="18" rx="2" fill="#2F6DB5" stroke="#12345e" /><rect x="9" y="9" width="6" height="6" fill="#F6EBCB" stroke="#C0503F" strokeWidth="1.5" /></g>,
   min_score: <path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z" fill="#1BA3B8" stroke="#0b5f6e" strokeWidth="1.3" />,
-  min_coins: <g><circle cx="12" cy="12" r="8.5" fill="#F2C744" stroke="#7a5200" strokeWidth="1.5" /><circle cx="12" cy="12" r="5" fill="none" stroke="#7a5200" /></g>,
+  min_shards: <g><circle cx="12" cy="12" r="8.5" fill="#F2C744" stroke="#7a5200" strokeWidth="1.5" /><circle cx="12" cy="12" r="5" fill="none" stroke="#7a5200" /></g>,
 };
 export function StoryIcon({ id, size = 24 }: { id: StoryIconId; size?: number }) {
   const [art, setArt] = useState(true);
@@ -155,7 +155,7 @@ export function LevelStart() {
           {afterTut && (
             <button className={'boostbtn' + (bag ? ' on' : '')} onClick={() => setBag((b) => !b)} disabled={story.coins < STORY.COIN_BAG_PRICE && !bag}>
               <StoryIcon id="coinbag" size={34} />
-              <span><b>{t('lvl.coinBag')}</b><small>{t('lvl.coinBagSub', { n: STORY.COIN_BAG_COINS })}</small></span>
+              <span><b>{t('lvl.coinBag')}</b><small>{t('lvl.coinBagSub', { n: STORY.COIN_BAG_SHARDS })}</small></span>
               <span className="price num"><Icon id="coins" size={16} />{STORY.COIN_BAG_PRICE}</span>
             </button>
           )}
@@ -182,16 +182,18 @@ export function GoalsPanel() {
   if (!r || r.width < 60 || !g.solo) return null;
   const prog = goalProgress(g);
   const done = goalsDone(g) && g.phase !== 'finished';
-  const left = trackLen(g) - g.players[0].pos;
+  const left = daysLeft(g);
   const me = g.players[0];
+  const lv = g.solo.level;
   return (
     <div className={'goalspanel' + (coach?.focus === 'goals' ? ' coach-focus' : '')} style={{ left: Math.max(6, r.left), top: r.top, width: r.width, height: r.height }}>
       <div className="gp-head">
-        <b>{t('lvl.title', { n: g.solo.level })}</b>
+        <b>{t('lvl.title', { n: lv })}</b>
         <ToolBar />
-        <span className="gem coin"><CoinIcon size={16} /><b key={me.coins} className="num bump">{me.coins}</b><CoinDelta value={me.coins} /></span>
+        {lv >= STORY.SHOW_SHARDS && <span className="gem coin" title={t('hud.coins')}><CoinIcon size={16} /><b key={me.coins} className="num bump">{me.coins}</b><CoinDelta value={me.coins} /></span>}
         <span className="gem score" title={t('lvl.score')}><StoryIcon id="star" size={16} /><b className="num">{soloScore(g).total}</b></span>
       </div>
+      {lv >= STORY.SHOW_DAYS && <DaysRow />}
       <ul className="gp-goals">
         {prog.map((p, i) => (
           <li key={i} className={p.done ? 'done' : ''}>
@@ -204,9 +206,27 @@ export function GoalsPanel() {
       </ul>
       {done && (
         <button className="btn primary finishbtn" onClick={() => { sfx.click(); send.solo({ t: 'finish' }); }}>
-          {t('lvl.finish')}{left > 0 && <small className="num"> +{left * STORY.EARLY_CELL_COINS} <Icon id="coins" size={14} /></small>}
+          {t('lvl.finish')}{left > 0 && <small className="num"> +{left * STORY.EARLY_DAY_COINS} <Icon id="coins" size={14} /></small>}
         </button>
       )}
+    </div>
+  );
+}
+
+/** The deadline as a big "18 days left", and what comes next: the next payday (with what it pays) and gift day. */
+function DaysRow() {
+  const t = useT();
+  const g = useStore((s) => s.game)!;
+  const coach = useStore((s) => s.coach);
+  const me = g.players[0];
+  const left = daysLeft(g);
+  const pay = treasuresOf(g).find((d) => d > me.pos);
+  const gift = rewardsOf(g).find((d, i) => d > me.pos && !g.rewardTaken[i]);
+  return (
+    <div className={'gp-days' + (left <= 3 ? ' low' : '') + (coach?.focus === 'days' ? ' coach-focus' : '')}>
+      <span className="gp-left"><TimeIcon size={18} /><b key={left} className="num bump">{left}</b><span>{t('days.left')}</span></span>
+      {pay !== undefined && <span className="gp-ev pay">{t('days.payday', { d: pay - me.pos, c: engravedTotal(me) })}</span>}
+      {gift !== undefined && <span className="gp-ev gift">{t('days.gift', { d: gift - me.pos })}</span>}
     </div>
   );
 }
@@ -308,7 +328,7 @@ export function LevelEnd() {
         <div className="row col">
           {canContinue && (
             <button className="btn primary" disabled={busy} onClick={cont}>
-              {t('lvl.continue', { c: STORY.CONTINUE_CELLS, k: STORY.CONTINUE_COINS })}
+              {t('lvl.continue', { c: STORY.CONTINUE_DAYS, k: STORY.CONTINUE_SHARDS })}
               <small className="num"> {price ? <><Icon id="coins" size={14} /> {price}</> : t('lvl.free')}</small>
             </button>
           )}
@@ -328,13 +348,16 @@ const SEEN_KEY = 'gridrush.coach.v1';
 const seen = (): Record<string, 1> => { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch { return {}; } };
 const markSeen = (k: string) => { try { localStorage.setItem(SEEN_KEY, JSON.stringify({ ...seen(), [k]: 1 })); } catch { /* ignore */ } };
 const FOCUS: Record<string, string> = {
-  place1: 'dock', place2: 'board', goals: 'goals', pacer: 'track', filled: 'board', region: 'region', advance: 'advance', crack: 'board',
-  treasure: 'track', stone: 'board', reward: 'track', gold: 'board', bonus7: 'board', chisel: 'tools', wheel: 'tools', brush: 'tools',
+  place1: 'dock', place2: 'board', goals: 'goals', filled: 'board', shards: 'dock', region: 'region', days: 'days', work: 'advance',
+  crack: 'board', payday: 'days', stone: 'board', gift: 'days', gold: 'board', bonus7: 'board', chisel: 'tools', wheel: 'tools', brush: 'tools',
 };
 
-/** Steps of the coach for a level: level 1 walks through the first tile; the others show one note. */
+/** Steps of the coach for a level: level 1 walks through the first tile, level 2 adds the shards, level 4 the days
+ *  and work; the others show one note. */
 function coachSteps(teach: string): string[] {
-  if (teach === 'place') return ['place1', 'place2', 'goals', 'pacer'];
+  if (teach === 'place') return ['place1', 'place2', 'goals'];
+  if (teach === 'filled') return ['filled', 'shards'];
+  if (teach === 'work') return ['days', 'work'];
   return [teach];
 }
 
@@ -355,7 +378,6 @@ export function LevelCoach() {
       if (k === 'place1' && !placed && sel === null) { key = k; break; }
       if (k === 'place2' && !placed && sel !== null) { key = k; break; }
       if (k === 'place1' || k === 'place2') continue; // (done by placing the first tile)
-      if (k === 'pacer' && g.players[0].pos === 0) continue; // after the first move
       key = k; break;
     }
   }

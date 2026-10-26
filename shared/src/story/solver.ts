@@ -5,7 +5,7 @@ import { cellIdx, cellsKey, cloneForSim, orientations } from '../engine';
 import { SHAPES, shapeCells } from '../tiles';
 import { legalActions } from '../bot';
 import type { GameState, Rng } from '../types';
-import { applySoloAction, goalProgress, goalsDone, soloScore, starsOf } from './solo';
+import { STORY, applySoloAction, goalProgress, goalsDone, soloScore, starsOf } from './solo';
 import type { LevelDef, SoloAction, SoloOptions } from './solo';
 import { createSoloGame } from './solo';
 
@@ -62,7 +62,7 @@ function value(s: GameState): number {
   for (const g of goalProgress(s)) {
     const missing = Math.max(0, g.goal.type === 'max_empty' ? g.have - g.need : g.need - g.have);
     if (g.goal.type === 'bonus7') v -= 30 * best7(s);
-    else if (g.goal.type === 'min_coins' || g.goal.type === 'min_score') v -= 6 * missing;
+    else if (g.goal.type === 'min_shards' || g.goal.type === 'min_score') v -= 6 * missing;
     else v -= 30 * missing;
   }
   const me = s.players[0];
@@ -85,7 +85,9 @@ export function solveLevel(level: LevelDef, opts: SoloOptions = {}, noise = 0, r
     if (s.solo!.outcome) break;
     if (goalsDone(s)) { applySoloAction(s, { t: 'finish' }); actions.push({ t: 'finish' }); break; }
     let best: SoloAction | null = null, bestV = -Infinity;
-    for (const a of legalActions(s, 0)) {
+    const cands: SoloAction[] = legalActions(s, 0).filter((a) => a.t !== 'advance');
+    if (s.phase === 'playing') for (let d = 1; d <= STORY.WORK_MAX; d++) cands.push({ t: 'work', days: d });
+    for (const a of cands) {
       const sim = cloneForSim(s);
       if (applySoloAction(sim, a)) continue;
       const v = value(sim) + (noise ? (rng() * 2 - 1) * noise : 0);

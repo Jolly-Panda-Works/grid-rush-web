@@ -2,7 +2,7 @@ import { Client, Room } from 'colyseus.js';
 import { Action, GameState, Seat, eloDelta, levelFromXp, xpForGame } from '../../shared/src';
 import { sfx } from './audio';
 import { saveProfile, profileLevel } from './profile';
-import { pushRibbon, pushToast, resetSel, setSel, useStore } from './store';
+import { pushRewardCard, pushRibbon, pushToast, resetSel, setSel, useStore } from './store';
 import { TRAUMA, addTrauma } from './three/shake';
 import { nearestValid } from './three/placement';
 import { tr, trErr } from './i18n';
@@ -81,7 +81,7 @@ export async function startSearch(solo: boolean) {
   }
 }
 
-/** A story level: straight into the game screen (no matchmaking), one board against the pacer. */
+/** A story level: straight into the game screen (no matchmaking), one board and a deadline. */
 export function startLevelGame(def: LevelDef, attempt: Attempt) {
   ++token;
   leaveRoom();
@@ -195,14 +195,19 @@ function onState(g: GameState, turnLeft: number | null) {
           if (e.seat === st.mySeat) { mine.treasures++; mine.treasureCoins += e.coins; }
           sfx.coin();
           if (e.seat === st.mySeat && e.coins > 0) addTrauma(TRAUMA.medium);
+          if (g.solo) { pushToast(tr('toast.treasureMine', { c: e.coins }), e.coins > 0 ? 'good' : 'info'); break; }
           useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'treasure', coins: e.coins };
           break;
-        case 'reward': if (e.seat === st.mySeat) mine.rewards++; useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'reward', coins: 0 }; break;
+        case 'reward':
+          if (e.seat === st.mySeat) mine.rewards++;
+          if (g.solo) { pushRewardCard(0); break; } // no track marker in a level to show it when it passes
+          useStore.getState().pendingFx[`${e.seat}:${e.pos}`] = { kind: 'reward', coins: 0 };
+          break;
         case 'bonus7': pushRibbon(tr('rib.bonus7'), 'big', tr('toast.bonus7', { name: nameOf(g, e.seat) })); sfx.bonus(); addTrauma(TRAUMA.large); break;
         case 'gold': sfx.coin(); break;
         case 'tool': sfx.place(); addTrauma(TRAUMA.small); break;
         case 'turn':
-          if (g.solo) break; // the pacer's turn takes no time: nothing to announce
+          if (g.solo) break; // (a level has no turns)
           // the hand-over is the rule players miss most, so it is always announced in words
           // the hand-over is the rule players miss most: a big banner every time
           if (e.seat === st.mySeat) { sfx.turn(); pushRibbon(tr('rib.yourTurn'), 'mine'); }

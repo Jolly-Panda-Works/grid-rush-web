@@ -19,7 +19,8 @@ function Scene() {
   const aspect = size.width / Math.max(1, size.height);
   const len = useStore((s) => (s.game ? trackLen(s.game) : undefined));
   const solo = useStore((s) => !!s.game?.solo);
-  const layout = useMemo(() => computeLayout(aspect, len, solo), [aspect, len, solo]);
+  const rtl = useStore((s) => s.settings.lang === 'fa');
+  const layout = useMemo(() => computeLayout(aspect, len, solo, rtl), [aspect, len, solo, rtl]);
 
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
@@ -37,8 +38,15 @@ function Scene() {
       // phones: one panel under the other (tall space); desktop: side by side (wide space under the opponent board)
       return { left, top, width: ((b.x + 1) / 2) * size.width - left, height: ((1 - b.y) / 2) * size.height - top, stacked: !layout.landscape };
     };
+    // phones: where the strip of days is, so a tap on it can open the whole calendar
+    dragApi.trackRect = () => {
+      const p = layout.track.plate;
+      a.set(p.x - p.w / 2, p.y + p.h / 2, 0).project(cam); b.set(p.x + p.w / 2, p.y - p.h / 2, 0).project(cam);
+      const left = ((a.x + 1) / 2) * size.width, top = ((1 - a.y) / 2) * size.height;
+      return { left, top, width: ((b.x + 1) / 2) * size.width - left, height: ((1 - b.y) / 2) * size.height - top, strip: layout.track.window > 0 };
+    };
     useStore.setState((s) => ({ layoutTick: s.layoutTick + 1 }));
-    return () => { dragApi.infoRect = null; };
+    return () => { dragApi.infoRect = null; dragApi.trackRect = null; };
   }, [layout, aspect, camera, size.width, size.height]);
 
   // decaying-trauma shake of the camera only (smooth sines, not random jitter); always returns to rest
@@ -60,7 +68,7 @@ function Scene() {
       <directionalLight position={[-6, 10, 18]} intensity={0.9} />
       <BoardView seat={mySeat} x={layout.my.x} y={layout.my.y} scale={layout.my.scale} />
       {!game.solo && <BoardView seat={opp} x={layout.opp.x} y={layout.opp.y} scale={layout.opp.scale} />}
-      <TrackView layout={layout} />
+      {!game.solo && <TrackView layout={layout} />}
       <VfxLayer />
       <SteerLayer layout={layout} />
     </>

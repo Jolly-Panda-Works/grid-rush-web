@@ -185,10 +185,10 @@ async function main() {
   const winActions = (id: number) => { const r = solveLevel(LEVELS[id - 1]); assert.ok(r.won, `the solver wins level ${id}`); return r.actions; };
   const loseActions = (id: number) => {
     const g = createSoloGame(LEVELS[id - 1]);
-    const out: ({ t: 'advance' } | { t: 'reward'; r: number; c: number })[] = [];
+    const out: ({ t: 'work'; days: number } | { t: 'reward'; r: number; c: number })[] = [];
     while (!g.solo!.outcome) {
       const i = g.players[0].board.indexOf(0);
-      const a = g.phase === 'placing_reward' ? { t: 'reward' as const, r: Math.floor(i / 9), c: i % 9 } : { t: 'advance' as const };
+      const a = g.phase === 'placing_reward' ? { t: 'reward' as const, r: Math.floor(i / 9), c: i % 9 } : { t: 'work' as const, days: 5 };
       assert.equal(applySoloAction(g, a), null); out.push(a);
     }
     assert.equal(g.solo!.outcome, 'lost');
