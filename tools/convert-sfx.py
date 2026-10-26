@@ -12,7 +12,7 @@ import wave
 
 # game sound -> library file
 PICKS = {
-    'click': 'button_click_09.wav',
+    'click': 'radio_button_select_02.wav',
     'select': 'selection_03.wav',
     'place': 'upgrade_applied_14.wav',
     'coin': 'purchase_success_03.wav',
