@@ -263,11 +263,15 @@ function conclude(s: GameState, outcome: 'won' | 'lost') {
 
 /** No opponent buys tiles here, so the market moves on in two other ways: every "work" replaces the oldest offer,
  *  and if none of the three fits anywhere on the board, the oldest ones are replaced (up to three times) instead of
- *  leaving the player stuck. Seeded, so a replay does the same. */
+ *  leaving the player stuck; if still nothing fits, a 1x1 tile comes in. Seeded, so a replay does the same. */
 function refreshIfStuck(s: GameState) {
   const board = s.players[0].board;
   if (s.phase !== 'playing' || emptyCount(s.players[0]) === 0) return;
   for (let n = 0; n < 3 && !s.offer.some((t) => canPlaceAny(board, t.cells)); n++) rotateOffer(s);
+  // only gaps smaller than any tile are left: the market brings a 1x1 (a day, no shards)
+  if (!s.offer.some((t) => canPlaceAny(board, t.cells))) {
+    s.offer[0] = { uid: s.nextUid++, shape: MONO_SHAPE, cells: [[0, 0]], timeCost: 1, coinCost: 0, engraved: 0 };
+  }
 }
 /** The oldest offer leaves, the previewed tile slides in and a new one is drawn. */
 function rotateOffer(s: GameState) {

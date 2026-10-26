@@ -152,6 +152,10 @@ test('work takes 1-5 days of the deadline and pays a shard a day; the turn never
 test('when no offer fits anywhere, the oldest offers are replaced', () => {
   const s = createSoloGame(lvl({ cells: { stone: Array.from({ length: 81 }, (_, i) => [Math.floor(i / 9), i % 9] as [number, number]).filter(([r, c]) => !(r === 4 && c < 2)) } }));
   assert.ok(s.offer.some((t) => t.cells.length <= 2), 'a tile that fits the 2-cell gap came in');
+  const one = createSoloGame(lvl({ cells: { stone: Array.from({ length: 81 }, (_, i) => [Math.floor(i / 9), i % 9] as [number, number]).filter(([r, c]) => !(r === 4 && c === 4)) } }));
+  assert.ok(one.offer.some((t) => t.cells.length === 1 && t.coinCost === 0), 'a single empty cell: a free 1x1 comes in');
+  assert.equal(applySoloAction(one, { t: 'buy', offer: one.offer.findIndex((t) => t.cells.length === 1), cells: [[4, 4]] }), null);
+  assert.equal(one.phase, 'finished', 'the board is full: the level ends');
 });
 test('stones take no tile and are neither empty nor filled; prefilled cells are old tiles', () => {
   const s = createSoloGame(lvl({ cells: { stone: [[0, 0]], filled: [[8, 8], [8, 7], [0, 8]] } }));
